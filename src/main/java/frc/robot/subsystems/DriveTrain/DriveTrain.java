@@ -4,6 +4,7 @@
 
 package frc.robot.subsystems.DriveTrain;
 
+import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.InvertType;
 import com.ctre.phoenix.motorcontrol.StatusFrame;
 import com.ctre.phoenix.motorcontrol.TalonFXFeedbackDevice;
@@ -14,6 +15,8 @@ import com.ctre.phoenix.motorcontrol.can.TalonFXConfiguration;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 import com.kauailabs.navx.frc.AHRS;
 
+import edu.wpi.first.hal.SimDouble;
+import edu.wpi.first.hal.simulation.SimDeviceDataJNI;
 import edu.wpi.first.math.kinematics.DifferentialDriveOdometry;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.util.Units;
@@ -21,7 +24,9 @@ import edu.wpi.first.wpilibj.simulation.DifferentialDrivetrainSim;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.SPI;
+import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import frc.robot.Robot;
 
 import static frc.robot.Constants.*;
@@ -142,10 +147,100 @@ public class DriveTrain extends SubsystemBase {
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
+    m_odometry.update(m_gyro.getRotation2d(),
+    nativeUnitsToDistanceMeters(m_left_leader.getSelectedSensorPosition()),
+    nativeUnitsToDistanceMeters(m_right_leader.getSelectedSensorPosition()));
+    m_field.setRobotPose(m_odometry.getPoseMeters());
   }
 
   @Override
   public void simulationPeriodic() {
     // This method will be called once per scheduler run during simulation
+    m_left_drive_sim.setBusVoltage(RobotController.getBatteryVoltage());
+		m_right_drive_sim.setBusVoltage(RobotController.getBatteryVoltage());
+
+    /*
+			* CTRE simulation is low-level, so SimCollection inputs
+			* and outputs are not affected by SetInverted(). Only
+			* the regular user-level API calls are affected.
+			*
+			* WPILib expects +V to be forward.
+			* Positive motor output lead voltage is ccw. We observe
+			* on our physical robot that this is reverse for the
+			* right motor, so negate it.
+			*
+			* We are hard-coding the negation of the values instead of
+			* using getInverted() so we can catch a possible bug in the
+			* robot code where the wrong value is passed to setInverted().
+			*/
+		m_drivetrain_sim.setInputs(m_left_drive_sim.getMotorOutputLeadVoltage(),
+    -m_right_drive_sim.getMotorOutputLeadVoltage());
+
+    /*
+    * Advance the model by 20 ms. Note that if you are running this
+    * subsystem in a separate thread or have changed the nominal
+    * timestep of TimedRobot, this value needs to match it.
+    */
+    m_drivetrain_sim.update(0.02);
+
+    /*
+    * Update all of our sensors.
+    *
+    * Since WPILib's simulation class is assuming +V is forward,
+    * but -V is forward for the right motor, we need to negate the
+    * position reported by the simulation class. Basically, we
+    * negated the input, so we need to negate the output.
+    */
+		m_left_drive_sim.setIntegratedSensorRawPosition(
+      distanceToNativeUnits(
+        m_drivetrain_sim.getLeftPositionMeters()
+      ));
+    m_left_drive_sim.setIntegratedSensorVelocity(
+      velocityToNativeUnits(
+        m_drivetrain_sim.getLeftVelocityMetersPerSecond()
+      ));
+    m_right_drive_sim.setIntegratedSensorRawPosition(
+      distanceToNativeUnits(
+        -m_drivetrain_sim.getRightPositionMeters()
+      ));
+    m_right_drive_sim.setIntegratedSensorVelocity(
+      velocityToNativeUnits(
+        -m_drivetrain_sim.getRightVelocityMetersPerSecond()
+      ));
+
+    int dev = SimDeviceDataJNI.getSimDeviceHandle("navX-Sensor[0]");
+    SimDouble angle = new SimDouble(SimDeviceDataJNI.getSimValueHandle(dev, "Yaw"));
+    angle.set(-m_drivetrain_sim.getHeading().getDegrees());
+  }
+
+  private int distanceToNativeUnits(double positionMeters){
+		double wheelRotations = positionMeters/(2 * Math.PI * Units.inchesToMeters(k_dt_wheel_radius_inches));
+		double motorRotations = wheelRotations * k_dt_gear_ratio;
+		int sensorCounts = (int)(motorRotations * k_dt_counts_per_rev);
+		return sensorCounts;
+	}
+
+	private int velocityToNativeUnits(double velocityMetersPerSecond){
+		double wheelRotationsPerSecond = velocityMetersPerSecond/(2 * Math.PI * Units.inchesToMeters(k_dt_wheel_radius_inches));
+		double motorRotationsPerSecond = wheelRotationsPerSecond * k_dt_gear_ratio;
+		double motorRotationsPer100ms = motorRotationsPerSecond / k_dt_100ms_per_second;
+		int sensorCountsPer100ms = (int)(motorRotationsPer100ms * k_dt_counts_per_rev);
+		return sensorCountsPer100ms;
+	}
+
+	private double nativeUnitsToDistanceMeters(double sensorCounts){
+		double motorRotations = (double)sensorCounts / k_dt_counts_per_rev;
+		double wheelRotations = motorRotations / k_dt_gear_ratio;
+		double positionMeters = wheelRotations * (2 * Math.PI * Units.inchesToMeters(k_dt_wheel_radius_inches));
+	return positionMeters;
+	}
+  public void teleop_drive(double forward, double turn){
+    var speeds =  DifferentialDrive.curvatureDriveIK(forward, turn, true);
+    if(Robot.isSimulation()){
+			// Just set the motors
+			m_right_leader.set(ControlMode.PercentOutput, speeds.right);
+			m_left_leader.set(ControlMode.PercentOutput, speeds.left);
+			return;
+		}
   }
 }

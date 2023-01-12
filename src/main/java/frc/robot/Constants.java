@@ -40,4 +40,11 @@ public final class Constants {
     public static final double k_dt_neutral_deadband = .1;  // MUST BE TUNED
     public static final double k_dt_peak_output_forward = 1.0; // MUST BE TUNED
     public static final double k_dt_peak_output_reverse = -1.0;
+    public static final int k_dt_counts_per_rev = 2048;
+    public static final double k_dt_100ms_per_second = 10;
+    
+
+    /////////////////// Human Interface ///////////////////////////
+    public static final int DRIVER_LEFT_AXIS = 1;
+    public static final int DRIVER_RIGHT_AXIS = 4;
 }
