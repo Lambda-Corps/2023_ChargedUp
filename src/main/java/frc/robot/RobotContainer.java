@@ -6,6 +6,7 @@ package frc.robot;
 
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
+import frc.robot.subsystems.Arm.Arm;
 import frc.robot.subsystems.DriveTrain.DefaultDriveTrainCommand;
 import frc.robot.subsystems.DriveTrain.DriveTrain;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -23,6 +24,7 @@ public class RobotContainer {
 
   // The robot's subsystems and commands are defined here...
   private final DriveTrain m_drivetrain = new DriveTrain();
+  private final Arm m_arm = new  Arm();
 
   //private final ExampleCommand m_autoCommand = new ExampleCommand(m_exampleSubsystem);
 

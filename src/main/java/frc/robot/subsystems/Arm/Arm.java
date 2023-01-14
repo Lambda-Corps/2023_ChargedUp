@@ -4,59 +4,54 @@
 
 package frc.robot.subsystems.Arm;
 
+import static frc.robot.Constants.*;
+
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.FeedbackDevice;
-import com.ctre.phoenix.motorcontrol.NeutralMode;
-import com.ctre.phoenix.motorcontrol.TalonFXInvertType;
 import com.ctre.phoenix.motorcontrol.can.TalonFXConfiguration;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 
+import edu.wpi.first.networktables.DoublePublisher;
+import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import static frc.robot.Constants.*;
 
 public class Arm extends SubsystemBase {
-  TalonFXInvertType bottom_invert_type, top_invert_type;
-  NeutralMode bottom_neutral_mode, top_neutral_mode;
   WPI_TalonFX m_bottom_stage, m_top_stage;
-  TalonFXConfiguration bottom_configs, top_configs;
   DigitalInput  m_arm_base_reverse_limit, m_arm_top_reverse_limit;
+  DoublePublisher m_bottom_arm_enc_value, m_top_arm_enc_value;
 
-  final double BOTTOM_ARM_DRIVE_SPEED, TOP_ARM_DRIVE_SPEED;
+  // Constant values for ARM movement, must be researched and tuned via tuner
+  final double BOTTOM_ARM_DRIVE_SPEED = .1;
+  final double TOP_ARM_DRIVE_SPEED = .1;
   /** Creates a new Arm. */
   public Arm() {
     // Configure top and bottom arm talons. NOTE: set invertType such that positive input rotates to FRONT of robot
     m_bottom_stage = new WPI_TalonFX(BOTTOM_ARM_STAGE);
-    bottom_invert_type = TalonFXInvertType.CounterClockwise;
-    bottom_neutral_mode = NeutralMode.Brake;
     m_top_stage = new WPI_TalonFX(TOP_ARM_STAGE);
-    top_invert_type = TalonFXInvertType.CounterClockwise;
-    top_neutral_mode = NeutralMode.Brake;
-
-    bottom_configs = new TalonFXConfiguration();
+    
+    TalonFXConfiguration bottom_configs = new TalonFXConfiguration();
     bottom_configs.primaryPID.selectedFeedbackSensor = FeedbackDevice.IntegratedSensor;
     m_bottom_stage.configAllSettings(bottom_configs);
-    top_configs = new TalonFXConfiguration();
-    top_configs.primaryPID.selectedFeedbackSensor = FeedbackDevice.IntegratedSensor;
-    m_top_stage.configAllSettings(top_configs);
+    TalonFXConfiguration top_config = new TalonFXConfiguration();
+    top_config.primaryPID.selectedFeedbackSensor = FeedbackDevice.IntegratedSensor;
+    m_top_stage.configAllSettings(top_config);
     
-    m_bottom_stage.setInverted(bottom_invert_type);
-    m_bottom_stage.setNeutralMode(bottom_neutral_mode);
-    m_top_stage.setInverted(top_invert_type);
-    m_top_stage.setNeutralMode(top_neutral_mode);
-
     // Top and bottom arm limit switches
     m_arm_base_reverse_limit = new DigitalInput(ARM_BASE_LIMIT_SWITCH);
     m_arm_top_reverse_limit = new DigitalInput(ARM_TOP_LIMIT_SWITCH);
 
-    ////////////// ARM CONSTANTS //////////////
-    BOTTOM_ARM_DRIVE_SPEED = 1.0; /* subject to change after testing */
-    TOP_ARM_DRIVE_SPEED = 1.0; /* subject to change after testing */
+    // Setup the network tables publishers to push data to the dashboard
+    NetworkTable shuffleboard = NetworkTableInstance.getDefault().getTable("Shuffleboard");
+    m_bottom_arm_enc_value = shuffleboard.getDoubleTopic("Arm/BottomEncoder").publish();
+    m_top_arm_enc_value = shuffleboard.getDoubleTopic("Arm/TopEncoder").publish();
   }
 
   @Override
   public void periodic() {
-    
+    m_bottom_arm_enc_value.set(m_bottom_stage.getSelectedSensorPosition());
+    m_top_arm_enc_value.set(m_top_stage.getSelectedSensorPosition());
   }
 
   // DO NOT USE DURING MATCHES!!! ONLY RUN IN THE PITS!!!
