@@ -14,10 +14,10 @@ package frc.robot;
  */
 public final class Constants {
     ////////////////////// CAN IDs //////////////////////
-    public final static int LEFT_TALON_LEADER    = 1;
-    public final static int LEFT_TALON_FOLLOWER  = 3;
-    public final static int RIGHT_TALON_LEADER   = 2;
-    public final static int RIGHT_TALON_FOLLOWER = 4; 
+    public final static int LEFT_TALON_LEADER    = 3;
+    public final static int LEFT_TALON_FOLLOWER  = 1;
+    public final static int RIGHT_TALON_LEADER   = 4;
+    public final static int RIGHT_TALON_FOLLOWER = 2; 
     public final static int CAN_ID_FIVE = 5; 
     public final static int CAN_ID_SIX = 6;
     public final static int CAN_ID_SEVEN = 7;
@@ -29,19 +29,6 @@ public final class Constants {
     public final static int CAN_ID_THIRTEEN = 13;
 
     //////////////////// Roborio DIO ////////////////////
-
-    ////////// Robot Physical Characteristics ///////////
-    public static final double k_robot_mass = 55.3; // MUST BE CHANGED, THIS IS 2022 number
-    public static final double k_dt_gear_ratio = 1.0; // MUST BE CHANGED TO OUR ACTUAL GEARBOX
-    public static final double k_dt_wheel_radius_inches = 3.0;
-    public static final double k_dt_track_width_meters = .546; // MUST BE CHANGED, THIS IS 2022
-
-    ////////////////////// DriveTrain Specific constants ///////////////////
-    public static final double k_dt_neutral_deadband = .1;  // MUST BE TUNED
-    public static final double k_dt_peak_output_forward = 1.0; // MUST BE TUNED
-    public static final double k_dt_peak_output_reverse = -1.0;
-    public static final int k_dt_counts_per_rev = 2048;
-    public static final double k_dt_100ms_per_second = 10;
     
 
     /////////////////// Human Interface ///////////////////////////

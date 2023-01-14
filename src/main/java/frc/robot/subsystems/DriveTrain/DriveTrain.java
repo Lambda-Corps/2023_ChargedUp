@@ -6,104 +6,186 @@ package frc.robot.subsystems.DriveTrain;
 
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.InvertType;
+import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.StatusFrame;
+import com.ctre.phoenix.motorcontrol.SupplyCurrentLimitConfiguration;
 import com.ctre.phoenix.motorcontrol.TalonFXFeedbackDevice;
 import com.ctre.phoenix.motorcontrol.TalonFXInvertType;
 import com.ctre.phoenix.motorcontrol.TalonFXSimCollection;
-import com.ctre.phoenix.motorcontrol.can.TalonFX;
 import com.ctre.phoenix.motorcontrol.can.TalonFXConfiguration;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 import com.kauailabs.navx.frc.AHRS;
 
 import edu.wpi.first.hal.SimDouble;
 import edu.wpi.first.hal.simulation.SimDeviceDataJNI;
+import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.kinematics.DifferentialDriveOdometry;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.RobotController;
+import edu.wpi.first.wpilibj.SPI;
+import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.simulation.DifferentialDrivetrainSim;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import edu.wpi.first.wpilibj.RobotController;
-import edu.wpi.first.wpilibj.SPI;
-import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import frc.robot.Robot;
 
 import static frc.robot.Constants.*;
 
 public class DriveTrain extends SubsystemBase {
-  // Declare class-only constants and member variables before the Constructor below
-  /////////////////// Subsystem Sensors and Actuators  //////////////////////
-  private final WPI_TalonFX m_left_leader, m_right_leader, m_left_follower, m_right_follower;
+/**
+	 * Using the configSelectedFeedbackCoefficient() function, scale units to 3600 per rotation.
+	 * This is nice as it keeps 0.1 degrees of resolution, and is fairly intuitive.
+	 */
+  public final static double kTurnTravelUnitsPerRotation = 3600;
+    
+  /**
+   * Empirically measure what the difference between encoders per 360'
+   * Drive the robot in clockwise rotations and measure the units per rotation.
+   * Drive the robot in counter clockwise rotations and measure the units per rotation.
+   * Take the average of the two.
+   */
+  public static final int kCountsPerRev = 2048;    // Encoder counts per revolution of the motor shaft.
+  public static final double kSensorGearRatio = 10.71; // Gear ratio is the ratio between the *encoder* and the wheels. On the AndyMark
+                            // drivetrain, encoders mount 1:1 with the gearbox shaft.
+  public static final double kGearRatio = 10.71;   // Switch kSensorGearRatio to this gear ratio if encoder is on the motor instead
+                            // of on the gearbox.
+  public static final double kWheelRadiusInches = 3.15;
+  public static final int k100msPerSecond = 10;
+  public final static int kEncoderUnitsPerRotation = 88554;
+  public final static double kEncoderTicksPerDegree = kEncoderUnitsPerRotation / 360;
+  public static final double kEncoderTicksPerInch = (kCountsPerRev * kGearRatio) / (2 * Math.PI * kWheelRadiusInches);
+  private final int kTimeoutMs = 0;
+  private final double kNeutralDeadband = 0.002;
+  private final double kControllerDeadband = 0.1;
+  private final double kTrackWidthMeters = .546;
+  private final double kRobotMass = 55.3;
 
-  // The Navx Gyro
-  private AHRS m_gyro;
+	private final double MAX_TELEOP_DRIVE_SPEED = 1.0;
+	// private final double arbFF = 0.2;
+	// TalonFX's for the drivetrain
+	// Right side is inverted here to drive forward
+	WPI_TalonFX m_left_leader, m_right_leader, m_left_follower, m_right_follower;
+	// WPI_TalonFX m_left_leader, m_right_leader;//, m_left_follower, m_right_follower;
 
+	// Variables to hold the invert types for the talons
+	TalonFXInvertType m_left_invert, m_right_invert;
+	
+	// Gyro 
+	public AHRS m_gyro;
+	
+	// Auxilliary PID tracker
+	// private boolean m_was_correcting = false;
+	// private boolean m_is_correcting = false;
 
-  /////////////// Odometry and Kinematics  /////////////////////////
-  private final DifferentialDriveOdometry m_odometry;
-  private final Field2d m_field;
+	///////////// Odometry Trackers //////////////
+	// Odometry class for tracking robot pose
+	private final DifferentialDriveOdometry m_odometry;
+	private final Field2d m_2dField;
+	
+	///////////// Simulator Objects //////////////
+	// These classes help us simulate our drivetrain
+	public DifferentialDrivetrainSim m_drivetrainSimulator;
+	/* Object for simulated inputs into Talon. */
+	private TalonFXSimCollection m_leftDriveSim, m_rightDriveSim;
 
-  ////////////////////// Simulator Specific Options /////////////////
-  DifferentialDrivetrainSim m_drivetrain_sim;
-  TalonFXSimCollection m_left_drive_sim, m_right_drive_sim;
+	// RateLimiters to try to keep from tipping over
+	SlewRateLimiter m_forward_limiter, m_rotation_limiter;
+	private double m_drive_absMax;
 
-  /** Creates a new ExampleSubsystem. */
-  public DriveTrain() {
-    // Instantiate the member variables for the DT
-    // First the NAVX
+  	/** Creates a new DriveTrain. */
+ 	public DriveTrain() {
     m_gyro = new AHRS(SPI.Port.kMXP);
-
-    // Falcons
     m_left_leader = new WPI_TalonFX(LEFT_TALON_LEADER);
-    m_left_follower = new WPI_TalonFX(LEFT_TALON_FOLLOWER);
+		m_left_follower = new  WPI_TalonFX(LEFT_TALON_FOLLOWER);
     m_right_leader = new WPI_TalonFX(RIGHT_TALON_LEADER);
-    m_right_follower = new WPI_TalonFX(RIGHT_TALON_FOLLOWER);
+		m_right_follower = new WPI_TalonFX(RIGHT_TALON_FOLLOWER);
 
-    // Create blank configuration objects and "factory default" all the talons
-    // This erases any settings, including those that were set in Phoenix tuner
-    // before rebooting robot code
-    TalonFXConfiguration _leftconfig = new TalonFXConfiguration();
+    /** Invert Directions for Left and Right */
+    m_left_invert = TalonFXInvertType.CounterClockwise; //Same as invert = "false"
+    m_right_invert = TalonFXInvertType.Clockwise; //Same as invert = "true"
+
+    /** Config Objects for motor controllers */
+    TalonFXConfiguration _leftConfig = new TalonFXConfiguration();
     TalonFXConfiguration _rightConfig = new TalonFXConfiguration();
 
-    m_left_leader.configAllSettings(_leftconfig);
-    m_left_follower.configAllSettings(_leftconfig);
-    m_right_leader.configAllSettings(_rightConfig);
-    m_right_follower.configAllSettings(_rightConfig);
+		// Set follower talons to default configs, and then follo–w their leaders
+		m_left_follower.configAllSettings(_leftConfig);
+		m_right_follower.configAllSettings(_rightConfig);
+		m_left_follower.follow(m_left_leader);
+		m_left_follower.setInverted(InvertType.FollowMaster);
+		m_right_follower.follow(m_right_leader);
+		m_right_follower.setInverted(InvertType.FollowMaster);
+
+    		/* Set Neutral Mode */
+		m_left_leader.setNeutralMode(NeutralMode.Brake);
+		m_right_leader.setNeutralMode(NeutralMode.Brake);
+
+		/* Configure output */
+		m_left_leader.setInverted(m_left_invert);
+		m_right_leader.setInverted(m_right_invert);
   
-    // Configure the talons with internal settings, THIS MUST BE DONE BEFORE SETTING
-    // FOLLOWER TYPE, and STATUS FRAMES since these settings will destroy the 
-    // settings that were set in code
-    // Set the integrated encoder as the primary sensor
-    _leftconfig.primaryPID.selectedFeedbackSensor = TalonFXFeedbackDevice.IntegratedSensor.toFeedbackDevice();
-    _rightConfig.primaryPID.selectedFeedbackSensor = TalonFXFeedbackDevice.IntegratedSensor.toFeedbackDevice();
+    	/* Configure the left Talon's selected sensor as integrated sensor */
+		/* 
+		 * Currently, in order to use a product-specific FeedbackDevice in configAll objects,
+		 * you have to call toFeedbackType. This is a workaround until a product-specific
+		 * FeedbackDevice is implemented for configSensorTerm
+		 */
+		_leftConfig.primaryPID.selectedFeedbackSensor = TalonFXFeedbackDevice.IntegratedSensor.toFeedbackDevice(); //Local Feedback Source
+		_rightConfig.primaryPID.selectedFeedbackSensor = TalonFXFeedbackDevice.IntegratedSensor.toFeedbackDevice();
 
-    // Set output limits for forward and back
-    _leftconfig.peakOutputForward = k_dt_peak_output_forward;
-    _leftconfig.peakOutputReverse = k_dt_peak_output_reverse;
-    _rightConfig.peakOutputForward = k_dt_peak_output_forward;
-    _rightConfig.peakOutputForward = k_dt_peak_output_reverse;
+		// /* Configure the Remote (Left) Talon's selected sensor as a remote sensor for the right Talon */
+		// _rightConfig.remoteFilter1.remoteSensorDeviceID = m_left_leader.getDeviceID(); //Device ID of Remote Source
+		// _rightConfig.remoteFilter1.remoteSensorSource = RemoteSensorSource.TalonFX_SelectedSensor; //Remote Source Type
+		
+		// /* Setup difference signal to be used for turn when performing Drive Straight with encoders */
+		// setRobotTurnConfigs(m_right_invert, _rightConfig);
 
-    // Set deadband for motor controllers
-    _leftconfig.neutralDeadband = k_dt_neutral_deadband;
-    _rightConfig.neutralDeadband = k_dt_neutral_deadband;
-    
-    // Set Motor Configs with custom settings
-    m_left_leader.configAllSettings(_leftconfig);
-    m_right_leader.configAllSettings(_rightConfig);
+		/* Config the neutral deadband. */
+		_leftConfig.neutralDeadband = kNeutralDeadband;
+		_rightConfig.neutralDeadband = kNeutralDeadband;
 
-    /* Continue to configure the rest of the talon configurations now */
-    // Set Drivetrain inverts
-    m_left_leader.setInverted(TalonFXInvertType.CounterClockwise); // invert = false
-    m_left_follower.setInverted(InvertType.FollowMaster);
-    m_right_leader.setInverted(TalonFXInvertType.Clockwise); // invert = true
-    m_right_follower.setInverted(InvertType.FollowMaster);
+		/* max out the peak output (for all modes).  However you can
+		 * limit the output of a given PID object with configClosedLoopPeakOutput().
+		 */
+		_leftConfig.peakOutputForward = 1.0;
+		_leftConfig.peakOutputReverse = -1.0;
+		_rightConfig.peakOutputForward = +1.0;
+		_rightConfig.peakOutputReverse = -1.0;
+			
+		/* 1ms per loop.  PID loop can be slowed down if need be.
+		 * For example,
+		 * - if sensor updates are too slow
+		 * - sensor deltas are very small per update, so derivative error never gets large enough to be useful.
+		 * - sensor movement is very slow causing the derivative error to be near zero.
+		 */
 
-    /* Set status frame periods */
+		int closedLoopTimeMs = 1;
+		_rightConfig.slot0.closedLoopPeriod = closedLoopTimeMs;
+		_rightConfig.slot1.closedLoopPeriod = closedLoopTimeMs;
+		_rightConfig.slot2.closedLoopPeriod = closedLoopTimeMs;
+   	_rightConfig.slot3.closedLoopPeriod = closedLoopTimeMs;
+		_rightConfig.slot0.allowableClosedloopError = 25;
+		_rightConfig.slot1.allowableClosedloopError = 25;
+		_leftConfig.slot0.closedLoopPeriod = closedLoopTimeMs;
+		_leftConfig.slot1.closedLoopPeriod = closedLoopTimeMs;
+		_leftConfig.slot2.closedLoopPeriod = closedLoopTimeMs;
+   	_leftConfig.slot3.closedLoopPeriod = closedLoopTimeMs;
+		_leftConfig.slot0.allowableClosedloopError = 25;
+		_leftConfig.slot1.allowableClosedloopError = 25;
+
+  	/* APPLY the config settings */
+		m_left_leader.configAllSettings(_leftConfig);
+		m_right_leader.configAllSettings(_rightConfig);
+		m_left_leader.configSupplyCurrentLimit(new SupplyCurrentLimitConfiguration(true, 35, 40, 1.0), 0);
+		m_right_leader.configSupplyCurrentLimit(new SupplyCurrentLimitConfiguration(true, 35, 40, 1.0), 0);
+
+		/* Set status frame periods */
 		// Leader Talons need faster updates 
-		m_right_leader.setStatusFramePeriod(StatusFrame.Status_12_Feedback1, 20, 0);
-		m_right_leader.setStatusFramePeriod(StatusFrame.Status_14_Turn_PIDF1, 20, 0);
-		m_left_leader.setStatusFramePeriod(StatusFrame.Status_2_Feedback0, 5, 0);		//Used remotely by right Talon, speed up
+		m_right_leader.setStatusFramePeriod(StatusFrame.Status_12_Feedback1, 20, kTimeoutMs);
+		m_right_leader.setStatusFramePeriod(StatusFrame.Status_14_Turn_PIDF1, 20, kTimeoutMs);
+		m_left_leader.setStatusFramePeriod(StatusFrame.Status_2_Feedback0, 5, kTimeoutMs);		//Used remotely by right Talon, speed up
 		// Followers can slow down certain status messages to reduce the can bus usage, per CTRE:
 		// "Motor controllers that are followers can set Status 1 and Status 2 to 255ms(max) using setStatusFramePeriod."
 		m_right_follower.setStatusFramePeriod(StatusFrame.Status_1_General, 255);
@@ -111,55 +193,125 @@ public class DriveTrain extends SubsystemBase {
 		m_left_follower.setStatusFramePeriod(StatusFrame.Status_2_Feedback0, 255);
 		m_left_follower.setStatusFramePeriod(StatusFrame.Status_1_General, 255);
 
-    // Set the Encoders to Zero just to be sure
-    m_right_leader.setSelectedSensorPosition(0);
-    m_left_leader.setSelectedSensorPosition(0);
+		// setEncodersToZero();
+		m_right_leader.setSelectedSensorPosition(0);
+		m_left_leader.setSelectedSensorPosition(0);
 
-    /* Instantiate the simulator objects. This includes the drivetrain,
-       and talking to the NAVX gyro */
-    if( Robot.isSimulation() ){
-      m_drivetrain_sim = new DifferentialDrivetrainSim(
-        DCMotor.getFalcon500(2), // 2 falcons on each side of DT
-        k_dt_gear_ratio, // Verify correct in Constants.java
-        2.1, // Moment of Inertia of 2.1 kg m^2
-        k_robot_mass, // Verify correct in Constants.java
-        Units.inchesToMeters(k_dt_wheel_radius_inches),
-        k_dt_track_width_meters, 
-        null // VecBuilder.fill(0.001, 0.001, 0.001, 0.1, 0.1, 0.005, 0.005) Uncomment this line to add measurement noise.
-      );
+		/// Odometry Tracker objects
+		m_2dField = new Field2d();
+		SmartDashboard.putData(m_2dField);
+		m_odometry = new DifferentialDriveOdometry(m_gyro.getRotation2d(), 0, 0);
 
-      // Setup the simulation input classes
-      m_left_drive_sim = m_left_leader.getSimCollection();
-      m_right_drive_sim = m_right_leader.getSimCollection();
-    }
+		// Code for simulation within the DriveTrain Constructor
+		if (Robot.isSimulation()) { // If our robot is simulated
+			// This class simulates our drivetrain's motion around the field.
+			/* Simulation model of the drivetrain */
+			m_drivetrainSimulator = new DifferentialDrivetrainSim(
+			  DCMotor.getFalcon500(2), // 2 Falcon 500s on each side of the drivetrain.
+			  kGearRatio, // Standard AndyMark Gearing reduction.
+			  2.1, // MOI of 2.1 kg m^2 (from CAD model).
+			  kRobotMass, // Mass of the robot is 26.5 kg.
+			  Units.inchesToMeters(kWheelRadiusInches), // Robot uses 3" radius (6" diameter) wheels.
+			  kTrackWidthMeters, // Distance between wheels is _ meters.
+	  
+			  /*
+			  * The standard deviations for measurement noise:
+			  * x and y: 0.001 m
+			  * heading: 0.001 rad
+			  * l and r velocity: 0.1 m/s
+			  * l and r position: 0.005 m
+			  */
+			  null // VecBuilder.fill(0.001, 0.001, 0.001, 0.1, 0.1, 0.005, 0.005) //Uncomment this
+				  // line to add measurement noise.
+			);
+	  
+			// Setup the Simulation input classes
+			m_leftDriveSim = m_left_leader.getSimCollection();
+			m_rightDriveSim = m_right_leader.getSimCollection();
+		  } // end of constructor code for the simulation
 
-    // Set the angle to 0 as the starting point
-    m_gyro.reset();
+		  // Setup the drive train limiting test variables
+		  // Default the slew rate 3 meters per second
+		  m_forward_limiter = new SlewRateLimiter(3);
+		  m_rotation_limiter = new SlewRateLimiter(3);
+		  m_drive_absMax = MAX_TELEOP_DRIVE_SPEED;
+		  
+		  m_gyro.reset();
+  	}
 
-    // Create the Odometry Object to estimate robot position on field.
-    m_odometry = new DifferentialDriveOdometry(m_gyro.getRotation2d(), 0, 0);
+	@Override
+	public void periodic() {
+		m_odometry.update(m_gyro.getRotation2d(),
+                      nativeUnitsToDistanceMeters(m_left_leader.getSelectedSensorPosition()),
+                      nativeUnitsToDistanceMeters(m_right_leader.getSelectedSensorPosition()));
+   		m_2dField.setRobotPose(m_odometry.getPoseMeters());
+	}
 
-    // Create the field for Pose visualization and make it available on SmartDashboard Table
-    m_field = new Field2d();
-    SmartDashboard.putData(m_field);
+	/** Deadband 5 percent, used on the gamepad */
+	private double deadband(double value) {
+		/* Upper deadband */
+		if (value >= kControllerDeadband) {
+      		return value;
+    	}
+		
+		/* Lower deadband */
+		if (value <= -kControllerDeadband) {
+      		return value;
+    	}
+
+		/* Outside deadband */
+		return 0;
+  	}
+  
+  	/** Make sure the input to the set command is 1.0 >= x >= -1.0 **/
+	private double clamp_drive(double value) {
+		/* Upper deadband */
+		if (value >= m_drive_absMax) {
+     		return m_drive_absMax;
+   		}
+
+		/* Lower deadband */
+		if (value <= -m_drive_absMax) {
+      		return -m_drive_absMax;
+    	}
+
+    /* Outside deadband */
+    return value;
   }
 
-  @Override
-  public void periodic() {
-    // This method will be called once per scheduler run
-    m_odometry.update(m_gyro.getRotation2d(),
-    nativeUnitsToDistanceMeters(m_left_leader.getSelectedSensorPosition()),
-    nativeUnitsToDistanceMeters(m_right_leader.getSelectedSensorPosition()));
-    m_field.setRobotPose(m_odometry.getPoseMeters());
+	public void teleop_drive(double forward, double turn){
+		forward = deadband(forward);
+		turn = deadband(turn);
+
+		forward = clamp_drive(forward);
+		turn = clamp_drive(turn);
+
+		//forward = -m_forward_limiter.calculate(forward) * m_drive_absMax;
+		if(forward != 0 || turn != 0) {
+			forward = m_forward_limiter.calculate(forward) * m_drive_absMax;
+			turn = m_rotation_limiter.calculate(turn) * m_drive_absMax;
+		}
+
+		var speeds = DifferentialDrive.curvatureDriveIK(forward, turn, true);
+
+		if(Robot.isSimulation()){
+			// Just set the motors
+			m_right_leader.set(ControlMode.PercentOutput, speeds.right);
+			m_left_leader.set(ControlMode.PercentOutput, speeds.left);
+			return;
+		}			
+			// Just set the motors
+	  m_right_leader.set(ControlMode.PercentOutput, speeds.right);
+		m_left_leader.set(ControlMode.PercentOutput, speeds.left);
   }
 
-  @Override
-  public void simulationPeriodic() {
-    // This method will be called once per scheduler run during simulation
-    m_left_drive_sim.setBusVoltage(RobotController.getBatteryVoltage());
-		m_right_drive_sim.setBusVoltage(RobotController.getBatteryVoltage());
+	@Override
+	public void simulationPeriodic() {
+		/* Pass the robot battery voltage to the simulated Talon FXs */
+		m_leftDriveSim.setBusVoltage(RobotController.getBatteryVoltage());
+		m_rightDriveSim.setBusVoltage(RobotController.getBatteryVoltage());
 
-    /*
+		/*
 			* CTRE simulation is low-level, so SimCollection inputs
 			* and outputs are not affected by SetInverted(). Only
 			* the regular user-level API calls are affected.
@@ -173,74 +325,65 @@ public class DriveTrain extends SubsystemBase {
 			* using getInverted() so we can catch a possible bug in the
 			* robot code where the wrong value is passed to setInverted().
 			*/
-		m_drivetrain_sim.setInputs(m_left_drive_sim.getMotorOutputLeadVoltage(),
-    -m_right_drive_sim.getMotorOutputLeadVoltage());
+		m_drivetrainSimulator.setInputs(m_leftDriveSim.getMotorOutputLeadVoltage(),
+								-m_rightDriveSim.getMotorOutputLeadVoltage());
 
-    /*
-    * Advance the model by 20 ms. Note that if you are running this
-    * subsystem in a separate thread or have changed the nominal
-    * timestep of TimedRobot, this value needs to match it.
-    */
-    m_drivetrain_sim.update(0.02);
+		/*
+			* Advance the model by 20 ms. Note that if you are running this
+			* subsystem in a separate thread or have changed the nominal
+			* timestep of TimedRobot, this value needs to match it.
+			*/
+		m_drivetrainSimulator.update(0.02);
 
-    /*
-    * Update all of our sensors.
-    *
-    * Since WPILib's simulation class is assuming +V is forward,
-    * but -V is forward for the right motor, we need to negate the
-    * position reported by the simulation class. Basically, we
-    * negated the input, so we need to negate the output.
-    */
-		m_left_drive_sim.setIntegratedSensorRawPosition(
-      distanceToNativeUnits(
-        m_drivetrain_sim.getLeftPositionMeters()
-      ));
-    m_left_drive_sim.setIntegratedSensorVelocity(
-      velocityToNativeUnits(
-        m_drivetrain_sim.getLeftVelocityMetersPerSecond()
-      ));
-    m_right_drive_sim.setIntegratedSensorRawPosition(
-      distanceToNativeUnits(
-        -m_drivetrain_sim.getRightPositionMeters()
-      ));
-    m_right_drive_sim.setIntegratedSensorVelocity(
-      velocityToNativeUnits(
-        -m_drivetrain_sim.getRightVelocityMetersPerSecond()
-      ));
+		/*
+			* Update all of our sensors.
+			*
+			* Since WPILib's simulation class is assuming +V is forward,
+			* but -V is forward for the right motor, we need to negate the
+			* position reported by the simulation class. Basically, we
+			* negated the input, so we need to negate the output.
+			*/
+		m_leftDriveSim.setIntegratedSensorRawPosition(
+						distanceToNativeUnits(
+							m_drivetrainSimulator.getLeftPositionMeters()
+						));
+		m_leftDriveSim.setIntegratedSensorVelocity(
+						velocityToNativeUnits(
+							m_drivetrainSimulator.getLeftVelocityMetersPerSecond()
+						));
+		m_rightDriveSim.setIntegratedSensorRawPosition(
+						distanceToNativeUnits(
+							-m_drivetrainSimulator.getRightPositionMeters()
+						));
+		m_rightDriveSim.setIntegratedSensorVelocity(
+						velocityToNativeUnits(
+							-m_drivetrainSimulator.getRightVelocityMetersPerSecond()
+						));
 
-    int dev = SimDeviceDataJNI.getSimDeviceHandle("navX-Sensor[0]");
-    SimDouble angle = new SimDouble(SimDeviceDataJNI.getSimValueHandle(dev, "Yaw"));
-    angle.set(-m_drivetrain_sim.getHeading().getDegrees());
-  }
+		int dev = SimDeviceDataJNI.getSimDeviceHandle("navX-Sensor[0]");
+		SimDouble angle = new SimDouble(SimDeviceDataJNI.getSimValueHandle(dev, "Yaw"));
+		angle.set(-m_drivetrainSimulator.getHeading().getDegrees());
+	}
 
-  private int distanceToNativeUnits(double positionMeters){
-		double wheelRotations = positionMeters/(2 * Math.PI * Units.inchesToMeters(k_dt_wheel_radius_inches));
-		double motorRotations = wheelRotations * k_dt_gear_ratio;
-		int sensorCounts = (int)(motorRotations * k_dt_counts_per_rev);
+	private int distanceToNativeUnits(double positionMeters){
+		double wheelRotations = positionMeters/(2 * Math.PI * Units.inchesToMeters(kWheelRadiusInches));
+		double motorRotations = wheelRotations * kSensorGearRatio;
+		int sensorCounts = (int)(motorRotations * kCountsPerRev);
 		return sensorCounts;
 	}
 
 	private int velocityToNativeUnits(double velocityMetersPerSecond){
-		double wheelRotationsPerSecond = velocityMetersPerSecond/(2 * Math.PI * Units.inchesToMeters(k_dt_wheel_radius_inches));
-		double motorRotationsPerSecond = wheelRotationsPerSecond * k_dt_gear_ratio;
-		double motorRotationsPer100ms = motorRotationsPerSecond / k_dt_100ms_per_second;
-		int sensorCountsPer100ms = (int)(motorRotationsPer100ms * k_dt_counts_per_rev);
+		double wheelRotationsPerSecond = velocityMetersPerSecond/(2 * Math.PI * Units.inchesToMeters(kWheelRadiusInches));
+		double motorRotationsPerSecond = wheelRotationsPerSecond * kSensorGearRatio;
+		double motorRotationsPer100ms = motorRotationsPerSecond / k100msPerSecond;
+		int sensorCountsPer100ms = (int)(motorRotationsPer100ms * kCountsPerRev);
 		return sensorCountsPer100ms;
 	}
 
 	private double nativeUnitsToDistanceMeters(double sensorCounts){
-		double motorRotations = (double)sensorCounts / k_dt_counts_per_rev;
-		double wheelRotations = motorRotations / k_dt_gear_ratio;
-		double positionMeters = wheelRotations * (2 * Math.PI * Units.inchesToMeters(k_dt_wheel_radius_inches));
-	return positionMeters;
+		double motorRotations = (double)sensorCounts / kCountsPerRev;
+		double wheelRotations = motorRotations / kSensorGearRatio;
+		double positionMeters = wheelRotations * (2 * Math.PI * Units.inchesToMeters(kWheelRadiusInches));
+	  return positionMeters;
 	}
-  public void teleop_drive(double forward, double turn){
-    var speeds =  DifferentialDrive.curvatureDriveIK(forward, turn, true);
-    if(Robot.isSimulation()){
-			// Just set the motors
-			m_right_leader.set(ControlMode.PercentOutput, speeds.right);
-			m_left_leader.set(ControlMode.PercentOutput, speeds.left);
-			return;
-		}
-  }
 }
