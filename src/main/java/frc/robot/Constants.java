@@ -18,8 +18,8 @@ public final class Constants {
     public final static int LEFT_TALON_FOLLOWER  = 1;
     public final static int RIGHT_TALON_LEADER   = 4;
     public final static int RIGHT_TALON_FOLLOWER = 2; 
-    public final static int CAN_ID_FIVE = 5; 
-    public final static int CAN_ID_SIX = 6;
+    public final static int BOTTOM_ARM_STAGE = 5; 
+    public final static int TOP_ARM_STAGE = 6;
     public final static int CAN_ID_SEVEN = 7;
     public final static int CAN_ID_EIGHT = 8;
     public final static int CAN_ID_NINE = 9;
@@ -28,10 +28,12 @@ public final class Constants {
     public final static int CAN_ID_TWELVE = 12;
     public final static int CAN_ID_THIRTEEN = 13;
 
-    //////////////////// Roborio DIO ////////////////////
-    
+    /////////////////// Roborio DIO ///////////////////
+    public final static int ARM_BASE_LIMIT_SWITCH = 0;
+    public final static int ARM_TOP_LIMIT_SWITCH = 1;
 
-    /////////////////// Human Interface ///////////////////////////
+    /////////////////// Human Interface ///////////////////
     public static final int DRIVER_LEFT_AXIS = 1;
     public static final int DRIVER_RIGHT_AXIS = 4;
+
 }
