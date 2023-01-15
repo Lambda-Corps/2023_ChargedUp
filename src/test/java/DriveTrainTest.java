@@ -63,11 +63,16 @@ class DriveTrainTest {
         System.out.println("Post TD Left Velocity: " + dt.getLeftSpeed());
         System.out.println("Post TD Left Velocity: " + m_left_motors.getMotorOutputLeadVoltage());
         try{
-            Thread.sleep(2000);
+            Thread.sleep(100);
         } catch(Exception e) {
             System.out.println(e.getMessage());
         }
         dt.simulationPeriodic();
+        try{
+            Thread.sleep(100);
+        } catch(Exception e) {
+            System.out.println(e.getMessage());
+        }
         System.out.println("Post Sleep Left Velocity: " + dt_sim.getLeftVelocityMetersPerSecond());
         System.out.println("Post Sleep Left Velocity: " + dt.getLeftSpeed());
         System.out.println("Post Sleep Left Velocity: " + m_left_motors.getMotorOutputLeadVoltage());
