@@ -402,4 +402,8 @@ public class DriveTrain extends SubsystemBase {
   public double getRightSpeed(){
     return m_right_leader.getSelectedSensorVelocity();
   }
+
+  public DifferentialDrivetrainSim getDriveTrainSim(){
+    return m_drivetrainSimulator;
+  }
 }
