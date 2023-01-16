@@ -33,9 +33,6 @@ class DriveTrainTest {
 
         m_left_motors = dt.getLeftSimCollection();
         m_right_motors = dt.getRightSimCollection();
-
-       //dt_sim = DifferentialDrivetrainSim.createKitbotSim(KitbotMotor.kDoubleFalcon500PerSide, KitbotGearing.k10p71, KitbotWheelSize.kSixInch, null);
-       dt_sim = dt.getDriveTrainSim();
     }
 
     @AfterEach // Cleanup any things we need
@@ -44,45 +41,94 @@ class DriveTrainTest {
     }
 
     @Test
+    void emptyExampleTestCase(){
+        // Test cases must "enable" the robot in simulation for the motors to actually "drive"
+        waitForUpdate(); // This enables the CTRE simulation motors
+
+        // Call the drivetrain function you want to test (e.g. teleop_drive)
+        dt.teleop_drive(0, 0);
+
+        // The drivetrain still needs to accelerate to get to speed, so you can step through
+        // the simulation that advance 20ms.  The waitForUpdate() command will sleep the thread
+        // of execution for 200 ms.  So, if we loop the waitForUpdate() method 5 times, it will
+        // simulate 1 full second in time.  To equally simulate the drivetrain action, the 
+        // simulation periodic method must be called 10 times to step.  The following loop will
+        // simulate 1 second of driving.
+        for (var i = 0; i < 5; i++){
+            for( var j = 0; j < 10; j++){
+                // Step the simulator 200 ms
+                dt.simulationPeriodic();    
+            }
+             /* Wait 200 ms for ramping to take affect */
+            waitForUpdate();
+        }
+
+        // We drove with 0 and 0 as inputs, the robot should not be moving
+        assertEquals(0.0, dt.getLeftSpeed(), DELTA);
+        assertEquals(0.0, dt.getRightSpeed(), DELTA);
+    }
+
+    @Test
     void driveTrainConstructorWorks(){
         assertNotEquals(dt, null);
     }
 
     @Test
-    void driveTrainSimConstructorWorks(){
-        assertNotNull(dt_sim);
+    void teleopDriveFullBackward(){
+        double throt = -1.0;
+        double turn = 0.0;
+        waitForUpdate();
+        dt.teleop_drive(throt, turn);   
+
+        for (var i = 0; i < 5; i++){
+            for( var j = 0; j < 10; j++){
+                // Step the simulator 200 ms
+                dt.simulationPeriodic();    
+            }
+             /* Wait 200 ms for ramping to take affect */
+            waitForUpdate();
+        }
+       
+        // double expectedLeft = busV * (throt - turn);
+        // double expectedRight = busV * (throt + turn);
+        // if (Constants.Left_Side_Inverted) expectedLeft = -expectedLeft;
+        // if (Constants.Right_Side_Inverted) expectedRight = -expectedRight;
+        assertTrue(dt.getLeftSpeed() < 0);
+        assertTrue(dt.getRightSpeed() < 0);
+        assertTrue(m_left_motors.getMotorOutputLeadVoltage() < 0);
+        assertTrue(m_right_motors.getMotorOutputLeadVoltage() > 0);
     }
 
     @Test
     void teleopDriveFullForward(){
-        System.out.println("Pre-Update Left Velocity: " + dt_sim.getLeftVelocityMetersPerSecond());
-        System.out.println("Pre-Update Left Velocity: " + dt.getLeftSpeed());
-        System.out.println("Pre-Update Left Velocity: " + m_left_motors.getMotorOutputLeadVoltage());
-        dt.teleop_drive(1, 0);
-        System.out.println("Post TD Left Velocity: " + dt_sim.getLeftVelocityMetersPerSecond());
-        System.out.println("Post TD Left Velocity: " + dt.getLeftSpeed());
-        System.out.println("Post TD Left Velocity: " + m_left_motors.getMotorOutputLeadVoltage());
-        try{
-            Thread.sleep(100);
-        } catch(Exception e) {
-            System.out.println(e.getMessage());
+        waitForUpdate();
+        double throt = 1.0;
+        double turn = 0.0;
+        dt.teleop_drive(throt, turn);
+
+        for (var i = 0; i < 5; i++){
+            for( var j = 0; j < 10; j++){
+                // Step the simulator 200 ms
+                dt.simulationPeriodic();    
+            }
+             /* Wait 200 ms for ramping to take affect */
+            waitForUpdate();
         }
-        dt.simulationPeriodic();
-        try{
-            Thread.sleep(100);
-        } catch(Exception e) {
-            System.out.println(e.getMessage());
-        }
-        System.out.println("Post Sleep Left Velocity: " + dt_sim.getLeftVelocityMetersPerSecond());
-        System.out.println("Post Sleep Left Velocity: " + dt.getLeftSpeed());
-        System.out.println("Post Sleep Left Velocity: " + m_left_motors.getMotorOutputLeadVoltage());
 
         // Need to find a way to verify that each motor controller is sending
         // the motors in the proper direction
-        assertTrue(dt_sim.getLeftVelocityMetersPerSecond() > 0);
         assertTrue(dt.getLeftSpeed() > 0);
+        assertTrue(dt.getRightSpeed() > 0);
         assertTrue(m_left_motors.getMotorOutputLeadVoltage() > 0);
-        assertTrue(m_right_motors.getMotorOutputLeadVoltage() > 0);
-  
+        assertTrue(m_right_motors.getMotorOutputLeadVoltage() < 0);
+    }
+
+    private static void waitForUpdate() {
+        try {
+            com.ctre.phoenix.unmanaged.Unmanaged.feedEnable(500);
+            Thread.sleep(200);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 }
