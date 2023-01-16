@@ -26,6 +26,34 @@ public class Arm extends SubsystemBase {
   final double BOTTOM_ARM_DRIVE_SPEED = .1;
   final double TOP_ARM_DRIVE_SPEED = .1;
   /** Creates a new Arm. */
+
+  public ArmState arm_state;
+  public ArmPosition arm_position;
+  public ArmTask arm_task;
+
+  public enum ArmState {
+    Active,
+    Inactive,
+  }
+
+  public enum ArmPosition {
+    Retracted,
+    GroundPickup,
+    SubstationPickup,
+    ConeScoreLow,
+    ConeScoreMid,
+    ConeScoreHigh,
+    CubeScoreLow,
+    CubeScoreMid,
+    CubeScoreHigh,
+  }
+
+  public enum ArmTask {
+    HoldPosition,
+    MoveToPosition,
+    Stop,
+  }
+
   public Arm() {
     // Configure top and bottom arm talons. NOTE: set invertType such that positive input rotates to FRONT of robot
     m_bottom_stage = new WPI_TalonFX(BOTTOM_ARM_STAGE);
@@ -46,12 +74,35 @@ public class Arm extends SubsystemBase {
     NetworkTable shuffleboard = NetworkTableInstance.getDefault().getTable("Shuffleboard");
     m_bottom_arm_enc_value = shuffleboard.getDoubleTopic("Arm/BottomEncoder").publish();
     m_top_arm_enc_value = shuffleboard.getDoubleTopic("Arm/TopEncoder").publish();
+
+    arm_state = ArmState.Inactive;
+    arm_position = ArmPosition.Retracted;
+    arm_task = ArmTask.Stop;
   }
 
   @Override
   public void periodic() {
     m_bottom_arm_enc_value.set(m_bottom_stage.getSelectedSensorPosition());
     m_top_arm_enc_value.set(m_top_stage.getSelectedSensorPosition());
+  }
+
+  public void moveArmManually(double bottom_speed, double top_speed) {
+    m_bottom_stage.set(ControlMode.PercentOutput, bottom_speed);
+    m_top_stage.set(ControlMode.PercentOutput, top_speed);
+
+    if (m_arm_base_reverse_limit.get() && m_bottom_stage.getSelectedSensorVelocity() < 0) {
+      m_bottom_stage.set(ControlMode.PercentOutput, 0);
+    }
+
+    if (m_arm_top_reverse_limit.get() && m_top_stage.getSelectedSensorVelocity() < 0) {
+      m_top_stage.set(ControlMode.PercentOutput, 0);
+    }
+  }
+
+  public void armFullStop() {
+    arm_task = ArmTask.Stop;
+    m_bottom_stage.set(ControlMode.PercentOutput, 0);
+    m_top_stage.set(ControlMode.PercentOutput, 0);
   }
 
   // DO NOT USE DURING MATCHES!!! ONLY RUN IN THE PITS!!!
@@ -76,5 +127,25 @@ public class Arm extends SubsystemBase {
     // Zero encoders once both stages are reset
     m_bottom_stage.setSelectedSensorPosition(0);
     m_top_stage.setSelectedSensorPosition(0);
+  }
+
+  public WPI_TalonFX getBottomStageMotor() {
+    return m_bottom_stage;
+  }
+
+  public WPI_TalonFX getTopStageMotor() {
+    return m_top_stage;
+  }
+
+  public ArmState getArmState() {
+    return arm_state;
+  }
+
+  public ArmPosition getArmPosition() {
+    return arm_position;
+  }
+
+  public ArmTask getArmTask() {
+    return arm_task;
   }
 }
