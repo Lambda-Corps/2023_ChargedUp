@@ -386,4 +386,24 @@ public class DriveTrain extends SubsystemBase {
 		double positionMeters = wheelRotations * (2 * Math.PI * Units.inchesToMeters(kWheelRadiusInches));
 	  return positionMeters;
 	}
+
+  public TalonFXSimCollection getLeftSimCollection(){
+    return m_left_leader.getSimCollection();
+  }
+
+  public TalonFXSimCollection getRightSimCollection(){
+    return m_right_leader.getSimCollection();
+  }
+
+  public double getLeftSpeed(){
+    return m_left_leader.getSelectedSensorVelocity();
+  }
+
+  public double getRightSpeed(){
+    return m_right_leader.getSelectedSensorVelocity();
+  }
+
+  public DifferentialDrivetrainSim getDriveTrainSim(){
+    return m_drivetrainSimulator;
+  }
 }
