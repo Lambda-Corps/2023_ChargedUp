@@ -96,7 +96,7 @@ public class ArmTest {
         double lower_speed = -1;
         double busV = 12;
 
-        System.out.println("Normal Reverse Drive");
+        // System.out.println("Normal Reverse Drive");
         m_arm.unitTestMoveArmManually(lower_speed, upper_speed, false, false);
 
         waitForUpdate();
@@ -108,21 +108,21 @@ public class ArmTest {
         assertTrue(lower_sim.getMotorOutputLeadVoltage() < 0);
         assertTrue(upper_sim.getMotorOutputLeadVoltage() < 0);
 
-        System.out.println("Reverse w/ Bottom limit hit");
+        // System.out.println("Reverse w/ Bottom limit hit");
         m_arm.unitTestMoveArmManually(lower_speed, upper_speed, true, false);
 
         waitForUpdate();
         assertTrue(lower_sim.getMotorOutputLeadVoltage() == 0);
         assertTrue(upper_sim.getMotorOutputLeadVoltage() < 0);
 
-        System.out.println("Reverse w/ Upper limit hit");
+        // System.out.println("Reverse w/ Upper limit hit");
         m_arm.unitTestMoveArmManually(lower_speed, upper_speed, false, true);
 
         waitForUpdate();
         assertTrue(lower_sim.getMotorOutputLeadVoltage() < 0);
         assertTrue(upper_sim.getMotorOutputLeadVoltage() == 0);
 
-        System.out.println("Reverse w/ Both limits hit");
+        // System.out.println("Reverse w/ Both limits hit");
         m_arm.unitTestMoveArmManually(lower_speed, upper_speed, true, true);
 
         waitForUpdate();
