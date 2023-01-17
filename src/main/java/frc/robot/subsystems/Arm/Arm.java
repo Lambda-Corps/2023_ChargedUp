@@ -28,12 +28,18 @@ public class Arm extends SubsystemBase {
   /** Creates a new Arm. */
 
   public ArmState arm_state;
+  public ArmControlMode arm_control_mode;
   public ArmPosition arm_position;
   public ArmTask arm_task;
 
   public enum ArmState {
     Active,
     Inactive,
+  }
+
+  public enum ArmControlMode {  // Mostly for debugging information, could be used as an arm safety measure in emergencies
+    Manual,
+    Automatic,
   }
 
   public enum ArmPosition {
@@ -76,6 +82,7 @@ public class Arm extends SubsystemBase {
     m_top_arm_enc_value = shuffleboard.getDoubleTopic("Arm/TopEncoder").publish();
 
     arm_state = ArmState.Inactive;
+    arm_control_mode = ArmControlMode.Automatic;
     arm_position = ArmPosition.Retracted;
     arm_task = ArmTask.Stop;
   }
@@ -87,6 +94,8 @@ public class Arm extends SubsystemBase {
   }
 
   public void moveArmManually(double bottom_speed, double top_speed) {
+    arm_control_mode = ArmControlMode.Manual;
+
     m_bottom_stage.set(ControlMode.PercentOutput, bottom_speed);
     m_top_stage.set(ControlMode.PercentOutput, top_speed);
 
@@ -100,6 +109,7 @@ public class Arm extends SubsystemBase {
   }
 
   public void armFullStop() {
+    arm_control_mode = ArmControlMode.Automatic;
     arm_task = ArmTask.Stop;
     m_bottom_stage.set(ControlMode.PercentOutput, 0);
     m_top_stage.set(ControlMode.PercentOutput, 0);
@@ -107,6 +117,7 @@ public class Arm extends SubsystemBase {
 
   // DO NOT USE DURING MATCHES!!! ONLY RUN IN THE PITS!!!
   public void reset_arm_pos() {
+    arm_control_mode = ArmControlMode.Automatic;
     // while BOTH top and bottoms are false (not triggered)
     while (!m_arm_base_reverse_limit.get() && !m_arm_top_reverse_limit.get()) {
       // only drive base if limit is not hit
@@ -139,6 +150,10 @@ public class Arm extends SubsystemBase {
 
   public ArmState getArmState() {
     return arm_state;
+  }
+
+  public ArmControlMode getArmControlMode() {
+    return arm_control_mode;
   }
 
   public ArmPosition getArmPosition() {
