@@ -38,6 +38,7 @@ public class ArmTest {
         assertNotEquals(m_arm, null);
 
         assertTrue(m_arm.getArmState() == Arm.ArmState.Inactive);
+        assertTrue(m_arm.getArmControlMode() == Arm.ArmControlMode.Automatic);
         assertTrue(m_arm.getArmPosition() == Arm.ArmPosition.Retracted);
         assertTrue(m_arm.getArmTask() == Arm.ArmTask.Stop);
     }
@@ -88,11 +89,6 @@ public class ArmTest {
 
         assertTrue(lower_sim.getMotorOutputLeadVoltage() < 0);
         assertTrue(upper_sim.getMotorOutputLeadVoltage() < 0);
-    }
-
-    @Test
-    void testLowerReverseLimit() {
-
     }
     
     private static void waitForUpdate() {
