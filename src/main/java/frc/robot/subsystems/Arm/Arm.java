@@ -43,6 +43,7 @@ public class Arm extends SubsystemBase {
   }
 
   public enum ArmPosition {
+    Manual_Control,
     Retracted,
     GroundPickup,
     SubstationPickup,
@@ -57,6 +58,7 @@ public class Arm extends SubsystemBase {
   public enum ArmTask {
     HoldPosition,
     MoveToPosition,
+    MoveManually,
     Stop,
   }
 
@@ -94,23 +96,47 @@ public class Arm extends SubsystemBase {
   }
 
   public void moveArmManually(double bottom_speed, double top_speed) {
+    arm_state = ArmState.Active;
     arm_control_mode = ArmControlMode.Manual;
+    arm_position = ArmPosition.Manual_Control;
+    arm_task = ArmTask.MoveManually;
 
     m_bottom_stage.set(ControlMode.PercentOutput, bottom_speed);
     m_top_stage.set(ControlMode.PercentOutput, top_speed);
 
-    if (m_arm_base_reverse_limit.get() && m_bottom_stage.getSelectedSensorVelocity() < 0) {
+    if (m_arm_base_reverse_limit.get() && bottom_speed < 0) {
       m_bottom_stage.set(ControlMode.PercentOutput, 0);
     }
 
-    if (m_arm_top_reverse_limit.get() && m_top_stage.getSelectedSensorVelocity() < 0) {
+    if (m_arm_top_reverse_limit.get() && top_speed < 0) {
+      m_top_stage.set(ControlMode.PercentOutput, 0);
+    }
+  }
+
+  public void unitTestMoveArmManually(double bottom_speed, double top_speed, boolean bottom_limit_state, boolean top_limit_state) {
+    arm_state = ArmState.Active;
+    arm_control_mode = ArmControlMode.Manual;
+    arm_position = ArmPosition.Manual_Control;
+    arm_task = ArmTask.MoveManually;
+
+    m_bottom_stage.set(ControlMode.PercentOutput, bottom_speed);
+    m_top_stage.set(ControlMode.PercentOutput, top_speed);
+
+    if (bottom_limit_state && bottom_speed < 0) {
+      m_bottom_stage.set(ControlMode.PercentOutput, 0);
+    }
+
+    if (top_limit_state && top_speed < 0) {
       m_top_stage.set(ControlMode.PercentOutput, 0);
     }
   }
 
   public void armFullStop() {
+    arm_state = ArmState.Inactive;
     arm_control_mode = ArmControlMode.Automatic;
+    arm_position = ArmPosition.Manual_Control;
     arm_task = ArmTask.Stop;
+
     m_bottom_stage.set(ControlMode.PercentOutput, 0);
     m_top_stage.set(ControlMode.PercentOutput, 0);
   }

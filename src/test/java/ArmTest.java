@@ -6,7 +6,6 @@ package armtest;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.beans.Transient;
 import org.junit.jupiter.api.*;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 import edu.wpi.first.hal.HAL;
@@ -91,6 +90,46 @@ public class ArmTest {
         assertTrue(upper_sim.getMotorOutputLeadVoltage() < 0);
     }
     
+    @Test
+    void testArmReverseLimits() {
+        double upper_speed = -1;
+        double lower_speed = -1;
+        double busV = 12;
+
+        System.out.println("Normal Reverse Drive");
+        m_arm.unitTestMoveArmManually(lower_speed, upper_speed, false, false);
+
+        waitForUpdate();
+        var lower_sim = m_bottom_motor.getSimCollection();
+        var upper_sim = m_upper_motor.getSimCollection();
+        lower_sim.setBusVoltage(busV);
+        upper_sim.setBusVoltage(busV);
+
+        assertTrue(lower_sim.getMotorOutputLeadVoltage() < 0);
+        assertTrue(upper_sim.getMotorOutputLeadVoltage() < 0);
+
+        System.out.println("Reverse w/ Bottom limit hit");
+        m_arm.unitTestMoveArmManually(lower_speed, upper_speed, true, false);
+
+        waitForUpdate();
+        assertTrue(lower_sim.getMotorOutputLeadVoltage() == 0);
+        assertTrue(upper_sim.getMotorOutputLeadVoltage() < 0);
+
+        System.out.println("Reverse w/ Upper limit hit");
+        m_arm.unitTestMoveArmManually(lower_speed, upper_speed, false, true);
+
+        waitForUpdate();
+        assertTrue(lower_sim.getMotorOutputLeadVoltage() < 0);
+        assertTrue(upper_sim.getMotorOutputLeadVoltage() == 0);
+
+        System.out.println("Reverse w/ Both limits hit");
+        m_arm.unitTestMoveArmManually(lower_speed, upper_speed, true, true);
+
+        waitForUpdate();
+        assertTrue(lower_sim.getMotorOutputLeadVoltage() == 0);
+        assertTrue(upper_sim.getMotorOutputLeadVoltage() == 0);
+    }
+
     private static void waitForUpdate() {
         try {
             com.ctre.phoenix.unmanaged.Unmanaged.feedEnable(500);
