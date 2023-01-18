@@ -10,6 +10,7 @@ import org.junit.jupiter.api.*;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 import edu.wpi.first.hal.HAL;
 import edu.wpi.first.wpilibj.DigitalInput;
+import edu.wpi.first.wpilibj.simulation.DIOSim;
 import frc.robot.subsystems.Arm.Arm;
 
 /** Add your docs here. */
@@ -18,6 +19,7 @@ public class ArmTest {
     static Arm m_arm = new Arm();
     WPI_TalonFX m_bottom_motor, m_upper_motor;
     DigitalInput m_upper_reverse_limit, m_lower_reverse_limit;
+    DIOSim sim_bottom_limit, sim_upper_limit;
 
     @BeforeEach
     void setup() {
@@ -25,6 +27,11 @@ public class ArmTest {
 
         m_bottom_motor = m_arm.getBottomStageMotor();
         m_upper_motor = m_arm.getTopStageMotor();
+
+        m_lower_reverse_limit = m_arm.getBottomLimitSwitch();
+        m_upper_reverse_limit = m_arm.getTopLimitSwitch();
+        sim_bottom_limit = new DIOSim(m_lower_reverse_limit);
+        sim_upper_limit = new DIOSim(m_upper_reverse_limit);
     }
 
     @AfterEach
@@ -46,6 +53,8 @@ public class ArmTest {
     void testManualMoveArmZero() {
         double upper_speed = 0;
         double lower_speed = 0;
+        sim_bottom_limit.setValue(false);
+        sim_upper_limit.setValue(false);
         m_arm.moveArmManually(upper_speed, lower_speed);
 
         waitForUpdate();
@@ -59,6 +68,8 @@ public class ArmTest {
         double upper_speed = 1.0;
         double lower_speed = 1.0;
         double busV = 12;
+        sim_bottom_limit.setValue(false);
+        sim_upper_limit.setValue(false);
         m_arm.moveArmManually(upper_speed, lower_speed);
 
         var lower_sim = m_bottom_motor.getSimCollection();
@@ -77,6 +88,8 @@ public class ArmTest {
         double upper_speed = -1.0;
         double lower_speed = -1.0;
         double busV = 12;
+        sim_bottom_limit.setValue(false);
+        sim_upper_limit.setValue(false);
         m_arm.moveArmManually(upper_speed, lower_speed);
 
         var lower_sim = m_bottom_motor.getSimCollection();
@@ -95,36 +108,39 @@ public class ArmTest {
         double upper_speed = -1;
         double lower_speed = -1;
         double busV = 12;
-
-        // System.out.println("Normal Reverse Drive");
-        m_arm.unitTestMoveArmManually(lower_speed, upper_speed, false, false);
-
-        waitForUpdate();
         var lower_sim = m_bottom_motor.getSimCollection();
         var upper_sim = m_upper_motor.getSimCollection();
         lower_sim.setBusVoltage(busV);
         upper_sim.setBusVoltage(busV);
 
+        // Test both arm limits false
+        sim_bottom_limit.setValue(false);
+        sim_upper_limit.setValue(false);
+        m_arm.moveArmManually(lower_speed, upper_speed);
+        waitForUpdate();
         assertTrue(lower_sim.getMotorOutputLeadVoltage() < 0);
         assertTrue(upper_sim.getMotorOutputLeadVoltage() < 0);
 
-        // System.out.println("Reverse w/ Bottom limit hit");
-        m_arm.unitTestMoveArmManually(lower_speed, upper_speed, true, false);
-
+        // Test lower arm limit is hit
+        sim_bottom_limit.setValue(true);
+        sim_upper_limit.setValue(false);
+        m_arm.moveArmManually(lower_speed, upper_speed);
         waitForUpdate();
         assertTrue(lower_sim.getMotorOutputLeadVoltage() == 0);
         assertTrue(upper_sim.getMotorOutputLeadVoltage() < 0);
 
-        // System.out.println("Reverse w/ Upper limit hit");
-        m_arm.unitTestMoveArmManually(lower_speed, upper_speed, false, true);
-
+        // Test upper arm limit is hit
+        sim_bottom_limit.setValue(false);
+        sim_upper_limit.setValue(true);
+        m_arm.moveArmManually(lower_speed, upper_speed);
         waitForUpdate();
         assertTrue(lower_sim.getMotorOutputLeadVoltage() < 0);
         assertTrue(upper_sim.getMotorOutputLeadVoltage() == 0);
 
-        // System.out.println("Reverse w/ Both limits hit");
-        m_arm.unitTestMoveArmManually(lower_speed, upper_speed, true, true);
-
+        // Test both limits are hit
+        sim_bottom_limit.setValue(true);
+        sim_upper_limit.setValue(true);
+        m_arm.moveArmManually(lower_speed, upper_speed);
         waitForUpdate();
         assertTrue(lower_sim.getMotorOutputLeadVoltage() == 0);
         assertTrue(upper_sim.getMotorOutputLeadVoltage() == 0);
