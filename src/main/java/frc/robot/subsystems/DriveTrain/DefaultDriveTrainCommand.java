@@ -36,7 +36,7 @@ public class DefaultDriveTrainCommand extends CommandBase {
         forward  = -m_driver_controller.getRawAxis(DRIVER_LEFT_AXIS); // Left Y
     }
     else {
-        // Axises are inverted, negate them so positive is forward
+        // Axes are inverted, negate them so positive is forward
         turn = -m_driver_controller.getRawAxis(DRIVER_RIGHT_AXIS); // Right X
         forward  = -m_driver_controller.getRawAxis(DRIVER_LEFT_AXIS); // Left Y
     }
@@ -47,6 +47,7 @@ public class DefaultDriveTrainCommand extends CommandBase {
     }
 
     m_drivetrain.teleop_drive(forward, turn);
+    
   }
 
   // Called once the command ends or is interrupted.

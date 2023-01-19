@@ -4,6 +4,11 @@
 
 package frc.robot.subsystems.DriveTrain;
 
+import static frc.robot.Constants.LEFT_TALON_FOLLOWER;
+import static frc.robot.Constants.LEFT_TALON_LEADER;
+import static frc.robot.Constants.RIGHT_TALON_FOLLOWER;
+import static frc.robot.Constants.RIGHT_TALON_LEADER;
+
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.InvertType;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
@@ -22,6 +27,10 @@ import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.kinematics.DifferentialDriveOdometry;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.networktables.BooleanPublisher;
+import edu.wpi.first.networktables.DoublePublisher;
+import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
@@ -30,8 +39,6 @@ import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Robot;
-
-import static frc.robot.Constants.*;
 
 public class DriveTrain extends SubsystemBase {
 /**
@@ -93,6 +100,16 @@ public class DriveTrain extends SubsystemBase {
 	// RateLimiters to try to keep from tipping over
 	SlewRateLimiter m_forward_limiter, m_rotation_limiter;
 	private double m_drive_absMax;
+
+	//Networktables intializations
+
+	
+	public static DoublePublisher motorsValueLeftPub;
+	public static DoublePublisher motorsValueRightPub;
+	final BooleanPublisher motorState;
+
+	public double rightMotorSpeed;
+	public double leftMotorSpeed;
 
   	/** Creates a new DriveTrain. */
  	public DriveTrain() {
@@ -237,7 +254,20 @@ public class DriveTrain extends SubsystemBase {
 		  m_drive_absMax = MAX_TELEOP_DRIVE_SPEED;
 		  
 		  m_gyro.reset();
-  	}
+
+		  //Networktables!
+		  NetworkTable shuffleboard = NetworkTableInstance.getDefault().getTable("Shuffleboard");
+
+		  motorsValueLeftPub  = shuffleboard.getDoubleTopic("Left Motor Speed").publish();
+		  motorsValueRightPub = shuffleboard.getDoubleTopic("Right Motor Speed").publish();
+		  motorState = shuffleboard.getBooleanTopic("DriveTrain/MotorState").publish();
+		  
+	}
+	
+	public void UpdateTopics(){
+		motorsValueLeftPub.set(m_left_leader.get());
+		motorsValueRightPub.set(m_right_leader.get());
+	}
 
 	@Override
 	public void periodic() {
@@ -245,6 +275,14 @@ public class DriveTrain extends SubsystemBase {
                       nativeUnitsToDistanceMeters(m_left_leader.getSelectedSensorPosition()),
                       nativeUnitsToDistanceMeters(m_right_leader.getSelectedSensorPosition()));
    		m_2dField.setRobotPose(m_odometry.getPoseMeters());
+		   
+		UpdateTopics();
+		setSpeedVarible();
+	}
+
+	public void setSpeedVarible(){
+		leftMotorSpeed  = m_left_leader.get();
+		rightMotorSpeed = m_right_leader.get();
 	}
 
 	/** Deadband 5 percent, used on the gamepad */
@@ -386,4 +424,17 @@ public class DriveTrain extends SubsystemBase {
 		double positionMeters = wheelRotations * (2 * Math.PI * Units.inchesToMeters(kWheelRadiusInches));
 	  return positionMeters;
 	}
+
+	public double getLeftEncoderValue(){
+		return m_left_leader.getSelectedSensorPosition();
+	}
+	
+	public double getRightEncoderValue(){
+		return m_right_leader.getSelectedSensorPosition();
+	}
+
+	public double getRawAngle(){
+		return m_gyro.getAngle();
+	}
+
 }
