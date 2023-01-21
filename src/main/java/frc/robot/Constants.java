@@ -14,10 +14,10 @@ package frc.robot;
  */
 public final class Constants {
     ////////////////////// CAN IDs //////////////////////
-    public final static int LEFT_TALON_LEADER    = 3;
-    public final static int LEFT_TALON_FOLLOWER  = 1;
-    public final static int RIGHT_TALON_LEADER   = 4;
-    public final static int RIGHT_TALON_FOLLOWER = 2; 
+    public final static int LEFT_TALON_LEADER    = 1;
+    public final static int LEFT_TALON_FOLLOWER  = 3;
+    public final static int RIGHT_TALON_LEADER   = 2;
+    public final static int RIGHT_TALON_FOLLOWER = 4; 
     public final static int BOTTOM_ARM_STAGE = 5; 
     public final static int TOP_ARM_STAGE = 6;
     public final static int CAN_ID_SEVEN = 7;
