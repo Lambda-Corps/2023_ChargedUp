@@ -102,7 +102,7 @@ public class DriveTrain extends SubsystemBase {
 	private double m_drive_absMax;
 
 	//Networktables intializations
-
+	public float gyrox, gyroy, gyroz ;
 	
 	public static DoublePublisher motorsValueLeftPub;
 	public static DoublePublisher motorsValueRightPub;
@@ -280,6 +280,16 @@ public class DriveTrain extends SubsystemBase {
 		setSpeedVarible();
 	}
 
+	public double getgyrox(){
+		return m_gyro.getRawGyroX();
+	}
+	public double getgyroy(){
+		return m_gyro.getRawGyroY();
+	}
+	public double getgyroz(){
+		return m_gyro.getRawGyroZ();
+	}
+	
 	public void setSpeedVarible(){
 		leftMotorSpeed  = m_left_leader.get();
 		rightMotorSpeed = m_right_leader.get();

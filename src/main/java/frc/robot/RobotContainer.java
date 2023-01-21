@@ -71,8 +71,11 @@ public class RobotContainer {
   private void buildDriverTab() {
     ShuffleboardTab driveTab = Shuffleboard.getTab("Drive");
 
-    driveTab.add("Gyro", m_drivetrain.m_gyro).withSize(2, 2).withPosition(2, 0);
-
+    driveTab.add("Gyro", m_drivetrain.m_gyro).withSize(2, 2).withPosition(0, 0);
+    
+    // Left and Right motor speeds for testing and correction
+    driveTab.add("Right motor speed", m_right_speed).withPosition(2,0).withSize(2,2).withWidget(BuiltInWidgets.kGraph);
+    driveTab.add("Left motor speed", m_left_speed).withPosition(4,0).withSize(2,2).withWidget(BuiltInWidgets.kGraph);
     //left and right outputs of joysticks
     driveTab.add("Left Output", 0).withSize(1, 1).withPosition(2, 2).withWidget(BuiltInWidgets.kDial)
                                   .withProperties(Map.of("Min", -1, "Max", 1));
@@ -82,20 +85,21 @@ public class RobotContainer {
     driveTab.add("Autonomous Chooser", m_auto_chooser).withWidget(BuiltInWidgets.kComboBoxChooser).withPosition(0, 2).withSize(2, 1);
     //Autonomous Options
     m_auto_chooser.setDefaultOption("Default Autonomous" , new PrintCommand("You have run the Autonomous Command!"));
-    // Left and Right motor speeds for testing and correction
-    driveTab.add("Right motor speed", m_right_speed).withPosition(4,0).withSize(2,2).withWidget(BuiltInWidgets.kGraph);
-    driveTab.add("Left motor speed", m_left_speed).withPosition(6,0).withSize(2,2).withWidget(BuiltInWidgets.kGraph);
+    m_auto_chooser.addOption("3 Cone Auto", new PrintCommand("Soon to come"));
   }
 
   private void buildDriverTestTab() {
     ShuffleboardTab driveMMTab = Shuffleboard.getTab("Drive Testing");
 
+    driveMMTab.addNumber("Gyro x-axis", m_drivetrain::getgyrox).withSize(2, 2).withPosition(0, 0).withWidget(BuiltInWidgets.kNumberBar);
+    driveMMTab.addNumber("Gyro y-axis", m_drivetrain::getgyroy).withSize(2, 2).withPosition(2, 0).withWidget(BuiltInWidgets.kNumberBar);
+    driveMMTab.addNumber("Gyro z-axis", m_drivetrain::getgyroz).withSize(2, 2).withPosition(4, 0).withWidget(BuiltInWidgets.kNumberBar);
     // Result Values on row 2
-    driveMMTab.add("Tgt. Ticks", 0)                                          .withPosition(0, 1);
-    driveMMTab.addNumber("Left Encoder", m_drivetrain::getLeftEncoderValue)  .withPosition(1, 1);
-    driveMMTab.addNumber("Right Encoder", m_drivetrain::getRightEncoderValue).withPosition(2, 1);
-    driveMMTab.addNumber("Gyro Read", m_drivetrain::getRawAngle)             .withPosition(3, 1);
-    driveMMTab.add("Run Time", 0)                                            .withPosition(4, 1);
+    driveMMTab.add("Tgt. Ticks", 0)                                          .withPosition(0, 2);
+    driveMMTab.addNumber("Left Encoder", m_drivetrain::getLeftEncoderValue)  .withPosition(1, 2);
+    driveMMTab.addNumber("Right Encoder", m_drivetrain::getRightEncoderValue).withPosition(2, 2);
+    driveMMTab.addNumber("Gyro Read", m_drivetrain::getRawAngle)             .withPosition(3, 2);
+    driveMMTab.add("Run Time", 0)                                            .withPosition(4, 2);
   }
-  
+ 
 }
