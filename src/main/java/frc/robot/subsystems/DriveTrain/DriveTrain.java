@@ -281,13 +281,13 @@ public class DriveTrain extends SubsystemBase {
 	}
 
 	public double getgyrox(){
-		return m_gyro.getRawGyroX();
+		return m_gyro.getPitch();
 	}
 	public double getgyroy(){
-		return m_gyro.getRawGyroY();
+		return m_gyro.getRoll();
 	}
 	public double getgyroz(){
-		return m_gyro.getRawGyroZ();
+		return m_gyro.getAngle();
 	}
 	
 	public void setSpeedVarible(){
