@@ -98,9 +98,9 @@ public class DriveTrain extends SubsystemBase {
  	public DriveTrain() {
     m_gyro = new AHRS(SPI.Port.kMXP);
     m_left_leader = new WPI_TalonFX(LEFT_TALON_LEADER);
-		m_left_follower = new  WPI_TalonFX(LEFT_TALON_FOLLOWER);
+	// m_left_follower = new  WPI_TalonFX(LEFT_TALON_FOLLOWER);
     m_right_leader = new WPI_TalonFX(RIGHT_TALON_LEADER);
-		m_right_follower = new WPI_TalonFX(RIGHT_TALON_FOLLOWER);
+	// m_right_follower = new WPI_TalonFX(RIGHT_TALON_FOLLOWER);
 
     /** Invert Directions for Left and Right */
     m_left_invert = TalonFXInvertType.CounterClockwise; //Same as invert = "false"
@@ -109,89 +109,91 @@ public class DriveTrain extends SubsystemBase {
     /** Config Objects for motor controllers */
     TalonFXConfiguration _leftConfig = new TalonFXConfiguration();
     TalonFXConfiguration _rightConfig = new TalonFXConfiguration();
+	m_left_leader.configAllSettings(_leftConfig);
+	m_right_leader.configAllSettings(_rightConfig);
 
 		// Set follower talons to default configs, and then follo–w their leaders
-		m_left_follower.configAllSettings(_leftConfig);
-		m_right_follower.configAllSettings(_rightConfig);
-		m_left_follower.follow(m_left_leader);
-		m_left_follower.setInverted(InvertType.FollowMaster);
-		m_right_follower.follow(m_right_leader);
-		m_right_follower.setInverted(InvertType.FollowMaster);
+		// m_left_follower.configAllSettings(_leftConfig);
+		// m_right_follower.configAllSettings(_rightConfig);
+		// m_left_follower.follow(m_left_leader);
+		// m_left_follower.setInverted(InvertType.FollowMaster);
+		// m_right_follower.follow(m_right_leader);
+		// m_right_follower.setInverted(InvertType.FollowMaster);
 
     		/* Set Neutral Mode */
-		m_left_leader.setNeutralMode(NeutralMode.Brake);
-		m_right_leader.setNeutralMode(NeutralMode.Brake);
+	// 	m_left_leader.setNeutralMode(NeutralMode.Brake);
+	// 	m_right_leader.setNeutralMode(NeutralMode.Brake);
 
-		/* Configure output */
+	// 	/* Configure output */
 		m_left_leader.setInverted(m_left_invert);
 		m_right_leader.setInverted(m_right_invert);
   
-    	/* Configure the left Talon's selected sensor as integrated sensor */
-		/* 
-		 * Currently, in order to use a product-specific FeedbackDevice in configAll objects,
-		 * you have to call toFeedbackType. This is a workaround until a product-specific
-		 * FeedbackDevice is implemented for configSensorTerm
-		 */
-		_leftConfig.primaryPID.selectedFeedbackSensor = TalonFXFeedbackDevice.IntegratedSensor.toFeedbackDevice(); //Local Feedback Source
-		_rightConfig.primaryPID.selectedFeedbackSensor = TalonFXFeedbackDevice.IntegratedSensor.toFeedbackDevice();
+    // 	/* Configure the left Talon's selected sensor as integrated sensor */
+	// 	/* 
+	// 	 * Currently, in order to use a product-specific FeedbackDevice in configAll objects,
+	// 	 * you have to call toFeedbackType. This is a workaround until a product-specific
+	// 	 * FeedbackDevice is implemented for configSensorTerm
+	// 	 */
+	// 	_leftConfig.primaryPID.selectedFeedbackSensor = TalonFXFeedbackDevice.IntegratedSensor.toFeedbackDevice(); //Local Feedback Source
+	// 	_rightConfig.primaryPID.selectedFeedbackSensor = TalonFXFeedbackDevice.IntegratedSensor.toFeedbackDevice();
 
-		// /* Configure the Remote (Left) Talon's selected sensor as a remote sensor for the right Talon */
-		// _rightConfig.remoteFilter1.remoteSensorDeviceID = m_left_leader.getDeviceID(); //Device ID of Remote Source
-		// _rightConfig.remoteFilter1.remoteSensorSource = RemoteSensorSource.TalonFX_SelectedSensor; //Remote Source Type
+	// 	// /* Configure the Remote (Left) Talon's selected sensor as a remote sensor for the right Talon */
+	// 	// _rightConfig.remoteFilter1.remoteSensorDeviceID = m_left_leader.getDeviceID(); //Device ID of Remote Source
+	// 	// _rightConfig.remoteFilter1.remoteSensorSource = RemoteSensorSource.TalonFX_SelectedSensor; //Remote Source Type
 		
-		// /* Setup difference signal to be used for turn when performing Drive Straight with encoders */
-		// setRobotTurnConfigs(m_right_invert, _rightConfig);
+	// 	// /* Setup difference signal to be used for turn when performing Drive Straight with encoders */
+	// 	// setRobotTurnConfigs(m_right_invert, _rightConfig);
 
-		/* Config the neutral deadband. */
-		_leftConfig.neutralDeadband = kNeutralDeadband;
-		_rightConfig.neutralDeadband = kNeutralDeadband;
+	// 	/* Config the neutral deadband. */
+	// 	_leftConfig.neutralDeadband = kNeutralDeadband;
+	// 	_rightConfig.neutralDeadband = kNeutralDeadband;
 
-		/* max out the peak output (for all modes).  However you can
-		 * limit the output of a given PID object with configClosedLoopPeakOutput().
-		 */
-		_leftConfig.peakOutputForward = 1.0;
-		_leftConfig.peakOutputReverse = -1.0;
-		_rightConfig.peakOutputForward = +1.0;
-		_rightConfig.peakOutputReverse = -1.0;
+	// 	/* max out the peak output (for all modes).  However you can
+	// 	 * limit the output of a given PID object with configClosedLoopPeakOutput().
+	// 	 */
+	// 	_leftConfig.peakOutputForward = 1.0;
+	// 	_leftConfig.peakOutputReverse = -1.0;
+	// 	_rightConfig.peakOutputForward = +1.0;
+	// 	_rightConfig.peakOutputReverse = -1.0;
 			
-		/* 1ms per loop.  PID loop can be slowed down if need be.
-		 * For example,
-		 * - if sensor updates are too slow
-		 * - sensor deltas are very small per update, so derivative error never gets large enough to be useful.
-		 * - sensor movement is very slow causing the derivative error to be near zero.
-		 */
+	// 	/* 1ms per loop.  PID loop can be slowed down if need be.
+	// 	 * For example,
+	// 	 * - if sensor updates are too slow
+	// 	 * - sensor deltas are very small per update, so derivative error never gets large enough to be useful.
+	// 	 * - sensor movement is very slow causing the derivative error to be near zero.
+	// 	 */
 
-		int closedLoopTimeMs = 1;
-		_rightConfig.slot0.closedLoopPeriod = closedLoopTimeMs;
-		_rightConfig.slot1.closedLoopPeriod = closedLoopTimeMs;
-		_rightConfig.slot2.closedLoopPeriod = closedLoopTimeMs;
-   	_rightConfig.slot3.closedLoopPeriod = closedLoopTimeMs;
-		_rightConfig.slot0.allowableClosedloopError = 25;
-		_rightConfig.slot1.allowableClosedloopError = 25;
-		_leftConfig.slot0.closedLoopPeriod = closedLoopTimeMs;
-		_leftConfig.slot1.closedLoopPeriod = closedLoopTimeMs;
-		_leftConfig.slot2.closedLoopPeriod = closedLoopTimeMs;
-   	_leftConfig.slot3.closedLoopPeriod = closedLoopTimeMs;
-		_leftConfig.slot0.allowableClosedloopError = 25;
-		_leftConfig.slot1.allowableClosedloopError = 25;
+	// 	int closedLoopTimeMs = 1;
+	// 	_rightConfig.slot0.closedLoopPeriod = closedLoopTimeMs;
+	// 	_rightConfig.slot1.closedLoopPeriod = closedLoopTimeMs;
+	// 	_rightConfig.slot2.closedLoopPeriod = closedLoopTimeMs;
+   	// _rightConfig.slot3.closedLoopPeriod = closedLoopTimeMs;
+	// 	_rightConfig.slot0.allowableClosedloopError = 25;
+	// 	_rightConfig.slot1.allowableClosedloopError = 25;
+	// 	_leftConfig.slot0.closedLoopPeriod = closedLoopTimeMs;
+	// 	_leftConfig.slot1.closedLoopPeriod = closedLoopTimeMs;
+	// 	_leftConfig.slot2.closedLoopPeriod = closedLoopTimeMs;
+   	// _leftConfig.slot3.closedLoopPeriod = closedLoopTimeMs;
+	// 	_leftConfig.slot0.allowableClosedloopError = 25;
+	// 	_leftConfig.slot1.allowableClosedloopError = 25;
 
-  	/* APPLY the config settings */
-		m_left_leader.configAllSettings(_leftConfig);
-		m_right_leader.configAllSettings(_rightConfig);
-		m_left_leader.configSupplyCurrentLimit(new SupplyCurrentLimitConfiguration(true, 35, 40, 1.0), 0);
-		m_right_leader.configSupplyCurrentLimit(new SupplyCurrentLimitConfiguration(true, 35, 40, 1.0), 0);
+  	// /* APPLY the config settings */
+		// m_left_leader.configAllSettings(_leftConfig);
+		// m_right_leader.configAllSettings(_rightConfig);
+	// 	m_left_leader.configSupplyCurrentLimit(new SupplyCurrentLimitConfiguration(true, 35, 40, 1.0), 0);
+	// 	m_right_leader.configSupplyCurrentLimit(new SupplyCurrentLimitConfiguration(true, 35, 40, 1.0), 0);
 
-		/* Set status frame periods */
-		// Leader Talons need faster updates 
-		m_right_leader.setStatusFramePeriod(StatusFrame.Status_12_Feedback1, 20, kTimeoutMs);
-		m_right_leader.setStatusFramePeriod(StatusFrame.Status_14_Turn_PIDF1, 20, kTimeoutMs);
-		m_left_leader.setStatusFramePeriod(StatusFrame.Status_2_Feedback0, 5, kTimeoutMs);		//Used remotely by right Talon, speed up
-		// Followers can slow down certain status messages to reduce the can bus usage, per CTRE:
-		// "Motor controllers that are followers can set Status 1 and Status 2 to 255ms(max) using setStatusFramePeriod."
-		m_right_follower.setStatusFramePeriod(StatusFrame.Status_1_General, 255);
-		m_right_follower.setStatusFramePeriod(StatusFrame.Status_2_Feedback0, 255);
-		m_left_follower.setStatusFramePeriod(StatusFrame.Status_2_Feedback0, 255);
-		m_left_follower.setStatusFramePeriod(StatusFrame.Status_1_General, 255);
+	// 	/* Set status frame periods */
+	// 	// Leader Talons need faster updates 
+	// 	m_right_leader.setStatusFramePeriod(StatusFrame.Status_12_Feedback1, 20, kTimeoutMs);
+	// 	m_right_leader.setStatusFramePeriod(StatusFrame.Status_14_Turn_PIDF1, 20, kTimeoutMs);
+	// 	m_left_leader.setStatusFramePeriod(StatusFrame.Status_2_Feedback0, 5, kTimeoutMs);		//Used remotely by right Talon, speed up
+	// 	// Followers can slow down certain status messages to reduce the can bus usage, per CTRE:
+	// 	// "Motor controllers that are followers can set Status 1 and Status 2 to 255ms(max) using setStatusFramePeriod."
+	// 	m_right_follower.setStatusFramePeriod(StatusFrame.Status_1_General, 255);
+	// 	m_right_follower.setStatusFramePeriod(StatusFrame.Status_2_Feedback0, 255);
+	// 	m_left_follower.setStatusFramePeriod(StatusFrame.Status_2_Feedback0, 255);
+	// 	m_left_follower.setStatusFramePeriod(StatusFrame.Status_1_General, 255);
 
 		// setEncodersToZero();
 		m_right_leader.setSelectedSensorPosition(0);
