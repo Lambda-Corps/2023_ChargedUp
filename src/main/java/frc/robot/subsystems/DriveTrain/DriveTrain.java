@@ -18,10 +18,12 @@ import com.kauailabs.navx.frc.AHRS;
 
 import edu.wpi.first.hal.SimDouble;
 import edu.wpi.first.hal.simulation.SimDeviceDataJNI;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.kinematics.DifferentialDriveOdometry;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.Counter;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
@@ -98,147 +100,81 @@ public class DriveTrain extends SubsystemBase {
  	public DriveTrain() {
     m_gyro = new AHRS(SPI.Port.kMXP);
     m_left_leader = new WPI_TalonFX(LEFT_TALON_LEADER);
-	// m_left_follower = new  WPI_TalonFX(LEFT_TALON_FOLLOWER);
+	m_left_follower = new  WPI_TalonFX(LEFT_TALON_FOLLOWER);
     m_right_leader = new WPI_TalonFX(RIGHT_TALON_LEADER);
-	// m_right_follower = new WPI_TalonFX(RIGHT_TALON_FOLLOWER);
+	m_right_follower = new WPI_TalonFX(RIGHT_TALON_FOLLOWER);
+
+	m_left_leader.configFactoryDefault();
+	m_left_follower.configFactoryDefault();
+	m_right_leader.configFactoryDefault();
+	m_right_follower.configFactoryDefault();
 
     /** Invert Directions for Left and Right */
-    m_left_invert = TalonFXInvertType.CounterClockwise; //Same as invert = "false"
-    m_right_invert = TalonFXInvertType.Clockwise; //Same as invert = "true"
+	m_left_leader.setInverted(TalonFXInvertType.Clockwise); //Same invert as = "true"
+	m_right_leader.setInverted(TalonFXInvertType.CounterClockwise); //Same invert as = "false"
 
-    /** Config Objects for motor controllers */
-    TalonFXConfiguration _leftConfig = new TalonFXConfiguration();
-    TalonFXConfiguration _rightConfig = new TalonFXConfiguration();
-	m_left_leader.configAllSettings(_leftConfig);
-	m_right_leader.configAllSettings(_rightConfig);
-
-		// Set follower talons to default configs, and then follo–w their leaders
-		// m_left_follower.configAllSettings(_leftConfig);
-		// m_right_follower.configAllSettings(_rightConfig);
-		// m_left_follower.follow(m_left_leader);
-		// m_left_follower.setInverted(InvertType.FollowMaster);
-		// m_right_follower.follow(m_right_leader);
-		// m_right_follower.setInverted(InvertType.FollowMaster);
+	// Set follower talons to default configs, and then follo–w their leaders
+	m_left_follower.follow(m_left_leader);
+	m_left_follower.setInverted(InvertType.FollowMaster);
+	m_right_follower.follow(m_right_leader);
+	m_right_follower.setInverted(InvertType.FollowMaster);
 
     		/* Set Neutral Mode */
 	// 	m_left_leader.setNeutralMode(NeutralMode.Brake);
 	// 	m_right_leader.setNeutralMode(NeutralMode.Brake);
 
 	// 	/* Configure output */
-		m_left_leader.setInverted(m_left_invert);
-		m_right_leader.setInverted(m_right_invert);
-  
-    // 	/* Configure the left Talon's selected sensor as integrated sensor */
-	// 	/* 
-	// 	 * Currently, in order to use a product-specific FeedbackDevice in configAll objects,
-	// 	 * you have to call toFeedbackType. This is a workaround until a product-specific
-	// 	 * FeedbackDevice is implemented for configSensorTerm
-	// 	 */
-	// 	_leftConfig.primaryPID.selectedFeedbackSensor = TalonFXFeedbackDevice.IntegratedSensor.toFeedbackDevice(); //Local Feedback Source
-	// 	_rightConfig.primaryPID.selectedFeedbackSensor = TalonFXFeedbackDevice.IntegratedSensor.toFeedbackDevice();
+	m_left_leader.setInverted(m_left_invert);
+	m_right_leader.setInverted(m_right_invert);
 
-	// 	// /* Configure the Remote (Left) Talon's selected sensor as a remote sensor for the right Talon */
-	// 	// _rightConfig.remoteFilter1.remoteSensorDeviceID = m_left_leader.getDeviceID(); //Device ID of Remote Source
-	// 	// _rightConfig.remoteFilter1.remoteSensorSource = RemoteSensorSource.TalonFX_SelectedSensor; //Remote Source Type
+	/** Config Objects for motor controllers */
+    TalonFXConfiguration _leftConfig = new TalonFXConfiguration();
+    TalonFXConfiguration _rightConfig = new TalonFXConfiguration();
+
+	// setEncodersToZero();
+	m_right_leader.setSelectedSensorPosition(0);
+	m_left_leader.setSelectedSensorPosition(0);
+
+	/// Odometry Tracker objects
+	m_2dField = new Field2d();
+	SmartDashboard.putData(m_2dField);
+	m_odometry = new DifferentialDriveOdometry(m_gyro.getRotation2d(), 0, 0);
+
+	// Code for simulation within the DriveTrain Constructor
+	if (Robot.isSimulation()) { // If our robot is simulated
+		// This class simulates our drivetrain's motion around the field.
+		/* Simulation model of the drivetrain */
+		m_drivetrainSimulator = new DifferentialDrivetrainSim(
+			DCMotor.getFalcon500(2), // 2 Falcon 500s on each side of the drivetrain.
+			kGearRatio, // Standard AndyMark Gearing reduction.
+			2.1, // MOI of 2.1 kg m^2 (from CAD model).
+			kRobotMass, // Mass of the robot is 26.5 kg.
+			Units.inchesToMeters(kWheelRadiusInches), // Robot uses 3" radius (6" diameter) wheels.
+			kTrackWidthMeters, // Distance between wheels is _ meters.
+	
+			/*
+			* The standard deviations for measurement noise:
+			* x and y: 0.001 m
+			* heading: 0.001 rad
+			* l and r velocity: 0.1 m/s
+			* l and r position: 0.005 m
+			*/
+			null // VecBuilder.fill(0.001, 0.001, 0.001, 0.1, 0.1, 0.005, 0.005) //Uncomment this
+				// line to add measurement noise.
+		);
+	
+		// Setup the Simulation input classes
+		m_leftDriveSim = m_left_leader.getSimCollection();
+		m_rightDriveSim = m_right_leader.getSimCollection();
+		} // end of constructor code for the simulation
+
+		// Setup the drive train limiting test variables
+		// Default the slew rate 3 meters per second
+		m_forward_limiter = new SlewRateLimiter(3);
+		m_rotation_limiter = new SlewRateLimiter(3);
+		m_drive_absMax = MAX_TELEOP_DRIVE_SPEED;
 		
-	// 	// /* Setup difference signal to be used for turn when performing Drive Straight with encoders */
-	// 	// setRobotTurnConfigs(m_right_invert, _rightConfig);
-
-	// 	/* Config the neutral deadband. */
-	// 	_leftConfig.neutralDeadband = kNeutralDeadband;
-	// 	_rightConfig.neutralDeadband = kNeutralDeadband;
-
-	// 	/* max out the peak output (for all modes).  However you can
-	// 	 * limit the output of a given PID object with configClosedLoopPeakOutput().
-	// 	 */
-	// 	_leftConfig.peakOutputForward = 1.0;
-	// 	_leftConfig.peakOutputReverse = -1.0;
-	// 	_rightConfig.peakOutputForward = +1.0;
-	// 	_rightConfig.peakOutputReverse = -1.0;
-			
-	// 	/* 1ms per loop.  PID loop can be slowed down if need be.
-	// 	 * For example,
-	// 	 * - if sensor updates are too slow
-	// 	 * - sensor deltas are very small per update, so derivative error never gets large enough to be useful.
-	// 	 * - sensor movement is very slow causing the derivative error to be near zero.
-	// 	 */
-
-	// 	int closedLoopTimeMs = 1;
-	// 	_rightConfig.slot0.closedLoopPeriod = closedLoopTimeMs;
-	// 	_rightConfig.slot1.closedLoopPeriod = closedLoopTimeMs;
-	// 	_rightConfig.slot2.closedLoopPeriod = closedLoopTimeMs;
-   	// _rightConfig.slot3.closedLoopPeriod = closedLoopTimeMs;
-	// 	_rightConfig.slot0.allowableClosedloopError = 25;
-	// 	_rightConfig.slot1.allowableClosedloopError = 25;
-	// 	_leftConfig.slot0.closedLoopPeriod = closedLoopTimeMs;
-	// 	_leftConfig.slot1.closedLoopPeriod = closedLoopTimeMs;
-	// 	_leftConfig.slot2.closedLoopPeriod = closedLoopTimeMs;
-   	// _leftConfig.slot3.closedLoopPeriod = closedLoopTimeMs;
-	// 	_leftConfig.slot0.allowableClosedloopError = 25;
-	// 	_leftConfig.slot1.allowableClosedloopError = 25;
-
-  	// /* APPLY the config settings */
-		// m_left_leader.configAllSettings(_leftConfig);
-		// m_right_leader.configAllSettings(_rightConfig);
-	// 	m_left_leader.configSupplyCurrentLimit(new SupplyCurrentLimitConfiguration(true, 35, 40, 1.0), 0);
-	// 	m_right_leader.configSupplyCurrentLimit(new SupplyCurrentLimitConfiguration(true, 35, 40, 1.0), 0);
-
-	// 	/* Set status frame periods */
-	// 	// Leader Talons need faster updates 
-	// 	m_right_leader.setStatusFramePeriod(StatusFrame.Status_12_Feedback1, 20, kTimeoutMs);
-	// 	m_right_leader.setStatusFramePeriod(StatusFrame.Status_14_Turn_PIDF1, 20, kTimeoutMs);
-	// 	m_left_leader.setStatusFramePeriod(StatusFrame.Status_2_Feedback0, 5, kTimeoutMs);		//Used remotely by right Talon, speed up
-	// 	// Followers can slow down certain status messages to reduce the can bus usage, per CTRE:
-	// 	// "Motor controllers that are followers can set Status 1 and Status 2 to 255ms(max) using setStatusFramePeriod."
-	// 	m_right_follower.setStatusFramePeriod(StatusFrame.Status_1_General, 255);
-	// 	m_right_follower.setStatusFramePeriod(StatusFrame.Status_2_Feedback0, 255);
-	// 	m_left_follower.setStatusFramePeriod(StatusFrame.Status_2_Feedback0, 255);
-	// 	m_left_follower.setStatusFramePeriod(StatusFrame.Status_1_General, 255);
-
-		// setEncodersToZero();
-		m_right_leader.setSelectedSensorPosition(0);
-		m_left_leader.setSelectedSensorPosition(0);
-
-		/// Odometry Tracker objects
-		m_2dField = new Field2d();
-		SmartDashboard.putData(m_2dField);
-		m_odometry = new DifferentialDriveOdometry(m_gyro.getRotation2d(), 0, 0);
-
-		// Code for simulation within the DriveTrain Constructor
-		if (Robot.isSimulation()) { // If our robot is simulated
-			// This class simulates our drivetrain's motion around the field.
-			/* Simulation model of the drivetrain */
-			m_drivetrainSimulator = new DifferentialDrivetrainSim(
-			  DCMotor.getFalcon500(2), // 2 Falcon 500s on each side of the drivetrain.
-			  kGearRatio, // Standard AndyMark Gearing reduction.
-			  2.1, // MOI of 2.1 kg m^2 (from CAD model).
-			  kRobotMass, // Mass of the robot is 26.5 kg.
-			  Units.inchesToMeters(kWheelRadiusInches), // Robot uses 3" radius (6" diameter) wheels.
-			  kTrackWidthMeters, // Distance between wheels is _ meters.
-	  
-			  /*
-			  * The standard deviations for measurement noise:
-			  * x and y: 0.001 m
-			  * heading: 0.001 rad
-			  * l and r velocity: 0.1 m/s
-			  * l and r position: 0.005 m
-			  */
-			  null // VecBuilder.fill(0.001, 0.001, 0.001, 0.1, 0.1, 0.005, 0.005) //Uncomment this
-				  // line to add measurement noise.
-			);
-	  
-			// Setup the Simulation input classes
-			m_leftDriveSim = m_left_leader.getSimCollection();
-			m_rightDriveSim = m_right_leader.getSimCollection();
-		  } // end of constructor code for the simulation
-
-		  // Setup the drive train limiting test variables
-		  // Default the slew rate 3 meters per second
-		  m_forward_limiter = new SlewRateLimiter(3);
-		  m_rotation_limiter = new SlewRateLimiter(3);
-		  m_drive_absMax = MAX_TELEOP_DRIVE_SPEED;
-		  
-		  m_gyro.reset();
+		m_gyro.reset();
   	}
 
 	@Override
@@ -249,44 +185,12 @@ public class DriveTrain extends SubsystemBase {
    		m_2dField.setRobotPose(m_odometry.getPoseMeters());
 	}
 
-	/** Deadband 5 percent, used on the gamepad */
-	private double deadband(double value) {
-		/* Upper deadband */
-		if (value >= kControllerDeadband) {
-      		return value;
-    	}
-		
-		/* Lower deadband */
-		if (value <= -kControllerDeadband) {
-      		return value;
-    	}
-
-		/* Outside deadband */
-		return 0;
-  	}
-  
-  	/** Make sure the input to the set command is 1.0 >= x >= -1.0 **/
-	private double clamp_drive(double value) {
-		/* Upper deadband */
-		if (value >= m_drive_absMax) {
-     		return m_drive_absMax;
-   		}
-
-		/* Lower deadband */
-		if (value <= -m_drive_absMax) {
-      		return -m_drive_absMax;
-    	}
-
-    /* Outside deadband */
-    return value;
-  }
-
 	public void teleop_drive(double forward, double turn){
-		forward = deadband(forward);
-		turn = deadband(turn);
+		forward = MathUtil.applyDeadband(forward, kControllerDeadband);
+		turn = MathUtil.applyDeadband(turn, kControllerDeadband);
 
-		forward = clamp_drive(forward);
-		turn = clamp_drive(turn);
+		forward = MathUtil.clamp(forward, -m_drive_absMax, m_drive_absMax);
+		turn = MathUtil.clamp(turn, -m_drive_absMax, m_drive_absMax);
 
 		//forward = -m_forward_limiter.calculate(forward) * m_drive_absMax;
 		if(forward != 0 || turn != 0) {
