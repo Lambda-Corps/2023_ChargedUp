@@ -6,6 +6,9 @@ package frc.robot;
 
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
+import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import frc.robot.subsystems.DriveTrain.DefaultDriveTrainCommand;
 import frc.robot.subsystems.DriveTrain.DriveTrain;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -28,6 +31,7 @@ public class RobotContainer {
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
+    buildDriveTestTab();
     // Set subsystem default commands
     m_drivetrain.setDefaultCommand(new DefaultDriveTrainCommand(m_drivetrain, m_driver_controller));
     
@@ -51,5 +55,15 @@ public class RobotContainer {
   public Command getAutonomousCommand() {
     // An ExampleCommand will run in autonomous
     return new PrintCommand("Auto Needs to be Fixed");
+  }
+
+  private void buildDriveTestTab() {
+    ShuffleboardTab driveTestTab = Shuffleboard.getTab("Drive Test");
+
+    driveTestTab.add("Right Encoder", 0).withPosition(1, 0).withSize(1, 1);
+    driveTestTab.add("Left Encoder", 0).withPosition(0, 0).withSize(1, 1);
+    driveTestTab.add("Right Speed", 0).withPosition(3, 0).withSize(1,1);
+    driveTestTab.add("Left Speed", 0).withPosition(2, 0).withSize(1,1);
+    
   }
 }

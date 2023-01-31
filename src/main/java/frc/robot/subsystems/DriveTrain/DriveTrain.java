@@ -4,12 +4,14 @@
 
 package frc.robot.subsystems.DriveTrain;
 
+import static frc.robot.Constants.LEFT_TALON_FOLLOWER;
+import static frc.robot.Constants.LEFT_TALON_LEADER;
+import static frc.robot.Constants.RIGHT_TALON_FOLLOWER;
+import static frc.robot.Constants.RIGHT_TALON_LEADER;
+
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.InvertType;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
-import com.ctre.phoenix.motorcontrol.StatusFrame;
-import com.ctre.phoenix.motorcontrol.SupplyCurrentLimitConfiguration;
-import com.ctre.phoenix.motorcontrol.TalonFXFeedbackDevice;
 import com.ctre.phoenix.motorcontrol.TalonFXInvertType;
 import com.ctre.phoenix.motorcontrol.TalonFXSimCollection;
 import com.ctre.phoenix.motorcontrol.can.TalonFXConfiguration;
@@ -23,7 +25,11 @@ import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.kinematics.DifferentialDriveOdometry;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.wpilibj.Counter;
+import edu.wpi.first.networktables.DoubleEntry;
+import edu.wpi.first.networktables.DoubleTopic;
+import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.PubSubOption;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
@@ -32,8 +38,6 @@ import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Robot;
-
-import static frc.robot.Constants.*;
 
 public class DriveTrain extends SubsystemBase {
 /**
@@ -96,76 +100,79 @@ public class DriveTrain extends SubsystemBase {
 	SlewRateLimiter m_forward_limiter, m_rotation_limiter;
 	private double m_drive_absMax;
 
+	// All the Shuffleboard related artifacts
+	// Topics to put entries into network tables
+	//private final DoubleTopic m_left_encoder_topic, m_right_encoder_topic, m_left_speed_topic, m_right_speed_topic;
+
+	// Entries to periodically update the network table entries
+	private final DoubleEntry m_left_encoder_entry, m_right_encoder_entry, m_left_speed_entry, m_right_speed_entry;
+
   	/** Creates a new DriveTrain. */
  	public DriveTrain() {
-    m_gyro = new AHRS(SPI.Port.kMXP);
-    m_left_leader = new WPI_TalonFX(LEFT_TALON_LEADER);
-	m_left_follower = new  WPI_TalonFX(LEFT_TALON_FOLLOWER);
-    m_right_leader = new WPI_TalonFX(RIGHT_TALON_LEADER);
-	m_right_follower = new WPI_TalonFX(RIGHT_TALON_FOLLOWER);
+		m_gyro = new AHRS(SPI.Port.kMXP);
+		m_left_leader = new WPI_TalonFX(LEFT_TALON_LEADER);
+		m_left_follower = new  WPI_TalonFX(LEFT_TALON_FOLLOWER);
+		m_right_leader = new WPI_TalonFX(RIGHT_TALON_LEADER);
+		m_right_follower = new WPI_TalonFX(RIGHT_TALON_FOLLOWER);
 
-	m_left_leader.configFactoryDefault();
-	m_left_follower.configFactoryDefault();
-	m_right_leader.configFactoryDefault();
-	m_right_follower.configFactoryDefault();
+		m_left_leader.configFactoryDefault();
+		m_left_follower.configFactoryDefault();
+		m_right_leader.configFactoryDefault();
+		m_right_follower.configFactoryDefault();
 
-    /** Invert Directions for Left and Right */
-	m_left_leader.setInverted(TalonFXInvertType.Clockwise); //Same invert as = "true"
-	m_right_leader.setInverted(TalonFXInvertType.CounterClockwise); //Same invert as = "false"
+		/** Invert Directions for Left and Right */
+		m_left_leader.setInverted(TalonFXInvertType.Clockwise); //Same invert as = "true"
+		m_right_leader.setInverted(TalonFXInvertType.CounterClockwise); //Same invert as = "false"
 
-	// Set follower talons to default configs, and then follo–w their leaders
-	m_left_follower.follow(m_left_leader);
-	m_left_follower.setInverted(InvertType.FollowMaster);
-	m_right_follower.follow(m_right_leader);
-	m_right_follower.setInverted(InvertType.FollowMaster);
+		// Set follower talons to default configs, and then follo–w their leaders
+		m_left_follower.follow(m_left_leader);
+		m_left_follower.setInverted(InvertType.FollowMaster);
+		m_right_follower.follow(m_right_leader);
+		m_right_follower.setInverted(InvertType.FollowMaster);
 
-    		/* Set Neutral Mode */
-	// 	m_left_leader.setNeutralMode(NeutralMode.Brake);
-	// 	m_right_leader.setNeutralMode(NeutralMode.Brake);
+		/* Set Neutral Mode */
+		m_left_leader.setNeutralMode(NeutralMode.Brake);
+		m_right_leader.setNeutralMode(NeutralMode.Brake);
 
-	// 	/* Configure output */
-	m_left_leader.setInverted(m_left_invert);
-	m_right_leader.setInverted(m_right_invert);
+		/** Config Objects for motor controllers */
+		TalonFXConfiguration _leftConfig = new TalonFXConfiguration();
+		TalonFXConfiguration _rightConfig = new TalonFXConfiguration();
 
-	/** Config Objects for motor controllers */
-    TalonFXConfiguration _leftConfig = new TalonFXConfiguration();
-    TalonFXConfiguration _rightConfig = new TalonFXConfiguration();
+		// setEncodersToZero();
+		m_right_leader.setSelectedSensorPosition(0);
+		m_left_leader.setSelectedSensorPosition(0);
 
-	// setEncodersToZero();
-	m_right_leader.setSelectedSensorPosition(0);
-	m_left_leader.setSelectedSensorPosition(0);
+		/// Odometry Tracker objects
+		m_2dField = new Field2d();
+		SmartDashboard.putData(m_2dField);
+		m_odometry = new DifferentialDriveOdometry(m_gyro.getRotation2d(), 0, 0);
 
-	/// Odometry Tracker objects
-	m_2dField = new Field2d();
-	SmartDashboard.putData(m_2dField);
-	m_odometry = new DifferentialDriveOdometry(m_gyro.getRotation2d(), 0, 0);
-
-	// Code for simulation within the DriveTrain Constructor
-	if (Robot.isSimulation()) { // If our robot is simulated
-		// This class simulates our drivetrain's motion around the field.
-		/* Simulation model of the drivetrain */
-		m_drivetrainSimulator = new DifferentialDrivetrainSim(
-			DCMotor.getFalcon500(2), // 2 Falcon 500s on each side of the drivetrain.
-			kGearRatio, // Standard AndyMark Gearing reduction.
-			2.1, // MOI of 2.1 kg m^2 (from CAD model).
-			kRobotMass, // Mass of the robot is 26.5 kg.
-			Units.inchesToMeters(kWheelRadiusInches), // Robot uses 3" radius (6" diameter) wheels.
-			kTrackWidthMeters, // Distance between wheels is _ meters.
-	
-			/*
-			* The standard deviations for measurement noise:
-			* x and y: 0.001 m
-			* heading: 0.001 rad
-			* l and r velocity: 0.1 m/s
-			* l and r position: 0.005 m
-			*/
-			null // VecBuilder.fill(0.001, 0.001, 0.001, 0.1, 0.1, 0.005, 0.005) //Uncomment this
-				// line to add measurement noise.
-		);
-	
-		// Setup the Simulation input classes
-		m_leftDriveSim = m_left_leader.getSimCollection();
-		m_rightDriveSim = m_right_leader.getSimCollection();
+		// Code for simulation within the DriveTrain Constructor
+		if (Robot.isSimulation()) { // If our robot is simulated
+			// This class simulates our drivetrain's motion around the field.
+			/* Simulation model of the drivetrain */
+			m_drivetrainSimulator = new DifferentialDrivetrainSim(
+				DCMotor.getFalcon500(2), // 2 Falcon 500s on each side of the drivetrain.
+				kGearRatio, // Standard AndyMark Gearing reduction.
+				2.1, // MOI of 2.1 kg m^2 (from CAD model).
+				kRobotMass, // Mass of the robot is 26.5 kg.
+				Units.inchesToMeters(kWheelRadiusInches), // Robot uses 3" radius (6" diameter) wheels.
+				kTrackWidthMeters, // Distance between wheels is _ meters.
+		
+				/*
+				* The standard deviations for measurement noise:
+				* x and y: 0.001 m
+				* heading: 0.001 rad
+				* l and r velocity: 0.1 m/s
+				* l and r position: 0.005 m
+				*/
+				null // VecBuilder.fill(0.001, 0.001, 0.001, 0.1, 0.1, 0.005, 0.005) //Uncomment this
+					// line to add measurement noise.
+			);
+		
+			// Setup the Simulation input classes
+			m_leftDriveSim = m_left_leader.getSimCollection();
+			m_rightDriveSim = m_right_leader.getSimCollection();
 		} // end of constructor code for the simulation
 
 		// Setup the drive train limiting test variables
@@ -175,6 +182,16 @@ public class DriveTrain extends SubsystemBase {
 		m_drive_absMax = MAX_TELEOP_DRIVE_SPEED;
 		
 		m_gyro.reset();
+
+		// Create topics in the Shuffleboard table
+		NetworkTableInstance nt_inst = NetworkTableInstance.getDefault();
+		NetworkTable nt_table = nt_inst.getTable("Shuffleboard/Drive Test");
+
+		m_right_encoder_entry = new DoubleTopic(nt_table.getDoubleTopic("Right Encoder")).getEntry(0, PubSubOption.keepDuplicates(true));
+		m_left_encoder_entry = new DoubleTopic(nt_table.getDoubleTopic("Left Encoder")).getEntry(0, PubSubOption.keepDuplicates(true));
+		m_right_speed_entry = new DoubleTopic(nt_table.getDoubleTopic("Right Speed")).getEntry(0, PubSubOption.keepDuplicates(true));
+		m_left_speed_entry = new DoubleTopic(nt_table.getDoubleTopic("Left Speed")).getEntry(0, PubSubOption.keepDuplicates(true));
+
   	}
 
 	@Override
@@ -183,6 +200,12 @@ public class DriveTrain extends SubsystemBase {
                       nativeUnitsToDistanceMeters(m_left_leader.getSelectedSensorPosition()),
                       nativeUnitsToDistanceMeters(m_right_leader.getSelectedSensorPosition()));
    		m_2dField.setRobotPose(m_odometry.getPoseMeters());
+
+		// Update the encoder topics with timestamps
+		m_left_encoder_entry.set(m_left_leader.getSelectedSensorPosition(), 0);
+		m_right_encoder_entry.set(m_right_leader.getSelectedSensorPosition(), 0);
+		m_right_speed_entry.set(getRightSpeed(), 0);
+		m_left_speed_entry.set(getLeftSpeed(), 0);
 	}
 
 	public void teleop_drive(double forward, double turn){
