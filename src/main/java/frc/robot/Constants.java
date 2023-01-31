@@ -29,7 +29,8 @@ public final class Constants {
     public final static int CAN_ID_THIRTEEN = 13;
 
     //////////////////// Roborio DIO ////////////////////
-    
+    public final static int LIMIT_SWITCH_ONE = 0;
+    public final static int LIMIT_SWITCH_TWO = 1;
 
     /////////////////// Human Interface ///////////////////////////
     public static final int DRIVER_LEFT_AXIS = 1;

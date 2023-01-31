@@ -6,6 +6,7 @@ package frc.robot;
 
 import java.util.Map;
 
+import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import frc.robot.subsystems.DriveTrain.DefaultDriveTrainCommand;
@@ -28,7 +29,6 @@ public class RobotContainer {
 
   // The robot's subsystems and commands are defined here...
   private final DriveTrain m_drivetrain = new DriveTrain();
-
   private SendableChooser<Command> m_auto_chooser;
   private double m_left_speed, m_right_speed;
   //private final ExampleCommand m_autoCommand = new ExampleCommand(m_exampleSubsystem);
@@ -70,7 +70,8 @@ public class RobotContainer {
   
   private void buildDriverTab() {
     ShuffleboardTab driveTab = Shuffleboard.getTab("Drive");
-
+    driveTab.add("D 1", m_drivetrain.get_top_limit_switch());
+    driveTab.add("D 0", m_drivetrain.get_bottom_limit_switch());
     driveTab.add("Gyro", m_drivetrain.m_gyro).withSize(2, 2).withPosition(0, 0);
     
     // Left and Right motor speeds for testing and correction

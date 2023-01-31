@@ -31,6 +31,8 @@ import edu.wpi.first.networktables.BooleanPublisher;
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.Publisher;
+import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
@@ -38,7 +40,9 @@ import edu.wpi.first.wpilibj.simulation.DifferentialDrivetrainSim;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants;
 import frc.robot.Robot;
+import frc.robot.RobotContainer.*;
 
 public class DriveTrain extends SubsystemBase {
 /**
@@ -82,9 +86,18 @@ public class DriveTrain extends SubsystemBase {
 	// Gyro 
 	public AHRS m_gyro;
 	
+
+	//testing
+	public DigitalInput top_switch;
+
+	public DigitalInput bottom_switch;
+
 	// Auxilliary PID tracker
 	// private boolean m_was_correcting = false;
 	// private boolean m_is_correcting = false;
+
+	public BooleanPublisher m_bottom_switch_publisher;
+	public BooleanPublisher m_top_switch_publisher;
 
 	///////////// Odometry Trackers //////////////
 	// Odometry class for tracking robot pose
@@ -122,6 +135,9 @@ public class DriveTrain extends SubsystemBase {
     /** Invert Directions for Left and Right */
     m_left_invert = TalonFXInvertType.CounterClockwise; //Same as invert = "false"
     m_right_invert = TalonFXInvertType.Clockwise; //Same as invert = "true"
+
+	top_switch = new DigitalInput(Constants.LIMIT_SWITCH_ONE);
+    bottom_switch = new DigitalInput(Constants.LIMIT_SWITCH_TWO);
 
     /** Config Objects for motor controllers */
     TalonFXConfiguration _leftConfig = new TalonFXConfiguration();
@@ -261,12 +277,17 @@ public class DriveTrain extends SubsystemBase {
 		  motorsValueLeftPub  = shuffleboard.getDoubleTopic("Left Motor Speed").publish();
 		  motorsValueRightPub = shuffleboard.getDoubleTopic("Right Motor Speed").publish();
 		  motorState = shuffleboard.getBooleanTopic("DriveTrain/MotorState").publish();
+
+		  m_top_switch_publisher  = shuffleboard.getBooleanTopic("Top Limit Switch").publish();
+		  m_bottom_switch_publisher = shuffleboard.getBooleanTopic("Bottom Limit Switch").publish();
 		  
 	}
 	
 	public void UpdateTopics(){
 		motorsValueLeftPub.set(m_left_leader.get());
 		motorsValueRightPub.set(m_right_leader.get());
+		m_top_switch_publisher.set(top_switch.get());
+		m_bottom_switch_publisher.set(bottom_switch.get());
 	}
 
 	@Override
@@ -278,6 +299,15 @@ public class DriveTrain extends SubsystemBase {
 		   
 		UpdateTopics();
 		setSpeedVarible();
+		get_top_limit_switch();
+		get_bottom_limit_switch();
+	}
+
+	public Publisher get_top_limit_switch(){
+		return m_top_switch_publisher;
+	}
+	public Publisher get_bottom_limit_switch(){
+		return m_bottom_switch_publisher;
 	}
 
 	public double getgyrox(){
