@@ -36,6 +36,7 @@ import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.simulation.DifferentialDrivetrainSim;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.CommandBase;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Robot;
 
@@ -53,19 +54,20 @@ public class DriveTrain extends SubsystemBase {
    * Take the average of the two.
    */
   public static final int kCountsPerRev = 2048;    // Encoder counts per revolution of the motor shaft.
-  public static final double kSensorGearRatio = 10.71; // Gear ratio is the ratio between the *encoder* and the wheels. On the AndyMark
-                            // drivetrain, encoders mount 1:1 with the gearbox shaft.
-  public static final double kGearRatio = 10.71;   // Switch kSensorGearRatio to this gear ratio if encoder is on the motor instead
+  public static final double kGearRatio = 4.17;   // Switch kSensorGearRatio to this gear ratio if encoder is on the motor instead
                             // of on the gearbox.
-  public static final double kWheelRadiusInches = 3.15;
+  public static final double kWheelRadiusInches = 2.9;
   public static final int k100msPerSecond = 10;
-  public final static int kEncoderUnitsPerRotation = 88554;
+  public static final double kEncoderTicksPerInch = (kCountsPerRev * kGearRatio) / (2 * Math.PI * kWheelRadiusInches); // 469
+  
+//   public final static int kEncoderUnitsPerRotation = Double.intValue( (Math.PI * 24.75) * kEncoderTicksPerInch ) );
+  public final static int kEncoderUnitsPerRotation = 35000;
   public final static double kEncoderTicksPerDegree = kEncoderUnitsPerRotation / 360;
-  public static final double kEncoderTicksPerInch = (kCountsPerRev * kGearRatio) / (2 * Math.PI * kWheelRadiusInches);
   private final int kTimeoutMs = 0;
   private final double kNeutralDeadband = 0.002;
   private final double kControllerDeadband = 0.1;
   private final double kTrackWidthMeters = .546;
+  private final double kTrackWidthInches = 24.75;
   private final double kRobotMass = 55.3;
 
 	private final double MAX_TELEOP_DRIVE_SPEED = 1.0;
@@ -105,7 +107,7 @@ public class DriveTrain extends SubsystemBase {
 	//private final DoubleTopic m_left_encoder_topic, m_right_encoder_topic, m_left_speed_topic, m_right_speed_topic;
 
 	// Entries to periodically update the network table entries
-	private final DoubleEntry m_left_encoder_entry, m_right_encoder_entry, m_left_speed_entry, m_right_speed_entry;
+	private final DoubleEntry m_left_encoder_entry, m_right_encoder_entry, m_left_speed_entry, m_right_speed_entry, m_max_speed_entry;
 
   	/** Creates a new DriveTrain. */
  	public DriveTrain() {
@@ -191,7 +193,7 @@ public class DriveTrain extends SubsystemBase {
 		m_left_encoder_entry = new DoubleTopic(nt_table.getDoubleTopic("Left Encoder")).getEntry(0, PubSubOption.keepDuplicates(true));
 		m_right_speed_entry = new DoubleTopic(nt_table.getDoubleTopic("Right Speed")).getEntry(0, PubSubOption.keepDuplicates(true));
 		m_left_speed_entry = new DoubleTopic(nt_table.getDoubleTopic("Left Speed")).getEntry(0, PubSubOption.keepDuplicates(true));
-
+		m_max_speed_entry = new DoubleTopic(nt_table.getDoubleTopic("Max Speed")).getEntry(0, PubSubOption.keepDuplicates(true));
   	}
 
 	@Override
@@ -215,11 +217,11 @@ public class DriveTrain extends SubsystemBase {
 		forward = MathUtil.clamp(forward, -m_drive_absMax, m_drive_absMax);
 		turn = MathUtil.clamp(turn, -m_drive_absMax, m_drive_absMax);
 
-		//forward = -m_forward_limiter.calculate(forward) * m_drive_absMax;
-		if(forward != 0 || turn != 0) {
-			forward = m_forward_limiter.calculate(forward) * m_drive_absMax;
-			turn = m_rotation_limiter.calculate(turn) * m_drive_absMax;
-		}
+		// //forward = -m_forward_limiter.calculate(forward) * m_drive_absMax;
+		// if(forward != 0 || turn != 0) {
+		// 	forward = m_forward_limiter.calculate(forward) * m_drive_absMax;
+		// 	turn = m_rotation_limiter.calculate(turn) * m_drive_absMax;
+		// }
 
 		var speeds = DifferentialDrive.curvatureDriveIK(forward, turn, true);
 
@@ -230,7 +232,7 @@ public class DriveTrain extends SubsystemBase {
 			return;
 		}			
 			// Just set the motors
-	  m_right_leader.set(ControlMode.PercentOutput, speeds.right);
+	  	m_right_leader.set(ControlMode.PercentOutput, speeds.right);
 		m_left_leader.set(ControlMode.PercentOutput, speeds.left);
   }
 
@@ -296,14 +298,14 @@ public class DriveTrain extends SubsystemBase {
 
 	private int distanceToNativeUnits(double positionMeters){
 		double wheelRotations = positionMeters/(2 * Math.PI * Units.inchesToMeters(kWheelRadiusInches));
-		double motorRotations = wheelRotations * kSensorGearRatio;
+		double motorRotations = wheelRotations * kGearRatio;
 		int sensorCounts = (int)(motorRotations * kCountsPerRev);
 		return sensorCounts;
 	}
 
 	private int velocityToNativeUnits(double velocityMetersPerSecond){
 		double wheelRotationsPerSecond = velocityMetersPerSecond/(2 * Math.PI * Units.inchesToMeters(kWheelRadiusInches));
-		double motorRotationsPerSecond = wheelRotationsPerSecond * kSensorGearRatio;
+		double motorRotationsPerSecond = wheelRotationsPerSecond * kGearRatio;
 		double motorRotationsPer100ms = motorRotationsPerSecond / k100msPerSecond;
 		int sensorCountsPer100ms = (int)(motorRotationsPer100ms * kCountsPerRev);
 		return sensorCountsPer100ms;
@@ -311,7 +313,7 @@ public class DriveTrain extends SubsystemBase {
 
 	private double nativeUnitsToDistanceMeters(double sensorCounts){
 		double motorRotations = (double)sensorCounts / kCountsPerRev;
-		double wheelRotations = motorRotations / kSensorGearRatio;
+		double wheelRotations = motorRotations / kGearRatio;
 		double positionMeters = wheelRotations * (2 * Math.PI * Units.inchesToMeters(kWheelRadiusInches));
 	  return positionMeters;
 	}
@@ -334,5 +336,27 @@ public class DriveTrain extends SubsystemBase {
 
   public DifferentialDrivetrainSim getDriveTrainSim(){
     return m_drivetrainSimulator;
+  }
+
+  public void reset_max_speed(){
+	m_drive_absMax = m_max_speed_entry.get(0);
+  }
+
+  public double get_max_speed(){
+	return m_drive_absMax;
+  }
+  /**
+   * Example command factory method.
+   *
+   * @return a command
+   */
+  public CommandBase setMaxValue() {
+    // Inline construction of command goes here.
+    // Subsystem::RunOnce implicitly requires `this` subsystem.
+    return runOnce(
+        () -> {
+          /* one-time action goes here */
+		  m_drive_absMax = m_max_speed_entry.get(0);
+        });
   }
 }
