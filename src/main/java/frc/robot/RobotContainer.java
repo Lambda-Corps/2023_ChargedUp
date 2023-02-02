@@ -9,8 +9,10 @@ import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import frc.robot.subsystems.DriveTrain.DefaultDriveTrainCommand;
+import frc.robot.subsystems.DriveTrain.DriveForTenSecondsCommand;
 import frc.robot.subsystems.DriveTrain.DriveTrain;
 import frc.robot.subsystems.DriveTrain.SetMaxSpeedCommand;
+import frc.robot.subsystems.DriveTrain.TurnToAngle;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.PrintCommand;
 
@@ -72,8 +74,13 @@ public class RobotContainer {
     driveTestTab.addDouble("Current Speed", m_drivetrain::get_max_speed).withPosition(0, 3).withSize(1,1);
     driveTestTab.add("Reset_Max Speed", new SetMaxSpeedCommand(m_drivetrain)).withPosition(1, 3).withSize(2, 1);
 
+    // Turn to Angle networktable entry
+    driveTestTab.add("Target Heading", 0);
+    driveTestTab.add("Current Heading", 0);
 
-
+    // create drive test buttons
+    driveTestTab.add("Drive for Ten Seconds", new DriveForTenSecondsCommand(m_drivetrain));
+    driveTestTab.add("Turn to Angle", new TurnToAngle(m_drivetrain));
     
   }
 }

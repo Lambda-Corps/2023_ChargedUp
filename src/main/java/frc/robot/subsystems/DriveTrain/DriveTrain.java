@@ -359,4 +359,8 @@ public class DriveTrain extends SubsystemBase {
 		  m_drive_absMax = m_max_speed_entry.get(0);
         });
   }
+
+  public AHRS getDriveTrainGyro() {
+	return m_gyro;
+  }
 }
