@@ -75,5 +75,9 @@ public class RobotContainer {
 
     driveTestTab.add("Robot Heading", 0).withPosition(0, 0).withSize(2, 2).withWidget(BuiltInWidgets.kGyro);
     
+    driveTestTab.add("kP", 0).withPosition(4, 0).withSize(1, 1);
+    driveTestTab.add("kD", 0).withPosition(5, 0).withSize(1, 1);
+    driveTestTab.add("kI", 0).withPosition(6, 0).withSize(1, 1);
+    driveTestTab.add("kF", 0).withPosition(7, 0).withSize(1, 1);
   }
 }

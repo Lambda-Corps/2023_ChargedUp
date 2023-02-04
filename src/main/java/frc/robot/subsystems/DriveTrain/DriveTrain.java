@@ -14,6 +14,7 @@ import com.ctre.phoenix.motorcontrol.InvertType;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.TalonFXInvertType;
 import com.ctre.phoenix.motorcontrol.TalonFXSimCollection;
+import com.ctre.phoenix.motorcontrol.can.SlotConfiguration;
 import com.ctre.phoenix.motorcontrol.can.TalonFXConfiguration;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 import com.kauailabs.navx.frc.AHRS;
@@ -69,8 +70,10 @@ public class DriveTrain extends SubsystemBase {
   private final double kTrackWidthMeters = .546;
   private final double kTrackWidthInches = 24.75;
   private final double kRobotMass = 55.3;
+  private final int kclosedLoopTimeMs = 1;
 
 	private final double MAX_TELEOP_DRIVE_SPEED = 1.0;
+	private final double DRIVE_TRAIN_MM_TOLERANCE = 2048;
 	// private final double arbFF = 0.2;
 	// TalonFX's for the drivetrain
 	// Right side is inverted here to drive forward
@@ -109,6 +112,13 @@ public class DriveTrain extends SubsystemBase {
 	// Entries to periodically update the network table entries
 	private final DoubleEntry m_left_encoder_entry, m_right_encoder_entry, m_left_speed_entry, m_right_speed_entry, m_max_speed_entry, kP_entry, kD_entry, kI_entry, kF_entry;
 
+	TalonFXConfiguration _leftConfig = new TalonFXConfiguration();
+	TalonFXConfiguration _rightConfig = new TalonFXConfiguration();
+	SlotConfiguration left_forward_config = _leftConfig.slot0;
+	SlotConfiguration left_reverse_config = _leftConfig.slot1;
+	SlotConfiguration right_forward_config = _rightConfig.slot0;
+	SlotConfiguration right_reverse_config = _rightConfig.slot1;
+
   	/** Creates a new DriveTrain. */
  	public DriveTrain() {
 		m_gyro = new AHRS(SPI.Port.kMXP);
@@ -137,9 +147,7 @@ public class DriveTrain extends SubsystemBase {
 		m_right_leader.setNeutralMode(NeutralMode.Brake);
 
 		/** Config Objects for motor controllers */
-		TalonFXConfiguration _leftConfig = new TalonFXConfiguration();
-		TalonFXConfiguration _rightConfig = new TalonFXConfiguration();
-
+		
 		// setEncodersToZero();
 		m_right_leader.setSelectedSensorPosition(0);
 		m_left_leader.setSelectedSensorPosition(0);
@@ -199,6 +207,48 @@ public class DriveTrain extends SubsystemBase {
 		kD_entry = new DoubleTopic(nt_table.getDoubleTopic("kD")).getEntry(0, PubSubOption.keepDuplicates(true));
 		kI_entry = new DoubleTopic(nt_table.getDoubleTopic("kI")).getEntry(0, PubSubOption.keepDuplicates(true));
 		kF_entry = new DoubleTopic(nt_table.getDoubleTopic("kF")).getEntry(0, PubSubOption.keepDuplicates(true));
+		
+		//PID slot entries
+		left_forward_config.kP = kP_entry.getAsDouble();
+		left_forward_config.kD = kD_entry.getAsDouble();
+		left_forward_config.kI = kI_entry.getAsDouble();
+		left_forward_config.kF = kF_entry.getAsDouble();
+		left_forward_config.allowableClosedloopError = 256;
+		left_forward_config.closedLoopPeakOutput = MAX_TELEOP_DRIVE_SPEED;
+		left_forward_config.closedLoopPeriod = kclosedLoopTimeMs;
+		_leftConfig.slot0 = left_forward_config;
+		
+		left_reverse_config.kP = kP_entry.getAsDouble();
+		left_reverse_config.kD = kD_entry.getAsDouble();
+		left_reverse_config.kI = kI_entry.getAsDouble();
+		left_reverse_config.kF = kF_entry.getAsDouble();
+		left_reverse_config.allowableClosedloopError = 256;
+		left_reverse_config.closedLoopPeakOutput = MAX_TELEOP_DRIVE_SPEED;
+		left_reverse_config.closedLoopPeriod = kclosedLoopTimeMs;
+		_leftConfig.slot1 = left_reverse_config;
+		
+		
+		right_forward_config.kP = kP_entry.getAsDouble();
+		right_forward_config.kD = kD_entry.getAsDouble();
+		right_forward_config.kI = kI_entry.getAsDouble();
+		right_forward_config.kF = kF_entry.getAsDouble();
+		right_forward_config.allowableClosedloopError = 256;
+		right_forward_config.closedLoopPeakOutput = MAX_TELEOP_DRIVE_SPEED;
+		right_forward_config.closedLoopPeriod = kclosedLoopTimeMs;
+		_rightConfig.slot0 = right_forward_config;
+
+		right_reverse_config.kP = kP_entry.getAsDouble();
+		right_reverse_config.kD = kD_entry.getAsDouble();
+		right_reverse_config.kI = kI_entry.getAsDouble();
+		right_reverse_config.kF = kF_entry.getAsDouble();
+		right_reverse_config.allowableClosedloopError = 256;
+		right_reverse_config.closedLoopPeakOutput = MAX_TELEOP_DRIVE_SPEED;
+		right_reverse_config.closedLoopPeriod = kclosedLoopTimeMs;
+		_rightConfig.slot1 = right_reverse_config;
+
+		m_left_leader.configAllSettings(_leftConfig);
+		m_right_leader.configAllSettings(_rightConfig);
+		
   	}
 
 	@Override
@@ -363,5 +413,80 @@ public class DriveTrain extends SubsystemBase {
           /* one-time action goes here */
 		  m_drive_absMax = m_max_speed_entry.get(0);
         });
+  }
+
+  public void configureLeftForwardPidSlot() {
+	left_forward_config.kP = kP_entry.getAsDouble();
+	left_forward_config.kD = kD_entry.getAsDouble();
+	left_forward_config.kI = kI_entry.getAsDouble();
+	left_forward_config.kF = kF_entry.getAsDouble();
+	left_forward_config.allowableClosedloopError = 256;
+	left_forward_config.closedLoopPeakOutput = MAX_TELEOP_DRIVE_SPEED;
+	left_forward_config.closedLoopPeriod = kclosedLoopTimeMs;
+	_leftConfig.slot0 = left_forward_config;
+  }
+  
+  public void configureLeftReversePidSlot() {
+	left_reverse_config.kP = kP_entry.getAsDouble();
+	left_reverse_config.kD = kD_entry.getAsDouble();
+	left_reverse_config.kI = kI_entry.getAsDouble();
+	left_reverse_config.kF = kF_entry.getAsDouble();
+	left_reverse_config.allowableClosedloopError = 256;
+	left_reverse_config.closedLoopPeakOutput = MAX_TELEOP_DRIVE_SPEED;
+	left_reverse_config.closedLoopPeriod = kclosedLoopTimeMs;
+	_leftConfig.slot1 = left_reverse_config;
+  }
+  
+  public void configureRightForwardPidSlot() {
+	right_forward_config.kP = kP_entry.getAsDouble();
+	right_forward_config.kD = kD_entry.getAsDouble();
+	right_forward_config.kI = kI_entry.getAsDouble();
+	right_forward_config.kF = kF_entry.getAsDouble();
+	right_forward_config.allowableClosedloopError = 256;
+	right_forward_config.closedLoopPeakOutput = MAX_TELEOP_DRIVE_SPEED;
+	right_forward_config.closedLoopPeriod = kclosedLoopTimeMs;
+	_rightConfig.slot0 = right_forward_config;
+  }
+  
+  public void configureRightReversePidSlot() {
+	right_reverse_config.kP = kP_entry.getAsDouble();
+	right_reverse_config.kD = kD_entry.getAsDouble();
+	right_reverse_config.kI = kI_entry.getAsDouble();
+	right_reverse_config.kF = kF_entry.getAsDouble();
+	right_reverse_config.allowableClosedloopError = 256;
+	right_reverse_config.closedLoopPeakOutput = MAX_TELEOP_DRIVE_SPEED;
+	right_reverse_config.closedLoopPeriod = kclosedLoopTimeMs;
+	_rightConfig.slot1 = right_reverse_config;
+  }
+
+  public void configureMotionMagic(int target) {
+    double left_currentPosition = m_left_leader.getSelectedSensorPosition();
+    double right_currentPosition = m_right_leader.getSelectedSensorPosition();
+
+    if(left_currentPosition < target) {
+      configureLeftForwardPidSlot();
+    } else if(left_currentPosition > target) {
+      configureLeftReversePidSlot();
+    } else {
+      //does nothing
+	}
+
+	if(right_currentPosition < target){
+	  configureRightForwardPidSlot();
+	} else if (left_currentPosition > target){
+	  configureRightReversePidSlot();
+	} else {
+	  //does nothing 
+	}
+}
+	
+  public boolean driveMotionMagic(int target) {
+    m_right_leader.set(ControlMode.MotionMagic, target);
+	m_left_leader.set(ControlMode.MotionMagic, target);
+
+    double right_error = Math.abs(m_right_leader.getClosedLoopError());
+	double left_error = Math.abs(m_left_leader.getClosedLoopError());
+
+    return right_error <= DRIVE_TRAIN_MM_TOLERANCE && left_error <= DRIVE_TRAIN_MM_TOLERANCE;
   }
 }
