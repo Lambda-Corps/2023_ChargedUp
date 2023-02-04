@@ -11,6 +11,7 @@ import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import frc.robot.subsystems.DriveTrain.DefaultDriveTrainCommand;
 import frc.robot.subsystems.DriveTrain.DriveTrain;
+import frc.robot.subsystems.DriveTrain.DriveWithMotionMagic;
 import frc.robot.subsystems.DriveTrain.SetMaxSpeedCommand;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.PrintCommand;
@@ -29,13 +30,14 @@ public class RobotContainer {
   private final DriveTrain m_drivetrain = new DriveTrain();
 
   //private final ExampleCommand m_autoCommand = new ExampleCommand(m_exampleSubsystem);
+  private final int m_target;
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
     buildDriveTestTab();
     // Set subsystem default commands
     m_drivetrain.setDefaultCommand(new DefaultDriveTrainCommand(m_drivetrain, m_driver_controller));
-    
+    m_target = 32000;
     // Configure the button bindings
     configureButtonBindings();
   }
@@ -60,15 +62,18 @@ public class RobotContainer {
 
   private void buildDriveTestTab() {
     ShuffleboardTab driveTestTab = Shuffleboard.getTab("Drive Test");
+    driveTestTab.add("Drive_MM", m_drivetrain.driveMotionMagic(m_target)).withPosition(4, 0);
+    driveTestTab.add("Target Motion Magic", m_target);
+    driveTestTab.add("Motion Magic Drive", new DriveWithMotionMagic(m_drivetrain, m_target));
 
-    driveTestTab.add("Right Encoder", 0).withPosition(1, 0).withSize(1, 1);
-    driveTestTab.add("Left Encoder", 0).withPosition(0, 0).withSize(1, 1);
-    driveTestTab.add("Right Speed", 0).withPosition(3, 1).withSize(1,1);
-    driveTestTab.add("Left Speed", 0).withPosition(2, 1).withSize(1,1);
+    driveTestTab.add("Right Encoder", 0).withPosition(2, 0).withSize(1, 1);
+    driveTestTab.add("Left Encoder", 0).withPosition(3, 0).withSize(1, 1);
+    driveTestTab.add("Right Speed", 0).withPosition(2, 1).withSize(1,1);
+    driveTestTab.add("Left Speed", 0).withPosition(3, 1).withSize(1,1);
     
     // Set the max speed variables
     driveTestTab.add("Max Speed", 0).withPosition(0, 2).withSize(1,1);
-    driveTestTab.add("Reset Max Speed", m_drivetrain.setMaxValue()).withPosition(1, 2).withSize(2, 1);
+    driveTestTab.add("Reset Max Speed", m_drivetrain.setMaxValue()).withPosition(0, 2).withSize(2, 1);
     // Set the max speed variables
     driveTestTab.addDouble("Current Speed", m_drivetrain::get_max_speed).withPosition(0, 3).withSize(1,1);
     driveTestTab.add("Set_Max Speed", new SetMaxSpeedCommand(m_drivetrain)).withPosition(1, 3).withSize(2, 1);

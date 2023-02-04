@@ -13,6 +13,17 @@ package frc.robot;
  * constants are needed, to reduce verbosity.
  */
 public final class Constants {
+    
+    public static final int kCountsPerRev = 2048;    // Encoder counts per revolution of the motor shaft.
+	public static final double kSensorGearRatio = 4.17; // Gear ratio is the ratio between the *encoder* and the wheels. On the AndyMark
+														// drivetrain, encoders mount 1:1 with the gearbox shaft.
+	public static final double kGearRatio = 4.17;   // Switch kSensorGearRatio to this gear ratio if encoder is on the motor instead
+														// of on the gearbox.
+	public static final double kWheelRadiusInches = 2.9;
+	public static final int k100msPerSecond = 10;
+	public final static int kEncoderUnitsPerRotation = 36465;
+	public final static double kEncoderTicksPerDegree = kEncoderUnitsPerRotation / 360;
+    public static final double kEncoderTicksPerInch = (kCountsPerRev * kGearRatio) / (2 * Math.PI * kWheelRadiusInches);
     ////////////////////// CAN IDs //////////////////////
     public final static int LEFT_TALON_LEADER    = 1;
     public final static int LEFT_TALON_FOLLOWER  = 3;
@@ -34,4 +45,14 @@ public final class Constants {
     /////////////////// Human Interface ///////////////////////////
     public static final int DRIVER_LEFT_AXIS = 1;
     public static final int DRIVER_RIGHT_AXIS = 4;
+    /* We allow either a 0 or 1 when selecting a PID Index, where 0 is primary and 1 is auxiliary */
+	public final static int PID_PRIMARY = 0;
+	public final static int PID_TURN = 1;
+
+    /* Firmware currently supports slots [0, 3] and can be used for either PID Set */
+	public final static int SLOT_0 = 0;
+	public final static int SLOT_1 = 1;
+    /* ---- Named slots, used to clarify code ---- */
+	public final static int kSlot_DriveMM = SLOT_0;
+	public final static int kSlot_Turning = SLOT_1;
 }

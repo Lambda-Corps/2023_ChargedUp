@@ -6,8 +6,10 @@ package frc.robot.subsystems.DriveTrain;
 
 import static frc.robot.Constants.LEFT_TALON_FOLLOWER;
 import static frc.robot.Constants.LEFT_TALON_LEADER;
+import static frc.robot.Constants.PID_PRIMARY;
 import static frc.robot.Constants.RIGHT_TALON_FOLLOWER;
 import static frc.robot.Constants.RIGHT_TALON_LEADER;
+import static frc.robot.Constants.kSlot_DriveMM;
 
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.InvertType;
@@ -118,6 +120,9 @@ public class DriveTrain extends SubsystemBase {
 	SlotConfiguration left_reverse_config = _leftConfig.slot1;
 	SlotConfiguration right_forward_config = _rightConfig.slot0;
 	SlotConfiguration right_reverse_config = _rightConfig.slot1;
+
+	// Motion Magic Setpoints for each side of the motor
+	private double m_left_setpoint, m_right_setpoint;
 
   	/** Creates a new DriveTrain. */
  	public DriveTrain() {
@@ -489,4 +494,57 @@ public class DriveTrain extends SubsystemBase {
 
     return right_error <= DRIVE_TRAIN_MM_TOLERANCE && left_error <= DRIVE_TRAIN_MM_TOLERANCE;
   }
+
+  public boolean motionMagicTurn(double arcTicks){
+	double tolerance = 75;
+	if(arcTicks > 0){
+		m_left_leader.set(ControlMode.MotionMagic, m_left_setpoint);
+		m_right_leader.set(ControlMode.MotionMagic, m_right_setpoint);
+	}else{
+		m_left_leader.set(ControlMode.MotionMagic, m_left_setpoint);
+		m_right_leader.set(ControlMode.MotionMagic, m_right_setpoint);
+	}
+	double currentLeftPos =  m_left_leader.getSelectedSensorPosition();
+	double currentRightPos = m_right_leader.getSelectedSensorPosition();
+	 
+	return Math.abs(m_left_setpoint - currentLeftPos) < tolerance && Math.abs(m_right_setpoint - currentRightPos) < tolerance;
+
+}
+
+public void motion_magic_start_config_drive(boolean isForward, double lengthInTicks){
+	m_left_setpoint = m_left_leader.getSelectedSensorPosition() + lengthInTicks;
+	m_right_setpoint = m_right_leader.getSelectedSensorPosition() + lengthInTicks;
+
+	m_left_leader.configMotionCruiseVelocity(16636,kTimeoutMs);
+	m_left_leader.configMotionAcceleration(8318/1.25, kTimeoutMs); //cruise velocity / 2, so will take 2 seconds
+	m_right_leader.configMotionCruiseVelocity(16636,kTimeoutMs);
+	m_right_leader.configMotionAcceleration(8318/1.25, kTimeoutMs);
+	
+	//set up talon to use DriveMM slots
+	m_left_leader.selectProfileSlot(kSlot_DriveMM, PID_PRIMARY);
+	m_right_leader.selectProfileSlot(kSlot_DriveMM, PID_PRIMARY);
+}
+
+public void reset_drive_PID_values(double kP, double kI, double kD) {
+	m_left_leader.config_kP(kSlot_DriveMM, kP);
+	m_left_leader.config_kI(kSlot_DriveMM, kI);
+	m_left_leader.config_kD(kSlot_DriveMM, kD);
+	
+	m_right_leader.config_kP(kSlot_DriveMM, kP);
+	m_right_leader.config_kI(kSlot_DriveMM, kI);
+	m_right_leader.config_kD(kSlot_DriveMM, kD); 
+}
+// public void motionMagicStartConfigsTurn(boolean isCCWturn, double lengthInTicks){
+
+// 	m_left_leader.selectProfileSlot(kSlot_Turning);
+// 	m_right_leader.selectProfileSlot(kSlot_Turning);
+// 	m_left_leader.configMotionCruiseVelocity(16636, kTimeoutMs);
+// 	m_left_leader.configMotionAcceleration(4159, kTimeoutMs);
+// 	m_right_leader.configMotionCruiseVelocity(16636, kTimeoutMs);
+// 	m_right_leader.configMotionAcceleration(4159, kTimeoutMs);
+
+// 	// length in Ticks is negative
+// 	m_left_setpoint = m_left_leader.getSelectedSensorPosition() + lengthInTicks;
+// 	m_right_setpoint = m_right_leader.getSelectedSensorPosition() - lengthInTicks;
+// }
 }
