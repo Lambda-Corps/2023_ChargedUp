@@ -107,7 +107,7 @@ public class DriveTrain extends SubsystemBase {
 	//private final DoubleTopic m_left_encoder_topic, m_right_encoder_topic, m_left_speed_topic, m_right_speed_topic;
 
 	// Entries to periodically update the network table entries
-	private final DoubleEntry m_left_encoder_entry, m_right_encoder_entry, m_left_speed_entry, m_right_speed_entry, m_max_speed_entry;
+	private final DoubleEntry m_left_encoder_entry, m_right_encoder_entry, m_left_speed_entry, m_right_speed_entry, m_max_speed_entry, kP_entry, kD_entry, kI_entry, kF_entry;
 
   	/** Creates a new DriveTrain. */
  	public DriveTrain() {
@@ -194,6 +194,11 @@ public class DriveTrain extends SubsystemBase {
 		m_right_speed_entry = new DoubleTopic(nt_table.getDoubleTopic("Right Speed")).getEntry(0, PubSubOption.keepDuplicates(true));
 		m_left_speed_entry = new DoubleTopic(nt_table.getDoubleTopic("Left Speed")).getEntry(0, PubSubOption.keepDuplicates(true));
 		m_max_speed_entry = new DoubleTopic(nt_table.getDoubleTopic("Max Speed")).getEntry(0, PubSubOption.keepDuplicates(true));
+
+		kP_entry = new DoubleTopic(nt_table.getDoubleTopic("kP")).getEntry(0, PubSubOption.keepDuplicates(true));
+		kD_entry = new DoubleTopic(nt_table.getDoubleTopic("kD")).getEntry(0, PubSubOption.keepDuplicates(true));
+		kI_entry = new DoubleTopic(nt_table.getDoubleTopic("kI")).getEntry(0, PubSubOption.keepDuplicates(true));
+		kF_entry = new DoubleTopic(nt_table.getDoubleTopic("kF")).getEntry(0, PubSubOption.keepDuplicates(true));
   	}
 
 	@Override
