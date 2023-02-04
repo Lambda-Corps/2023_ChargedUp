@@ -74,9 +74,9 @@ public class RobotContainer {
     driveTestTab.addDouble("Current Speed", m_drivetrain::get_max_speed).withPosition(0, 3).withSize(1,1);
     driveTestTab.add("Set_Max Speed", new SetMaxSpeedCommand(m_drivetrain)).withPosition(1, 3).withSize(2, 1);
 
-    driveTestTab.add("Robot Heading", 0).withPosition(0, 0).withSize(2, 2).withWidget(BuiltInWidgets.kGyro);
+    //driveTestTab.add("Robot Heading", 0).withPosition(0, 0).withSize(2, 2).withWidget(BuiltInWidgets.kGyro);
     
-    driveTestTab.add("Front/Back Limiter", 3).withPosition(0, 4).withSize(1, 1);
+    driveTestTab.add("Front to Back Limiter", 3).withPosition(0, 4).withSize(1, 1);
     driveTestTab.add("Turn Rate Limiter", 3).withPosition(1, 4).withSize(1, 1);
     driveTestTab.add("Update Slew Rate Limiters", new UpdateSlewRateLimitersFromShuffleboard(m_drivetrain)).withPosition(0, 5).withSize(2, 1);
   }

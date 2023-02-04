@@ -109,8 +109,6 @@ public class DriveTrain extends SubsystemBase {
 	// Entries to periodically update the network table entries
 	private final DoubleEntry m_left_encoder_entry, m_right_encoder_entry, m_left_speed_entry, m_right_speed_entry, m_max_speed_entry, m_front_back_limiter_entry, m_turn_limiter_entry;
 
-	// Slew Rate limiting for speed and direction changes
-	private SlewRateLimiter m_front_to_back_limiter, m_turn_rate_limiter;
 
   	/** Creates a new DriveTrain. */
  	public DriveTrain() {
@@ -138,10 +136,6 @@ public class DriveTrain extends SubsystemBase {
 		/* Set Neutral Mode */
 		m_left_leader.setNeutralMode(NeutralMode.Brake);
 		m_right_leader.setNeutralMode(NeutralMode.Brake);
-
-		/* Set Slew Rate Limiter */
-		m_front_to_back_limiter = new SlewRateLimiter(3);
-		m_turn_rate_limiter = new SlewRateLimiter(5);
 
 		/** Config Objects for motor controllers */
 		TalonFXConfiguration _leftConfig = new TalonFXConfiguration();
@@ -226,11 +220,11 @@ public class DriveTrain extends SubsystemBase {
 		forward = MathUtil.clamp(forward, -m_drive_absMax, m_drive_absMax);
 		turn = MathUtil.clamp(turn, -m_drive_absMax, m_drive_absMax);
 
-		// //forward = -m_forward_limiter.calculate(forward) * m_drive_absMax;
-		// if(forward != 0 || turn != 0) {
-		// 	forward = m_forward_limiter.calculate(forward) * m_drive_absMax;
-		// 	turn = m_rotation_limiter.calculate(turn) * m_drive_absMax;
-		// }
+		//forward = -m_forward_limiter.calculate(forward) * m_drive_absMax;
+		if(forward != 0 || turn != 0) {
+			forward = m_forward_limiter.calculate(forward) * m_drive_absMax;
+			turn = m_rotation_limiter.calculate(turn) * m_drive_absMax;
+		}
 
 		var speeds = DifferentialDrive.curvatureDriveIK(forward, turn, true);
 
@@ -370,7 +364,7 @@ public class DriveTrain extends SubsystemBase {
   }
 
   public void updateSlewRates() {
-	m_turn_rate_limiter.reset(m_turn_limiter_entry.getAsDouble());
-	m_front_to_back_limiter.reset(m_front_back_limiter_entry.getAsDouble());
+	m_rotation_limiter.reset(m_turn_limiter_entry.getAsDouble());
+	m_forward_limiter.reset(m_front_back_limiter_entry.getAsDouble());
   }
 }
