@@ -6,6 +6,7 @@ package frc.robot;
 
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import frc.robot.subsystems.DriveTrain.DefaultDriveTrainCommand;
@@ -62,18 +63,17 @@ public class RobotContainer {
 
     driveTestTab.add("Right Encoder", 0).withPosition(1, 0).withSize(1, 1);
     driveTestTab.add("Left Encoder", 0).withPosition(0, 0).withSize(1, 1);
-    driveTestTab.add("Right Speed", 0).withPosition(3, 0).withSize(1,1);
-    driveTestTab.add("Left Speed", 0).withPosition(2, 0).withSize(1,1);
+    driveTestTab.add("Right Speed", 0).withPosition(3, 1).withSize(1,1);
+    driveTestTab.add("Left Speed", 0).withPosition(2, 1).withSize(1,1);
     
     // Set the max speed variables
     driveTestTab.add("Max Speed", 0).withPosition(0, 2).withSize(1,1);
     driveTestTab.add("Reset Max Speed", m_drivetrain.setMaxValue()).withPosition(1, 2).withSize(2, 1);
     // Set the max speed variables
     driveTestTab.addDouble("Current Speed", m_drivetrain::get_max_speed).withPosition(0, 3).withSize(1,1);
-    driveTestTab.add("Reset_Max Speed", new SetMaxSpeedCommand(m_drivetrain)).withPosition(1, 3).withSize(2, 1);
+    driveTestTab.add("Set_Max Speed", new SetMaxSpeedCommand(m_drivetrain)).withPosition(1, 3).withSize(2, 1);
 
-
-
+    driveTestTab.add("Robot Heading", 0).withPosition(0, 0).withSize(2, 2).withWidget(BuiltInWidgets.kGyro);
     
   }
 }
