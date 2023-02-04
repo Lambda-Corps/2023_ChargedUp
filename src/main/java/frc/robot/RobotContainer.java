@@ -37,7 +37,7 @@ public class RobotContainer {
     buildDriveTestTab();
     // Set subsystem default commands
     m_drivetrain.setDefaultCommand(new DefaultDriveTrainCommand(m_drivetrain, m_driver_controller));
-    m_target = 32000;
+    m_target = 81920;
     // Configure the button bindings
     configureButtonBindings();
   }
@@ -66,6 +66,7 @@ public class RobotContainer {
     driveTestTab.add("Target Motion Magic", m_target);
     driveTestTab.add("Motion Magic Drive", new DriveWithMotionMagic(m_drivetrain, m_target));
 
+    driveTestTab.add("Drivetrain", m_drivetrain).withPosition(5, 2);
     driveTestTab.add("Right Encoder", 0).withPosition(2, 0).withSize(1, 1);
     driveTestTab.add("Left Encoder", 0).withPosition(3, 0).withSize(1, 1);
     driveTestTab.add("Right Speed", 0).withPosition(2, 1).withSize(1,1);
@@ -73,16 +74,20 @@ public class RobotContainer {
     
     // Set the max speed variables
     driveTestTab.add("Max Speed", 0).withPosition(0, 2).withSize(1,1);
-    driveTestTab.add("Reset Max Speed", m_drivetrain.setMaxValue()).withPosition(0, 2).withSize(2, 1);
+    //driveTestTab.add("Reset Max Speed", m_drivetrain.setMaxValue()).withPosition(0, 2).withSize(1, 1);
     // Set the max speed variables
     driveTestTab.addDouble("Current Speed", m_drivetrain::get_max_speed).withPosition(0, 3).withSize(1,1);
     driveTestTab.add("Set_Max Speed", new SetMaxSpeedCommand(m_drivetrain)).withPosition(1, 3).withSize(2, 1);
 
-    driveTestTab.add("Robot Heading", 0).withPosition(0, 0).withSize(2, 2).withWidget(BuiltInWidgets.kGyro);
+    //driveTestTab.add("Robot Heading", 0).withPosition(0, 0).withSize(2, 2).withWidget(BuiltInWidgets.kGyro);
     
     driveTestTab.add("kP", 0).withPosition(4, 0).withSize(1, 1);
     driveTestTab.add("kD", 0).withPosition(5, 0).withSize(1, 1);
     driveTestTab.add("kI", 0).withPosition(6, 0).withSize(1, 1);
     driveTestTab.add("kF", 0).withPosition(7, 0).withSize(1, 1);
+    driveTestTab.add("Tgt. Ticks", 0 ).withPosition( 1, 4);
+    driveTestTab.add("Tgt. Inches", 0 ).withPosition( 1, 5);
+    driveTestTab.add("Run Time", 0 ).withPosition( 1, 6);
+    driveTestTab.add("Finish Iterrations", 0 ).withPosition( 1, 7);
   }
 }

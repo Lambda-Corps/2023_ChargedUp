@@ -7,10 +7,13 @@ package frc.robot.subsystems.DriveTrain;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 
 import static frc.robot.Constants.kEncoderTicksPerInch;
+
+import java.io.Console;
 
 
 public class DriveWithMotionMagic extends CommandBase {
@@ -28,7 +31,7 @@ public class DriveWithMotionMagic extends CommandBase {
   public DriveWithMotionMagic(DriveTrain driveTrain, double targetInches) {
     m_driveTrain = driveTrain;
     m_targetPosition = targetInches;
-    NetworkTable driveTab = NetworkTableInstance.getDefault().getTable("Shuffleboard").getSubTable("Drive Testing");
+    NetworkTable driveTab = NetworkTableInstance.getDefault().getTable("Shuffleboard").getSubTable("Drive Test");
 
     m_drivekPEntry = driveTab.getEntry("kP");
     m_kIEntry = driveTab.getEntry("kI");
@@ -38,7 +41,6 @@ public class DriveWithMotionMagic extends CommandBase {
     m_targetPosEntry = driveTab.getEntry("Tgt. Inches");
     m_targetTicksEntry = driveTab.getEntry("Tgt. Ticks");
     m_drivedurationEntry = driveTab.getEntry("Run Time");
-    m_kIEntry = driveTab.getEntry("kI");
     // Use addRequirements() here to declare subsystem dependencies.
     addRequirements(m_driveTrain);
   }
@@ -63,6 +65,7 @@ public class DriveWithMotionMagic extends CommandBase {
   public void execute() {
     if (m_driveTrain.driveMotionMagic((int)m_targetTicks)){
       count++;
+      System.out.print("count:" + count);
     } else {
       count = 0;
     }

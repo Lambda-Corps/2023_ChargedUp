@@ -1,0 +1,17 @@
+{
+  "Connections": {
+    "open": true
+  },
+  "NetworkTables Settings": {
+    "mode": "Client (NT4)",
+    "serverTeam": "127.0.0.1"
+  },
+  "transitory": {
+    "Shuffleboard": {
+      "Drive Test": {
+        "open": true
+      },
+      "open": true
+    }
+  }
+}
