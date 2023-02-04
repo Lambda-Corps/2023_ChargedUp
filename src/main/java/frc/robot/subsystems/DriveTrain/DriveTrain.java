@@ -107,7 +107,10 @@ public class DriveTrain extends SubsystemBase {
 	//private final DoubleTopic m_left_encoder_topic, m_right_encoder_topic, m_left_speed_topic, m_right_speed_topic;
 
 	// Entries to periodically update the network table entries
-	private final DoubleEntry m_left_encoder_entry, m_right_encoder_entry, m_left_speed_entry, m_right_speed_entry, m_max_speed_entry;
+	private final DoubleEntry m_left_encoder_entry, m_right_encoder_entry, m_left_speed_entry, m_right_speed_entry, m_max_speed_entry, m_front_back_limiter_entry, m_turn_limiter_entry;
+
+	// Slew Rate limiting for speed and direction changes
+	private SlewRateLimiter m_front_to_back_limiter, m_turn_rate_limiter;
 
   	/** Creates a new DriveTrain. */
  	public DriveTrain() {
@@ -135,6 +138,10 @@ public class DriveTrain extends SubsystemBase {
 		/* Set Neutral Mode */
 		m_left_leader.setNeutralMode(NeutralMode.Brake);
 		m_right_leader.setNeutralMode(NeutralMode.Brake);
+
+		/* Set Slew Rate Limiter */
+		m_front_to_back_limiter = new SlewRateLimiter(3);
+		m_turn_rate_limiter = new SlewRateLimiter(5);
 
 		/** Config Objects for motor controllers */
 		TalonFXConfiguration _leftConfig = new TalonFXConfiguration();
@@ -194,6 +201,8 @@ public class DriveTrain extends SubsystemBase {
 		m_right_speed_entry = new DoubleTopic(nt_table.getDoubleTopic("Right Speed")).getEntry(0, PubSubOption.keepDuplicates(true));
 		m_left_speed_entry = new DoubleTopic(nt_table.getDoubleTopic("Left Speed")).getEntry(0, PubSubOption.keepDuplicates(true));
 		m_max_speed_entry = new DoubleTopic(nt_table.getDoubleTopic("Max Speed")).getEntry(0, PubSubOption.keepDuplicates(true));
+		m_front_back_limiter_entry = new DoubleTopic(nt_table.getDoubleTopic("Front/Back Limiter")).getEntry(0, PubSubOption.keepDuplicates(true));
+		m_turn_limiter_entry = new DoubleTopic(nt_table.getDoubleTopic("Turn Rate Limiter")).getEntry(0, PubSubOption.keepDuplicates(true));
   	}
 
 	@Override
@@ -358,5 +367,10 @@ public class DriveTrain extends SubsystemBase {
           /* one-time action goes here */
 		  m_drive_absMax = m_max_speed_entry.get(0);
         });
+  }
+
+  public void updateSlewRates() {
+	m_turn_rate_limiter.reset(m_turn_limiter_entry.getAsDouble());
+	m_front_to_back_limiter.reset(m_front_back_limiter_entry.getAsDouble());
   }
 }

@@ -12,6 +12,7 @@ import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import frc.robot.subsystems.DriveTrain.DefaultDriveTrainCommand;
 import frc.robot.subsystems.DriveTrain.DriveTrain;
 import frc.robot.subsystems.DriveTrain.SetMaxSpeedCommand;
+import frc.robot.subsystems.DriveTrain.UpdateSlewRateLimitersFromShuffleboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.PrintCommand;
 
@@ -75,5 +76,8 @@ public class RobotContainer {
 
     driveTestTab.add("Robot Heading", 0).withPosition(0, 0).withSize(2, 2).withWidget(BuiltInWidgets.kGyro);
     
+    driveTestTab.add("Front/Back Limiter", 3).withPosition(0, 4).withSize(1, 1);
+    driveTestTab.add("Turn Rate Limiter", 3).withPosition(1, 4).withSize(1, 1);
+    driveTestTab.add("Update Slew Rate Limiters", new UpdateSlewRateLimitersFromShuffleboard(m_drivetrain)).withPosition(0, 5).withSize(2, 1);
   }
 }
