@@ -32,7 +32,7 @@ public class DefaultDriveTrainCommand extends CommandBase {
   public void execute() {
     double turn, forward;
     if(Robot.isSimulation()){
-        turn = -m_driver_controller.getRawAxis(0); // Right X
+        turn = m_driver_controller.getRawAxis(0); // Right X
         forward  = -m_driver_controller.getRawAxis(DRIVER_LEFT_AXIS); // Left Y
     }
     else {
