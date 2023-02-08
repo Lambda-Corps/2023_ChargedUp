@@ -8,6 +8,11 @@ import static frc.robot.Constants.*;
 
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.FeedbackDevice;
+import com.ctre.phoenix.motorcontrol.LimitSwitchNormal;
+import com.ctre.phoenix.motorcontrol.LimitSwitchSource;
+import com.ctre.phoenix.motorcontrol.StatorCurrentLimitConfiguration;
+import com.ctre.phoenix.motorcontrol.TalonFXFeedbackDevice;
+import com.ctre.phoenix.motorcontrol.TalonFXInvertType;
 import com.ctre.phoenix.motorcontrol.can.TalonFXConfiguration;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 
@@ -18,13 +23,10 @@ import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class Arm extends SubsystemBase {
-  WPI_TalonFX m_bottom_stage, m_top_stage;
-  DigitalInput  m_arm_base_reverse_limit, m_arm_top_reverse_limit;
-  DoublePublisher m_bottom_arm_enc_value, m_top_arm_enc_value;
+  WPI_TalonFX m_arm_motor, m_wrist_motor;
+  DigitalInput  m_arm_forward_limit, m_arm_reverse_limit, m_wrist_reverse_limit, m_wrist_forward_limit;
+  DoublePublisher m_arm_position, m_wrist_position;
 
-  // Constant values for ARM movement, must be researched and tuned via tuner
-  final double BOTTOM_ARM_DRIVE_SPEED = .1;
-  final double TOP_ARM_DRIVE_SPEED = .1;
   /** Creates a new Arm. */
 
   public ArmState arm_state;
@@ -62,26 +64,100 @@ public class Arm extends SubsystemBase {
     Stop,
   }
 
+  ///////// Constants ///////////////
+  // Constant values for ARM movement, must be researched and tuned via tuner
+  final double ARM_DRIVE_SPEED = .2;
+  final double WRIST_DRIVE_SPEED = .2;
+  final double ARM_GEAR_RATIO = 10 * 4 * 4;
+  final double WRIST_GEAR_RATIO = 10 * 7 * 7;
+  final int WRIST_REVERSE_SOFT_LIMIT = 32000;
+  final int WRIST_FORWARD_SOFT_LIMIT = 150000;
+  final int ARM_REVERSE_SOFT_LIMIT = 10000; // TODO TUNE THIS
+  final int ARM_FORWARD_SOFT_LIMIT = (int)(2048 * ARM_GEAR_RATIO * 1/6); // 60 degrees rotation
+  final double WRIST_MAX_STATOR_CURRENT = 12.5;
+  final double ARM_MAX_STATOR_CURRENT = 5;
+  final int MOTION_MAGIC_SLOT = 0;
+
+
   public Arm() {
     // Configure top and bottom arm talons. NOTE: set invertType such that positive input rotates to FRONT of robot
-    m_bottom_stage = new WPI_TalonFX(BOTTOM_ARM_STAGE);
-    m_top_stage = new WPI_TalonFX(TOP_ARM_STAGE);
+    m_arm_motor = new WPI_TalonFX(ARM_MOTOR);
+    m_wrist_motor = new WPI_TalonFX(WRIST_MOTOR);
+
+    // Factory default the talons
+    m_arm_motor.configFactoryDefault();
+    m_wrist_motor.configFactoryDefault();
     
-    TalonFXConfiguration bottom_configs = new TalonFXConfiguration();
-    bottom_configs.primaryPID.selectedFeedbackSensor = FeedbackDevice.IntegratedSensor;
-    m_bottom_stage.configAllSettings(bottom_configs);
-    TalonFXConfiguration top_config = new TalonFXConfiguration();
-    top_config.primaryPID.selectedFeedbackSensor = FeedbackDevice.IntegratedSensor;
-    m_top_stage.configAllSettings(top_config);
+    TalonFXConfiguration arm_config = new TalonFXConfiguration();
+    TalonFXConfiguration wrist_config = new TalonFXConfiguration();
+
+    // Setup the ARM stage motor
+    m_arm_motor.configSelectedFeedbackSensor(TalonFXFeedbackDevice.IntegratedSensor, MOTION_MAGIC_SLOT, 0);
+    arm_config.primaryPID.selectedFeedbackSensor = FeedbackDevice.IntegratedSensor;
+    m_arm_motor.configReverseLimitSwitchSource(LimitSwitchSource.FeedbackConnector, LimitSwitchNormal.NormallyOpen);
+    m_arm_motor.configForwardLimitSwitchSource(LimitSwitchSource.FeedbackConnector, LimitSwitchNormal.NormallyOpen);
+
+    // Configure limit switches
+    arm_config.reverseLimitSwitchNormal = LimitSwitchNormal.NormallyOpen;
+    arm_config.forwardLimitSwitchNormal = LimitSwitchNormal.NormallyOpen;
+    arm_config.reverseSoftLimitEnable = true;
+    arm_config.forwardSoftLimitEnable = true;
+    arm_config.reverseSoftLimitThreshold = ARM_REVERSE_SOFT_LIMIT;
+    arm_config.forwardSoftLimitThreshold = ARM_FORWARD_SOFT_LIMIT;
+
+    // Set current limits for the ARM
+    StatorCurrentLimitConfiguration stator_limit = arm_config.statorCurrLimit;
+    stator_limit.currentLimit = ARM_MAX_STATOR_CURRENT;
+    stator_limit.enable = true;
+    stator_limit.triggerThresholdCurrent = ARM_MAX_STATOR_CURRENT + 1;
+    arm_config.statorCurrLimit = stator_limit;
     
-    // Top and bottom arm limit switches
-    m_arm_base_reverse_limit = new DigitalInput(ARM_BASE_LIMIT_SWITCH);
-    m_arm_top_reverse_limit = new DigitalInput(ARM_TOP_LIMIT_SWITCH);
+    // Set max speeds for output
+    arm_config.peakOutputForward = ARM_DRIVE_SPEED;
+    arm_config.peakOutputReverse = -ARM_DRIVE_SPEED;
+
+    // Configure the arm
+    m_arm_motor.configAllSettings(arm_config);
+   
+    // Configure the Wrist motor
+    m_wrist_motor.configSelectedFeedbackSensor(TalonFXFeedbackDevice.IntegratedSensor, MOTION_MAGIC_SLOT, 0);
+    wrist_config.primaryPID.selectedFeedbackSensor = FeedbackDevice.IntegratedSensor;
+    m_wrist_motor.configReverseLimitSwitchSource(LimitSwitchSource.FeedbackConnector, LimitSwitchNormal.NormallyOpen);
+    m_wrist_motor.configForwardLimitSwitchSource(LimitSwitchSource.FeedbackConnector, LimitSwitchNormal.NormallyOpen);
+
+    // Configure limit switches
+    wrist_config.reverseLimitSwitchNormal = LimitSwitchNormal.NormallyOpen;
+    wrist_config.forwardLimitSwitchNormal = LimitSwitchNormal.NormallyOpen;
+    wrist_config.reverseSoftLimitEnable = true;
+    wrist_config.forwardSoftLimitEnable = true;
+    wrist_config.reverseSoftLimitThreshold = ARM_REVERSE_SOFT_LIMIT;
+    wrist_config.forwardSoftLimitThreshold = ARM_FORWARD_SOFT_LIMIT;
+
+    // Set current limits for the ARM
+    stator_limit = wrist_config.statorCurrLimit;
+    stator_limit.currentLimit = ARM_MAX_STATOR_CURRENT;
+    stator_limit.enable = true;
+    stator_limit.triggerThresholdCurrent = ARM_MAX_STATOR_CURRENT + 1;
+    wrist_config.statorCurrLimit = stator_limit;
+    
+    // Set max speeds for output
+    wrist_config.peakOutputForward = ARM_DRIVE_SPEED;
+    wrist_config.peakOutputReverse = -ARM_DRIVE_SPEED;
+    // Configure the arm
+    m_wrist_motor.configAllSettings(arm_config);
+    m_wrist_motor.setInverted(TalonFXInvertType.Clockwise);
+
+    // Top and bottom arm limit switches, these DIOs are for the LEDs to light up when the limits are hit
+    m_arm_forward_limit = new DigitalInput(ARM_FORWARD_LIMIT_SWITCH);
+    m_arm_reverse_limit = new DigitalInput(ARM_REVERSE_LIMIT_SWITCH);
+    
+    m_wrist_forward_limit = new DigitalInput(WRIST_FORWARD_LIMIT_SWITCH);
+    m_wrist_reverse_limit = new DigitalInput(WRIST_REVERSE_LIMIT_SWITCH);
 
     // Setup the network tables publishers to push data to the dashboard
-    NetworkTable shuffleboard = NetworkTableInstance.getDefault().getTable("Shuffleboard");
-    m_bottom_arm_enc_value = shuffleboard.getDoubleTopic("Arm/BottomEncoder").publish();
-    m_top_arm_enc_value = shuffleboard.getDoubleTopic("Arm/TopEncoder").publish();
+    NetworkTable shuffleboard = NetworkTableInstance.getDefault().getTable("Shuffleboard").getSubTable("ARM");
+    m_arm_position = shuffleboard.getDoubleTopic("Armposition").publish();
+    m_wrist_position = shuffleboard.getDoubleTopic("Wristposition").publish();
 
     arm_state = ArmState.Inactive;
     arm_control_mode = ArmControlMode.Automatic;
@@ -91,8 +167,8 @@ public class Arm extends SubsystemBase {
 
   @Override
   public void periodic() {
-    m_bottom_arm_enc_value.set(m_bottom_stage.getSelectedSensorPosition());
-    m_top_arm_enc_value.set(m_top_stage.getSelectedSensorPosition());
+    m_arm_position.set(m_arm_motor.getSelectedSensorPosition());
+    m_wrist_position.set(m_wrist_motor.getSelectedSensorPosition());
   }
 
   public void moveArmManually(double bottom_speed, double top_speed) {
@@ -101,15 +177,15 @@ public class Arm extends SubsystemBase {
     arm_position = ArmPosition.Manual_Control;
     arm_task = ArmTask.MoveManually;
 
-    m_bottom_stage.set(ControlMode.PercentOutput, bottom_speed);
-    m_top_stage.set(ControlMode.PercentOutput, top_speed);
+    m_arm_motor.set(ControlMode.PercentOutput, bottom_speed);
+    m_wrist_motor.set(ControlMode.PercentOutput, top_speed);
 
-    if (m_arm_base_reverse_limit.get() && bottom_speed < 0) {
-      m_bottom_stage.set(ControlMode.PercentOutput, 0);
+    if (m_arm_forward_limit.get() && bottom_speed < 0) {
+      m_arm_motor.set(ControlMode.PercentOutput, 0);
     }
 
-    if (m_arm_top_reverse_limit.get() && top_speed < 0) {
-      m_top_stage.set(ControlMode.PercentOutput, 0);
+    if (m_arm_reverse_limit.get() && top_speed < 0) {
+      m_wrist_motor.set(ControlMode.PercentOutput, 0);
     }
   }
 
@@ -119,41 +195,41 @@ public class Arm extends SubsystemBase {
     arm_position = ArmPosition.Manual_Control;
     arm_task = ArmTask.Stop;
 
-    m_bottom_stage.set(ControlMode.PercentOutput, 0);
-    m_top_stage.set(ControlMode.PercentOutput, 0);
+    m_arm_motor.set(ControlMode.PercentOutput, 0);
+    m_wrist_motor.set(ControlMode.PercentOutput, 0);
   }
 
   // DO NOT USE DURING MATCHES!!! ONLY RUN IN THE PITS!!!
   public void reset_arm_pos() {
     arm_control_mode = ArmControlMode.Automatic;
     // while BOTH top and bottoms are false (not triggered)
-    while (!m_arm_base_reverse_limit.get() && !m_arm_top_reverse_limit.get()) {
+    while (!m_arm_forward_limit.get() && !m_arm_reverse_limit.get()) {
       // only drive base if limit is not hit
-      if (!m_arm_base_reverse_limit.get()) {
-        m_bottom_stage.set(ControlMode.PercentOutput, -BOTTOM_ARM_DRIVE_SPEED);
+      if (!m_arm_forward_limit.get()) {
+        m_arm_motor.set(ControlMode.PercentOutput, -ARM_DRIVE_SPEED);
       }else {
-        m_bottom_stage.set(ControlMode.PercentOutput, 0);
+        m_arm_motor.set(ControlMode.PercentOutput, 0);
       }
 
       // only drive upper stage if limit is not hit
-      if (!m_arm_top_reverse_limit.get()) {
-        m_top_stage.set(ControlMode.PercentOutput, -TOP_ARM_DRIVE_SPEED);
+      if (!m_arm_reverse_limit.get()) {
+        m_wrist_motor.set(ControlMode.PercentOutput, -WRIST_DRIVE_SPEED);
       }else {
-        m_top_stage.set(ControlMode.PercentOutput, 0);
+        m_wrist_motor.set(ControlMode.PercentOutput, 0);
       }
     }
     
     // Zero encoders once both stages are reset
-    m_bottom_stage.setSelectedSensorPosition(0);
-    m_top_stage.setSelectedSensorPosition(0);
+    m_arm_motor.setSelectedSensorPosition(0);
+    m_wrist_motor.setSelectedSensorPosition(0);
   }
 
   public WPI_TalonFX getBottomStageMotor() {
-    return m_bottom_stage;
+    return m_arm_motor;
   }
 
   public WPI_TalonFX getTopStageMotor() {
-    return m_top_stage;
+    return m_wrist_motor;
   }
 
   public ArmState getArmState() {
@@ -173,10 +249,44 @@ public class Arm extends SubsystemBase {
   }
 
   public DigitalInput getBottomLimitSwitch() {
-    return m_arm_base_reverse_limit;
+    return m_arm_forward_limit;
   }
 
   public DigitalInput getTopLimitSwitch() {
-    return m_arm_top_reverse_limit;
+    return m_arm_reverse_limit;
   }
+
+  private int radiansToNativeUnits(double radians) {
+    double ticks = (radians / (2 *  Math.PI)) * 2048;
+    return (int)ticks;
+  }
+
+  // Converts to native units per 100 ms
+  private int velocityToNativeUnits(double radPerSec) {
+    double radPer100ms = radPerSec / 1000;
+    return radiansToNativeUnits(radPer100ms);
+  }
+
+  public boolean getArmForwardLimit(){
+    return m_arm_forward_limit.get();
+  }
+
+  public boolean getArmReverseLimit(){
+      return m_arm_reverse_limit.get();
+  }
+
+  public boolean getWristForwardLimit(){
+      return m_wrist_forward_limit.get();
+  }
+
+  public boolean getWristReverseLimit(){
+      return m_wrist_reverse_limit.get();
+  }
+
+  public void drive_manually(double arm_speed, double wrist_speed) {
+    m_arm_motor.set(ControlMode.PercentOutput, arm_speed);
+    m_wrist_motor.set(ControlMode.PercentOutput, wrist_speed);
+  }
+
+  
 }
