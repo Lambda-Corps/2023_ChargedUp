@@ -10,6 +10,7 @@ import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.FeedbackDevice;
 import com.ctre.phoenix.motorcontrol.LimitSwitchNormal;
 import com.ctre.phoenix.motorcontrol.LimitSwitchSource;
+import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.StatorCurrentLimitConfiguration;
 import com.ctre.phoenix.motorcontrol.TalonFXFeedbackDevice;
 import com.ctre.phoenix.motorcontrol.TalonFXInvertType;
@@ -118,7 +119,13 @@ public class Arm extends SubsystemBase {
 
     // Configure the arm
     m_arm_motor.configAllSettings(arm_config);
+
+    // set arm inversion
+    m_arm_motor.setInverted(TalonFXInvertType.Clockwise);
    
+    //set arm brake mode 
+    m_arm_motor.setNeutralMode(NeutralMode.Brake);
+
     // Configure the Wrist motor
     m_wrist_motor.configSelectedFeedbackSensor(TalonFXFeedbackDevice.IntegratedSensor, MOTION_MAGIC_SLOT, 0);
     wrist_config.primaryPID.selectedFeedbackSensor = FeedbackDevice.IntegratedSensor;
@@ -146,6 +153,7 @@ public class Arm extends SubsystemBase {
     // Configure the arm
     m_wrist_motor.configAllSettings(arm_config);
     m_wrist_motor.setInverted(TalonFXInvertType.Clockwise);
+    m_wrist_motor.setNeutralMode(NeutralMode.Brake);
 
     // Top and bottom arm limit switches, these DIOs are for the LEDs to light up when the limits are hit
     m_arm_forward_limit = new DigitalInput(ARM_FORWARD_LIMIT_SWITCH);

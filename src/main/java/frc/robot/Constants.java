@@ -29,10 +29,10 @@ public final class Constants {
     public final static int CAN_ID_THIRTEEN = 13;
 
     /////////////////// Roborio DIO ///////////////////
-    public final static int ARM_REVERSE_LIMIT_SWITCH = 0;
-    public final static int ARM_FORWARD_LIMIT_SWITCH = 1;
-    public final static int WRIST_REVERSE_LIMIT_SWITCH = 2;
-    public final static int WRIST_FORWARD_LIMIT_SWITCH = 3;
+    public final static int ARM_REVERSE_LIMIT_SWITCH = 1;
+    public final static int ARM_FORWARD_LIMIT_SWITCH = 0;
+    public final static int WRIST_REVERSE_LIMIT_SWITCH = 3;
+    public final static int WRIST_FORWARD_LIMIT_SWITCH = 2;
     
 
     /////////////////// Human Interface ///////////////////

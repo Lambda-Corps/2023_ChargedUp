@@ -6,16 +6,17 @@ package frc.robot.subsystems.DriveTrain;
 
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.CommandBase;
+import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Robot;
 
 import static frc.robot.Constants.*;
 
 public class DefaultDriveTrainCommand extends CommandBase {
   private final DriveTrain m_drivetrain;
-  private final XboxController m_driver_controller;
+  private final CommandXboxController m_driver_controller;
 
   /** Creates a new DefaultDriveTrainCommand. */
-  public DefaultDriveTrainCommand(DriveTrain dt, XboxController xbox) {
+  public DefaultDriveTrainCommand(DriveTrain dt, CommandXboxController xbox) {
     m_drivetrain = dt;
     m_driver_controller = xbox;
 
@@ -41,7 +42,7 @@ public class DefaultDriveTrainCommand extends CommandBase {
         forward  = -m_driver_controller.getRawAxis(DRIVER_LEFT_AXIS); // Left Y
     }
 
-    if (m_driver_controller.getRightBumper()) {
+    if (m_driver_controller.rightBumper().getAsBoolean()) {
         // flip controls activated
         forward = -forward;
     }

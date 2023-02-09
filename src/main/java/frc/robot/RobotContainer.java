@@ -7,6 +7,7 @@ package frc.robot;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import frc.robot.subsystems.Arm.Arm;
+import frc.robot.subsystems.Arm.DriveArmManually;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
@@ -15,6 +16,7 @@ import frc.robot.subsystems.DriveTrain.DriveTrain;
 import frc.robot.subsystems.DriveTrain.SetMaxSpeedCommand;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.PrintCommand;
+import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -24,7 +26,8 @@ import edu.wpi.first.wpilibj2.command.PrintCommand;
  */
 public class RobotContainer {
   // Human interface
-  private final XboxController m_driver_controller = new XboxController(0);
+  private final CommandXboxController m_driver_controller = new CommandXboxController(0);
+  private final CommandXboxController m_partner_controller = new CommandXboxController(1);
 
   // The robot's subsystems and commands are defined here...
   private final DriveTrain m_drivetrain = new DriveTrain();
@@ -37,8 +40,7 @@ public class RobotContainer {
     buildDriveTestTab();
     buildArmTestTab();
     // Set subsystem default commands
-    m_drivetrain.setDefaultCommand(new DefaultDriveTrainCommand(m_drivetrain, m_driver_controller));
-    
+    m_drivetrain.setDefaultCommand(new DefaultDriveTrainCommand(m_drivetrain, m_driver_controller));    
     // Configure the button bindings
     configureButtonBindings();
   }
@@ -49,7 +51,9 @@ public class RobotContainer {
    * edu.wpi.first.wpilibj.Joystick} or {@link XboxController}), and then passing it to a {@link
    * edu.wpi.first.wpilibj2.command.button.JoystickButton}.
    */
-  private void configureButtonBindings() {}
+  private void configureButtonBindings() {
+    m_partner_controller.rightBumper().whileTrue(new DriveArmManually(m_arm, m_partner_controller));
+  }
 
   /**
    * Use this to pass the autonomous command to the main {@link Robot} class.
@@ -76,7 +80,7 @@ public class RobotContainer {
     driveTestTab.addDouble("Current Speed", m_drivetrain::get_max_speed).withPosition(0, 3).withSize(1,1);
     driveTestTab.add("Set_Max Speed", new SetMaxSpeedCommand(m_drivetrain)).withPosition(1, 3).withSize(2, 1);
 
-    driveTestTab.add("Robot Heading", 0).withPosition(0, 0).withSize(2, 2).withWidget(BuiltInWidgets.kGyro);
+    // driveTestTab.add("Robot Heading", 0).withPosition(0, 0).withSize(2, 2).withWidget(BuiltInWidgets.kGyro);
     
   }
 
@@ -88,19 +92,20 @@ public class RobotContainer {
     armTestTab.addBoolean("ArmReverse", m_arm::getArmReverseLimit).withPosition(2, 0).withSize(1,1);
     
   
-    armTestTab.add("WristEncoder", 0).withPosition(0, 0).withSize(1, 1);
+    armTestTab.add("WristEncoder", 0).withPosition(0, 1).withSize(1, 1);
 
     armTestTab.addBoolean("WristForward", m_arm::getWristForwardLimit).withPosition(1, 1).withSize(1,1);
     armTestTab.addBoolean("WristReverse", m_arm::getWristReverseLimit).withPosition(2, 1).withSize(1,1);
+    armTestTab.add("Arm Sub", m_arm);
     
-    // Set the max speed variables
-    armTestTab.add("Max Speed", 0).withPosition(0, 2).withSize(1,1);
-    armTestTab.add("Reset Max Speed", m_drivetrain.setMaxValue()).withPosition(1, 2).withSize(2, 1);
-    // Set the max speed variables
-    armTestTab.addDouble("Current Speed", m_drivetrain::get_max_speed).withPosition(0, 3).withSize(1,1);
-    armTestTab.add("Set_Max Speed", new SetMaxSpeedCommand(m_drivetrain)).withPosition(1, 3).withSize(2, 1);
+    // // Set the max speed variables
+    // armTestTab.add("Max Speed", 0).withPosition(0, 2).withSize(1,1);
+    // armTestTab.add("Reset Max Speed", m_drivetrain.setMaxValue()).withPosition(1, 2).withSize(2, 1);
+    // // Set the max speed variables
+    // armTestTab.addDouble("Current Speed", m_drivetrain::get_max_speed).withPosition(0, 3).withSize(1,1);
+    // armTestTab.add("Set_Max Speed", new SetMaxSpeedCommand(m_drivetrain)).withPosition(1, 3).withSize(2, 1);
 
-    armTestTab.add("Robot Heading", 0).withPosition(0, 0).withSize(2, 2).withWidget(BuiltInWidgets.kGyro);
+    // armTestTab.add("Robot Heading", 0).withPosition(0, 0).withSize(2, 2).withWidget(BuiltInWidgets.kGyro);
     
   }
 }
