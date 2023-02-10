@@ -10,6 +10,7 @@ import static frc.robot.Constants.RIGHT_TALON_FOLLOWER;
 import static frc.robot.Constants.RIGHT_TALON_LEADER;
 
 import com.ctre.phoenix.motorcontrol.ControlMode;
+import com.ctre.phoenix.motorcontrol.DemandType;
 import com.ctre.phoenix.motorcontrol.InvertType;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.TalonFXInvertType;
@@ -54,11 +55,12 @@ public class DriveTrain extends SubsystemBase {
    * Take the average of the two.
    */
   public static final int kCountsPerRev = 2048;    // Encoder counts per revolution of the motor shaft.
-  public static final double kGearRatio = 4.17;   // Switch kSensorGearRatio to this gear ratio if encoder is on the motor instead
+  public static final double kHighGearRatio = 4.17;   // Switch kSensorGearRatio to this gear ratio if encoder is on the motor instead
+  public static final double kLowGearRatio = 11.03;
                             // of on the gearbox.
   public static final double kWheelRadiusInches = 2.9;
   public static final int k100msPerSecond = 10;
-  public static final double kEncoderTicksPerInch = (kCountsPerRev * kGearRatio) / (2 * Math.PI * kWheelRadiusInches); // 469
+  public static final double kEncoderTicksPerInch = (kCountsPerRev * kLowGearRatio) / (2 * Math.PI * kWheelRadiusInches); // 469
   
 //   public final static int kEncoderUnitsPerRotation = Double.intValue( (Math.PI * 24.75) * kEncoderTicksPerInch ) );
   public final static int kEncoderUnitsPerRotation = 35000;
@@ -71,7 +73,7 @@ public class DriveTrain extends SubsystemBase {
   private final double kRobotMass = 55.3;
 
 	private final double MAX_TELEOP_DRIVE_SPEED = 1.0;
-	// private final double arbFF = 0.2;
+	private final double arbFF = 0.075;
 	// TalonFX's for the drivetrain
 	// Right side is inverted here to drive forward
 	WPI_TalonFX m_left_leader, m_right_leader, m_left_follower, m_right_follower;
@@ -108,6 +110,8 @@ public class DriveTrain extends SubsystemBase {
 
 	// Entries to periodically update the network table entries
 	private final DoubleEntry m_left_encoder_entry, m_right_encoder_entry, m_left_speed_entry, m_right_speed_entry, m_max_speed_entry;
+
+	final int MM_TOLERANCE = 600;
 
   	/** Creates a new DriveTrain. */
  	public DriveTrain() {
@@ -155,7 +159,7 @@ public class DriveTrain extends SubsystemBase {
 			/* Simulation model of the drivetrain */
 			m_drivetrainSimulator = new DifferentialDrivetrainSim(
 				DCMotor.getFalcon500(2), // 2 Falcon 500s on each side of the drivetrain.
-				kGearRatio, // Standard AndyMark Gearing reduction.
+				kHighGearRatio, // Standard AndyMark Gearing reduction.
 				2.1, // MOI of 2.1 kg m^2 (from CAD model).
 				kRobotMass, // Mass of the robot is 26.5 kg.
 				Units.inchesToMeters(kWheelRadiusInches), // Robot uses 3" radius (6" diameter) wheels.
@@ -298,14 +302,14 @@ public class DriveTrain extends SubsystemBase {
 
 	private int distanceToNativeUnits(double positionMeters){
 		double wheelRotations = positionMeters/(2 * Math.PI * Units.inchesToMeters(kWheelRadiusInches));
-		double motorRotations = wheelRotations * kGearRatio;
+		double motorRotations = wheelRotations * kHighGearRatio;
 		int sensorCounts = (int)(motorRotations * kCountsPerRev);
 		return sensorCounts;
 	}
 
 	private int velocityToNativeUnits(double velocityMetersPerSecond){
 		double wheelRotationsPerSecond = velocityMetersPerSecond/(2 * Math.PI * Units.inchesToMeters(kWheelRadiusInches));
-		double motorRotationsPerSecond = wheelRotationsPerSecond * kGearRatio;
+		double motorRotationsPerSecond = wheelRotationsPerSecond * kHighGearRatio;
 		double motorRotationsPer100ms = motorRotationsPerSecond / k100msPerSecond;
 		int sensorCountsPer100ms = (int)(motorRotationsPer100ms * kCountsPerRev);
 		return sensorCountsPer100ms;
@@ -313,7 +317,7 @@ public class DriveTrain extends SubsystemBase {
 
 	private double nativeUnitsToDistanceMeters(double sensorCounts){
 		double motorRotations = (double)sensorCounts / kCountsPerRev;
-		double wheelRotations = motorRotations / kGearRatio;
+		double wheelRotations = motorRotations / kHighGearRatio;
 		double positionMeters = wheelRotations * (2 * Math.PI * Units.inchesToMeters(kWheelRadiusInches));
 	  return positionMeters;
 	}
@@ -359,4 +363,45 @@ public class DriveTrain extends SubsystemBase {
 		  m_drive_absMax = m_max_speed_entry.get(0);
         });
   }
+
+	public void configure_motion_magic(double velocity, double time_to_velo, double kp) {
+		double acceleration = velocity/time_to_velo;
+
+		m_left_leader.configMotionCruiseVelocity(velocity);
+		m_right_leader.configMotionCruiseVelocity(velocity);
+		m_left_leader.configMotionAcceleration(acceleration);
+		m_right_leader.configMotionAcceleration(acceleration);
+
+		m_left_leader.selectProfileSlot(0, 0);
+		m_left_leader.config_kP(0, kp);
+		m_right_leader.selectProfileSlot(0, 0);
+		m_right_leader.config_kP(0, kp);
+	}
+
+	public boolean drive_motion_magic(int setpoint){
+		boolean done;
+		SmartDashboard.putNumber("Setpoint", setpoint);
+		m_left_leader.set(ControlMode.MotionMagic, setpoint);
+		m_right_leader.set(ControlMode.MotionMagic, setpoint);
+
+		double currentPos_L = m_left_leader.getSelectedSensorPosition();
+		double currentPos_R = m_right_leader.getSelectedSensorPosition();
+
+		// boolean left_done = m_left_leader.getClosedLoopError() < MM_TOLERANCE;
+		// boolean right_done = m_right_leader.getClosedLoopError() < MM_TOLERANCE;
+		boolean left_done = Math.abs((setpoint - currentPos_L)) < MM_TOLERANCE;
+		boolean right_done = Math.abs(setpoint - currentPos_R)  < MM_TOLERANCE;
+
+		done = left_done && right_done;
+
+		return done;
+	}
+
+	public double getLeftError(){
+		return m_left_leader.getClosedLoopError();
+	}
+
+	public double getRightError(){
+		return m_right_leader.getClosedLoopError();
+	}
 }
