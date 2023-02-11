@@ -7,21 +7,21 @@ package frc.robot.subsystems.DriveTrain;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.wpilibj2.command.CommandBase;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 
-public class DriveMotionMagic extends CommandBase {
+// NOTE:  Consider using this command inline, rather than writing a subclass.  For more
+// information, see:
+// https://docs.wpilib.org/en/stable/docs/software/commandbased/convenience-features.html
+public class DriveMMInstant extends InstantCommand {
   DriveTrain m_dt;
   int m_target_in_ticks;
   boolean m_done;
   int m_count;
+  
   NetworkTableEntry m_target_distance, m_time_to_velo, m_target_velocity, m_left_result, m_right_result, m_kp;
-
-  /** Creates a new DriveMotionMagic. */
-  public DriveMotionMagic( DriveTrain dt) {
+  public DriveMMInstant(DriveTrain dt) {
     m_dt = dt;
-    // Use addRequirements() here to declare subsystem dependencies.
-    addRequirements(m_dt);
-
+    
     NetworkTable driveTab = NetworkTableInstance.getDefault().getTable("Shuffleboard").getSubTable("Drive Test");
     m_target_distance = driveTab.getEntry("Target Distance");
     m_time_to_velo = driveTab.getEntry("Time to Velo");
@@ -29,6 +29,9 @@ public class DriveMotionMagic extends CommandBase {
     m_left_result = driveTab.getEntry("Left Encoder Result");
     m_right_result = driveTab.getEntry("Right Encoder Result");
     m_kp = driveTab.getEntry("MM kP");
+
+    // Use addRequirements() here to declare subsystem dependencies.
+    addRequirements(m_dt);
 
   }
 
@@ -41,30 +44,5 @@ public class DriveMotionMagic extends CommandBase {
 
     m_dt.configure_motion_magic( m_target_velocity.getDouble(0), m_time_to_velo.getDouble(0), m_kp.getDouble(0));
     m_dt.drive_motion_magic(m_target_in_ticks);
-  }
-
-  // Called every time the scheduler runs while the command is scheduled.
-  @Override
-  public void execute() {
-    m_done = m_dt.is_drive_mm_done(m_target_in_ticks);
-    // if(m_done){
-    //   m_count++;
-    // }
-    // else{
-    //   m_count = 0;
-    // }
-  }
-
-  // Called once the command ends or is interrupted.
-  @Override
-  public void end(boolean interrupted) {
-    m_dt.teleop_drive(0, 0);
-  }
-
-  // Returns true when the command should end.
-  @Override
-  public boolean isFinished() {
-    // return m_count > 5;
-    return m_done;
   }
 }

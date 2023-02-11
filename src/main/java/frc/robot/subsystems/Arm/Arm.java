@@ -21,6 +21,9 @@ import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DigitalInput;
+import edu.wpi.first.wpilibj.DoubleSolenoid;
+import edu.wpi.first.wpilibj.PneumaticsModuleType;
+import edu.wpi.first.wpilibj2.command.CommandBase;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class Arm extends SubsystemBase {
@@ -28,7 +31,7 @@ public class Arm extends SubsystemBase {
   DigitalInput  m_arm_forward_limit, m_arm_reverse_limit, m_wrist_reverse_limit, m_wrist_forward_limit;
   DoublePublisher m_arm_position, m_wrist_position;
 
-  /** Creates a new Arm. */
+  DoubleSolenoid m_gripper;
 
   public ArmState arm_state;
   public ArmControlMode arm_control_mode;
@@ -72,14 +75,16 @@ public class Arm extends SubsystemBase {
   final double ARM_GEAR_RATIO = 10 * 4 * 4;
   final double WRIST_GEAR_RATIO = 10 * 7 * 7;
   final int WRIST_REVERSE_SOFT_LIMIT = 32000;
-  final int WRIST_FORWARD_SOFT_LIMIT = 150000;
+  final int WRIST_FORWARD_SOFT_LIMIT = 264000; // 264,904, 265763, 266612
   final int ARM_REVERSE_SOFT_LIMIT = 10000; // TODO TUNE THIS
   final int ARM_FORWARD_SOFT_LIMIT = (int)(2048 * ARM_GEAR_RATIO * 1/6); // 60 degrees rotation
   final double WRIST_MAX_STATOR_CURRENT = 12.5;
   final double ARM_MAX_STATOR_CURRENT = 5;
   final int MOTION_MAGIC_SLOT = 0;
+  final DoubleSolenoid.Value GRIPPER_CONTRACT = DoubleSolenoid.Value.kForward;
+  final DoubleSolenoid.Value GRIPPER_EXPAND   = DoubleSolenoid.Value.kReverse;
 
-
+  /** Creates a new Arm. */
   public Arm() {
     // Configure top and bottom arm talons. NOTE: set invertType such that positive input rotates to FRONT of robot
     m_arm_motor = new WPI_TalonFX(ARM_MOTOR);
@@ -171,6 +176,10 @@ public class Arm extends SubsystemBase {
     arm_control_mode = ArmControlMode.Automatic;
     arm_position = ArmPosition.Retracted;
     arm_task = ArmTask.Stop;
+
+    m_gripper = new DoubleSolenoid(PneumaticsModuleType.CTREPCM, GRIPPER_SOLENOID_CHANNEL_A, GRIPPER_SOLENOID_CHANNEL_B);
+    // Set the gripper to contracted for our preload
+    m_gripper.set(GRIPPER_CONTRACT);
   }
 
   @Override
@@ -296,5 +305,22 @@ public class Arm extends SubsystemBase {
     m_wrist_motor.set(ControlMode.PercentOutput, wrist_speed);
   }
 
+  ////////////////////// ARM INLINE COMMANDS  /////////////////////
+  public CommandBase expandGripper() {
+    // Inline construction of command goes here.
+    // Subsystem::RunOnce implicitly requires `this` subsystem.
+    return runOnce(
+        () -> {
+          m_gripper.set(GRIPPER_EXPAND);
+        });
+  }
   
+  public CommandBase contractGripper() {
+    // Inline construction of command goes here.
+    // Subsystem::RunOnce implicitly requires `this` subsystem.
+    return runOnce(
+        () -> {
+          m_gripper.set(GRIPPER_CONTRACT);
+        });
+  }
 }

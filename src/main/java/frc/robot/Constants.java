@@ -41,4 +41,12 @@ public final class Constants {
     public static final int PARTNER_LEFT_AXIS = 0;
     public static final int PARTNER_RIGHT_AXIS = 4;
 
+    ///////////////////  PCM //////////////////////////////
+    public static final int DT_SOLENOID_CHANNEL_A = 0;
+    public static final int DT_SOLENOID_CHANNEL_B = 1;
+    public static final int GRIPPER_SOLENOID_CHANNEL_A = 2;
+    public static final int GRIPPER_SOLENOID_CHANNEL_B = 3;
+
+
+
 }

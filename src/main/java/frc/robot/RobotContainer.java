@@ -12,6 +12,7 @@ import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import frc.robot.subsystems.DriveTrain.DefaultDriveTrainCommand;
+import frc.robot.subsystems.DriveTrain.DriveMMSequence;
 import frc.robot.subsystems.DriveTrain.DriveMotionMagic;
 import frc.robot.subsystems.DriveTrain.DriveTrain;
 import frc.robot.subsystems.DriveTrain.SetMaxSpeedCommand;
@@ -53,7 +54,12 @@ public class RobotContainer {
    * edu.wpi.first.wpilibj2.command.button.JoystickButton}.
    */
   private void configureButtonBindings() {
-    m_partner_controller.rightBumper().whileTrue(new DriveArmManually(m_arm, m_partner_controller));
+    m_partner_controller.a().whileTrue(new DriveArmManually(m_arm, m_partner_controller));
+    m_partner_controller.rightBumper().onTrue(m_arm.contractGripper());
+    m_partner_controller.leftBumper().onTrue(m_arm.expandGripper());
+    
+    m_driver_controller.leftBumper().onTrue(m_drivetrain.shiftToHighGear());
+    m_driver_controller.leftBumper().onFalse(m_drivetrain.shiftToLowGear());
   }
 
   /**
@@ -90,7 +96,7 @@ public class RobotContainer {
     driveTestTab.add("Drive MM", new DriveMotionMagic(m_drivetrain)).withPosition(6,3).withSize(2, 1);
     driveTestTab.addDouble("Left Error", m_drivetrain::getLeftError).withPosition(0,4).withSize(1,1);
     driveTestTab.addDouble("Right Error", m_drivetrain::getRightError).withPosition(1,4).withSize(1,1);
-
+    driveTestTab.add("DriveMM Sequence", new DriveMMSequence(m_drivetrain)).withPosition(2, 4).withSize(1, 1);
 
     // driveTestTab.add("Robot Heading", 0).withPosition(0, 0).withSize(2, 2).withWidget(BuiltInWidgets.kGyro);
     

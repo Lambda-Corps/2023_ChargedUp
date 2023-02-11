@@ -31,6 +31,8 @@ import edu.wpi.first.networktables.DoubleTopic;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.PubSubOption;
+import edu.wpi.first.wpilibj.DoubleSolenoid;
+import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
@@ -74,6 +76,10 @@ public class DriveTrain extends SubsystemBase {
 
 	private final double MAX_TELEOP_DRIVE_SPEED = 1.0;
 	private final double arbFF = 0.075;
+
+	private final DoubleSolenoid.Value HIGH_GEAR = DoubleSolenoid.Value.kForward;
+	private final DoubleSolenoid.Value LOW_GEAR = DoubleSolenoid.Value.kReverse;
+
 	// TalonFX's for the drivetrain
 	// Right side is inverted here to drive forward
 	WPI_TalonFX m_left_leader, m_right_leader, m_left_follower, m_right_follower;
@@ -111,7 +117,10 @@ public class DriveTrain extends SubsystemBase {
 	// Entries to periodically update the network table entries
 	private final DoubleEntry m_left_encoder_entry, m_right_encoder_entry, m_left_speed_entry, m_right_speed_entry, m_max_speed_entry;
 
-	final int MM_TOLERANCE = 100;
+	final int MM_TOLERANCE = 200;
+	int m_setpoint = 0;
+
+	DoubleSolenoid m_shifter;
 
   	/** Creates a new DriveTrain. */
  	public DriveTrain() {
@@ -198,6 +207,9 @@ public class DriveTrain extends SubsystemBase {
 		m_right_speed_entry = new DoubleTopic(nt_table.getDoubleTopic("Right Speed")).getEntry(0, PubSubOption.keepDuplicates(true));
 		m_left_speed_entry = new DoubleTopic(nt_table.getDoubleTopic("Left Speed")).getEntry(0, PubSubOption.keepDuplicates(true));
 		m_max_speed_entry = new DoubleTopic(nt_table.getDoubleTopic("Max Speed")).getEntry(0, PubSubOption.keepDuplicates(true));
+
+		m_shifter = new DoubleSolenoid(PneumaticsModuleType.CTREPCM, 0, 1);
+		m_shifter.set(LOW_GEAR);
   	}
 
 	@Override
@@ -364,6 +376,21 @@ public class DriveTrain extends SubsystemBase {
         });
   }
 
+  /**
+   * Example command factory method.
+   *
+   * @return a command
+   */
+  public CommandBase stopMotorsCommand() {
+    // Inline construction of command goes here.
+    // Subsystem::RunOnce implicitly requires `this` subsystem.
+    return runOnce(
+        () -> {
+          /* one-time action goes here */
+		  m_left_leader.set(ControlMode.PercentOutput, 0);
+		  m_right_leader.set(ControlMode.PercentOutput, 0);
+        });
+  }
 	public void configure_motion_magic(double velocity, double time_to_velo, double kp) {
 		double acceleration = velocity/time_to_velo;
 
@@ -382,6 +409,7 @@ public class DriveTrain extends SubsystemBase {
 	}
 
 	public boolean drive_motion_magic(int setpoint){
+		m_setpoint = setpoint;
 		boolean done;
 		SmartDashboard.putNumber("Setpoint", setpoint);
 		m_left_leader.set(ControlMode.MotionMagic, setpoint, DemandType.ArbitraryFeedForward, arbFF);
@@ -423,4 +451,36 @@ public class DriveTrain extends SubsystemBase {
 	public double getRightError(){
 		return m_right_leader.getClosedLoopError();
 	}
+
+	public boolean is_motion_magic_done(){
+		double currentPos_L = m_left_leader.getSelectedSensorPosition();
+		double currentPos_R = m_right_leader.getSelectedSensorPosition();
+
+		// boolean left_done = m_left_leader.getClosedLoopError() < MM_TOLERANCE;
+		// boolean right_done = m_right_leader.getClosedLoopError() < MM_TOLERANCE;
+		boolean left_done = Math.abs((m_setpoint - currentPos_L)) < MM_TOLERANCE;
+		boolean right_done = Math.abs(m_setpoint - currentPos_R)  < MM_TOLERANCE;
+
+		boolean done = left_done && right_done;
+		// return Math.abs(m_left_leader.getClosedLoopError()) < MM_TOLERANCE ||
+		//        Math.abs(m_right_leader.getClosedLoopError()) < MM_TOLERANCE;
+		return done;
+	}
+
+	public CommandBase shiftToHighGear(){
+		return runOnce(
+			() -> {
+				m_shifter.set(HIGH_GEAR);
+			});
+	}
+
+	public CommandBase shiftToLowGear() {
+		// Inline construction of command goes here.
+		// Subsystem::RunOnce implicitly requires `this` subsystem.
+		return runOnce(
+			() -> {
+			  /* one-time action goes here */
+			  m_shifter.set(LOW_GEAR);
+			});
+	  }
 }
