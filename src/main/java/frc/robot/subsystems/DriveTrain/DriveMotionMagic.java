@@ -41,18 +41,19 @@ public class DriveMotionMagic extends CommandBase {
     m_target_in_ticks = (int)(m_target_distance.getDouble(0)* DriveTrain.kEncoderTicksPerInch);
 
     m_dt.configure_motion_magic( m_target_velocity.getDouble(0), m_time_to_velo.getDouble(0), m_kp.getDouble(0));
+    m_dt.drive_motion_magic(m_target_in_ticks);
   }
 
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-    m_done = m_dt.drive_motion_magic(m_target_in_ticks);
-    if(m_done){
-      m_count++;
-    }
-    else{
-      m_count = 0;
-    }
+    m_done = m_dt.is_drive_mm_done(m_target_in_ticks);
+    // if(m_done){
+    //   m_count++;
+    // }
+    // else{
+    //   m_count = 0;
+    // }
   }
 
   // Called once the command ends or is interrupted.
@@ -64,6 +65,7 @@ public class DriveMotionMagic extends CommandBase {
   // Returns true when the command should end.
   @Override
   public boolean isFinished() {
-    return m_count > 5;
+    // return m_count > 5;
+    return m_done;
   }
 }

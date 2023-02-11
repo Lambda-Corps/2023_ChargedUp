@@ -111,7 +111,7 @@ public class DriveTrain extends SubsystemBase {
 	// Entries to periodically update the network table entries
 	private final DoubleEntry m_left_encoder_entry, m_right_encoder_entry, m_left_speed_entry, m_right_speed_entry, m_max_speed_entry;
 
-	final int MM_TOLERANCE = 600;
+	final int MM_TOLERANCE = 100;
 
   	/** Creates a new DriveTrain. */
  	public DriveTrain() {
@@ -376,13 +376,32 @@ public class DriveTrain extends SubsystemBase {
 		m_left_leader.config_kP(0, kp);
 		m_right_leader.selectProfileSlot(0, 0);
 		m_right_leader.config_kP(0, kp);
+
+		m_left_leader.configAllowableClosedloopError(0, MM_TOLERANCE);
+		m_right_leader.configAllowableClosedloopError(0, MM_TOLERANCE);
 	}
 
 	public boolean drive_motion_magic(int setpoint){
 		boolean done;
 		SmartDashboard.putNumber("Setpoint", setpoint);
-		m_left_leader.set(ControlMode.MotionMagic, setpoint);
-		m_right_leader.set(ControlMode.MotionMagic, setpoint);
+		m_left_leader.set(ControlMode.MotionMagic, setpoint, DemandType.ArbitraryFeedForward, arbFF);
+		m_right_leader.set(ControlMode.MotionMagic, setpoint, DemandType.ArbitraryFeedForward, arbFF);
+
+		double currentPos_L = m_left_leader.getSelectedSensorPosition();
+		double currentPos_R = m_right_leader.getSelectedSensorPosition();
+
+		// boolean left_done = m_left_leader.getClosedLoopError() < MM_TOLERANCE;
+		// boolean right_done = m_right_leader.getClosedLoopError() < MM_TOLERANCE;
+		boolean left_done = Math.abs((setpoint - currentPos_L)) < MM_TOLERANCE;
+		boolean right_done = Math.abs(setpoint - currentPos_R)  < MM_TOLERANCE;
+
+		done = left_done && right_done;
+
+		return done;
+	}
+
+	public boolean is_drive_mm_done(int setpoint){
+		boolean done;
 
 		double currentPos_L = m_left_leader.getSelectedSensorPosition();
 		double currentPos_R = m_right_leader.getSelectedSensorPosition();
