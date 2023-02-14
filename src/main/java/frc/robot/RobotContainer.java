@@ -55,8 +55,8 @@ public class RobotContainer {
    */
   private void configureButtonBindings() {
     m_partner_controller.a().whileTrue(new DriveArmManually(m_arm, m_partner_controller));
-    m_partner_controller.rightBumper().onTrue(m_arm.contractGripper());
-    m_partner_controller.leftBumper().onTrue(m_arm.expandGripper());
+    m_partner_controller.rightBumper().onTrue(m_arm.contractGripperCommand());
+    m_partner_controller.leftBumper().onTrue(m_arm.expandGripperCommand());
     
     m_driver_controller.leftBumper().onTrue(m_drivetrain.shiftToHighGear());
     m_driver_controller.leftBumper().onFalse(m_drivetrain.shiftToLowGear());
@@ -114,9 +114,39 @@ public class RobotContainer {
 
     armTestTab.addBoolean("WristForward", m_arm::getWristForwardLimit).withPosition(1, 1).withSize(1,1);
     armTestTab.addBoolean("WristReverse", m_arm::getWristReverseLimit).withPosition(2, 1).withSize(1,1);
-    armTestTab.add("Arm Sub", m_arm);
+    armTestTab.add("Scheduler", m_arm).withPosition(8, 0).withSize(2, 1);
     
-    // // Set the max speed variables
+    // PIDF Values
+    armTestTab.add("Arm kP", 0).withPosition(4, 0).withSize(1, 1);
+    armTestTab.add("Arm kI", 0).withPosition(5, 0).withSize(1, 1);
+    armTestTab.add("Arm kD", 0).withPosition(6, 0).withSize(1, 1);
+    armTestTab.add("Arm kF", 0).withPosition(7, 0).withSize(1, 1);
+
+    armTestTab.add("Wrist kP", 0).withPosition(4, 1).withSize(1, 1);
+    armTestTab.add("Wrist kI", 0).withPosition(5, 1).withSize(1, 1);
+    armTestTab.add("Wrist kD", 0).withPosition(6, 1).withSize(1, 1);
+    armTestTab.add("Wrist kF", 0).withPosition(7, 1).withSize(1, 1);
+
+    armTestTab.add("Wrist Max", 0).withPosition(4, 2).withSize(1, 1);
+    armTestTab.add("Wrist Stator", 0).withPosition(5, 2).withSize(1, 1);
+    armTestTab.add("Arm Max", 0).withPosition(6, 2).withSize(1, 1);
+    armTestTab.add("Arm Stator", 0).withPosition(7, 2).withSize(1, 1);
+
+    armTestTab.add("Wrist Fwd Spd", .2).withPosition(4, 3).withSize(1, 1);
+    armTestTab.add("Wrist Rev Spd", .2).withPosition(5, 3).withSize(1, 1);
+    armTestTab.add("Arm Fwd Spd", .2).withPosition(6, 3).withSize(1, 1);
+    armTestTab.add("Arm Rev Spd", .2).withPosition(7, 3).withSize(1, 1);
+
+    armTestTab.add("Wrist Fwd Lim", 264000).withPosition(4, 2).withSize(1, 1);
+    armTestTab.add("Wrist Rev Lim", 32000).withPosition(5, 2).withSize(1, 1);
+    armTestTab.add("Arm Fwd Lim", 54613).withPosition(6, 2).withSize(1, 1);
+    armTestTab.add("Arm Rev Lim", 10000).withPosition(7, 2).withSize(1, 1);
+
+    // Add the commands to the page
+    armTestTab.add("Zero Wrist Encoder", m_arm.setArmEncoderToZero()).withPosition(0, 2).withSize(2, 1);
+    armTestTab.add("Zero Arm Encoder", m_arm.setArmEncoderToZero()).withPosition(2, 2).withSize(2, 1);
+    armTestTab.add("Set Arm Max Speed", m_arm.setArmMaxSpeed()).withPosition(0, 3).withSize(2, 1);
+    armTestTab.add("Set Wrist Max Speed", m_arm.setWristMaxSpeed()).withPosition(2, 3).withSize(2, 1);
     // armTestTab.add("Max Speed", 0).withPosition(0, 2).withSize(1,1);
     // armTestTab.add("Reset Max Speed", m_drivetrain.setMaxValue()).withPosition(1, 2).withSize(2, 1);
     // // Set the max speed variables

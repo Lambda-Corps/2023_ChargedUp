@@ -168,9 +168,9 @@ public class Arm extends SubsystemBase {
     m_wrist_reverse_limit = new DigitalInput(WRIST_REVERSE_LIMIT_SWITCH);
 
     // Setup the network tables publishers to push data to the dashboard
-    NetworkTable shuffleboard = NetworkTableInstance.getDefault().getTable("Shuffleboard").getSubTable("ARM");
-    m_arm_position = shuffleboard.getDoubleTopic("Armposition").publish();
-    m_wrist_position = shuffleboard.getDoubleTopic("Wristposition").publish();
+    NetworkTable shuffleboard = NetworkTableInstance.getDefault().getTable("Shuffleboard").getSubTable("Arm Test");
+    m_arm_position = shuffleboard.getDoubleTopic("ArmEncoder").publish();
+    m_wrist_position = shuffleboard.getDoubleTopic("WristEncoder").publish();
 
     arm_state = ArmState.Inactive;
     arm_control_mode = ArmControlMode.Automatic;
@@ -306,7 +306,7 @@ public class Arm extends SubsystemBase {
   }
 
   ////////////////////// ARM INLINE COMMANDS  /////////////////////
-  public CommandBase expandGripper() {
+  public CommandBase expandGripperCommand() {
     // Inline construction of command goes here.
     // Subsystem::RunOnce implicitly requires `this` subsystem.
     return runOnce(
@@ -315,12 +315,58 @@ public class Arm extends SubsystemBase {
         });
   }
   
-  public CommandBase contractGripper() {
+  public CommandBase contractGripperCommand() {
     // Inline construction of command goes here.
     // Subsystem::RunOnce implicitly requires `this` subsystem.
     return runOnce(
         () -> {
           m_gripper.set(GRIPPER_CONTRACT);
         });
+  }
+
+  public CommandBase setArmEncoderToZero() {
+    // Inline construction of command goes here.
+    // Subsystem::RunOnce implicitly requires `this` subsystem.
+    return runOnce(
+        () -> {
+          m_arm_motor.setSelectedSensorPosition(0);
+        });
+  }
+
+  public CommandBase setWristEncoderToZero() {
+    // Inline construction of command goes here.
+    // Subsystem::RunOnce implicitly requires `this` subsystem.
+    return runOnce(
+        () -> {
+          m_arm_motor.setSelectedSensorPosition(0);
+        });
+  }
+
+  public CommandBase setArmMaxSpeed(){
+    return runOnce(
+      () -> {
+        NetworkTable driveTab = NetworkTableInstance.getDefault().getTable("Shuffleboard").getSubTable("Arm Test");
+        double forward_speed = driveTab.getEntry("Arm Fwd Spd").getDouble(ARM_DRIVE_SPEED);
+        double reverse_speed = driveTab.getEntry("Arm Rev Spd").getDouble(-ARM_DRIVE_SPEED);
+
+        // Just in case they put values that aren't positive or negative on Shuffleboard as an accident, make sure it's right
+        if( reverse_speed > 0 ){
+          reverse_speed = reverse_speed * -1;
+        }
+
+        if( forward_speed < 0 ){
+          forward_speed = forward_speed * -1;
+        }
+
+        m_arm_motor.configPeakOutputForward(forward_speed);
+        m_arm_motor.configPeakOutputReverse(reverse_speed);
+      });
+  }
+
+  public CommandBase setWristMaxSpeed(){
+    return runOnce (
+      () -> {
+        System.out.println("Set Wrist Speed here");
+    });
   }
 }

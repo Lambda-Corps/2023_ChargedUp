@@ -90,14 +90,19 @@ public class ArmTest {
         double busV = 12;
         sim_bottom_limit.setValue(false);
         sim_upper_limit.setValue(false);
-        m_arm.moveArmManually(upper_speed, lower_speed);
+        m_arm.drive_manually(upper_speed, lower_speed);
 
         var lower_sim = m_bottom_motor.getSimCollection();
         var upper_sim = m_upper_motor.getSimCollection();
         lower_sim.setBusVoltage(busV);
         upper_sim.setBusVoltage(busV);
+        
+        for( var i = 0; i < 10; i++){
+            waitForUpdate();
+        }
 
-        waitForUpdate();
+        System.out.println("Lower Voltage: " + lower_sim.getMotorOutputLeadVoltage());
+        System.out.println("Upper Voltage: " + upper_sim.getMotorOutputLeadVoltage());
 
         assertTrue(lower_sim.getMotorOutputLeadVoltage() < 0);
         assertTrue(upper_sim.getMotorOutputLeadVoltage() < 0);

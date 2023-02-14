@@ -22,14 +22,14 @@ import frc.robot.subsystems.DriveTrain.DriveTrain;
 /** Add your docs here. */
 class DriveTrainTest {
     static final double DELTA = 1e-2; // acceptable deviation range
-    DriveTrain dt;
+    static DriveTrain dt = new DriveTrain();
 
     TalonFXSimCollection m_left_motors, m_right_motors;
     DifferentialDrivetrainSim dt_sim;
     @BeforeEach // this method will run before each test
     void setup() {
         assert HAL.initialize(500, 0); // initialize the HAL, crash if failed
-        dt = new DriveTrain();
+        // dt = new DriveTrain();
 
         m_left_motors = dt.getLeftSimCollection();
         m_right_motors = dt.getRightSimCollection();
@@ -38,6 +38,7 @@ class DriveTrainTest {
     @AfterEach // Cleanup any things we need
     void shutdown(){
         // Do stuff if we need
+        dt.teleop_drive(0, 0);
     }
 
     @Test
@@ -50,11 +51,11 @@ class DriveTrainTest {
 
         // The drivetrain still needs to accelerate to get to speed, so you can step through
         // the simulation that advance 20ms.  The waitForUpdate() command will sleep the thread
-        // of execution for 200 ms.  So, if we loop the waitForUpdate() method 5 times, it will
-        // simulate 1 full second in time.  To equally simulate the drivetrain action, the 
+        // of execution for 200 ms.  So, if we loop the waitForUpdate() method 30 times, it will
+        // simulate 6 full seconds in time.  To equally simulate the drivetrain action, the 
         // simulation periodic method must be called 10 times to step.  The following loop will
-        // simulate 1 second of driving.
-        for (var i = 0; i < 5; i++){
+        // simulate 6 seconds of driving.
+        for (var i = 0; i < 30; i++){
             for( var j = 0; j < 10; j++){
                 // Step the simulator 200 ms
                 dt.simulationPeriodic();    
@@ -95,8 +96,8 @@ class DriveTrainTest {
         // if (Constants.Right_Side_Inverted) expectedRight = -expectedRight;
         assertTrue(dt.getLeftSpeed() < 0);
         assertTrue(dt.getRightSpeed() < 0);
-        assertTrue(m_left_motors.getMotorOutputLeadVoltage() < 0);
-        assertTrue(m_right_motors.getMotorOutputLeadVoltage() > 0);
+        assertTrue(m_left_motors.getMotorOutputLeadVoltage() > 0);
+        assertTrue(m_right_motors.getMotorOutputLeadVoltage() < 0);
     }
 
     @Test
@@ -119,8 +120,8 @@ class DriveTrainTest {
         // the motors in the proper direction
         assertTrue(dt.getLeftSpeed() > 0);
         assertTrue(dt.getRightSpeed() > 0);
-        assertTrue(m_left_motors.getMotorOutputLeadVoltage() > 0);
-        assertTrue(m_right_motors.getMotorOutputLeadVoltage() < 0);
+        assertTrue(m_left_motors.getMotorOutputLeadVoltage() < 0);
+        assertTrue(m_right_motors.getMotorOutputLeadVoltage() > 0);
     }
 
     private static void waitForUpdate() {
