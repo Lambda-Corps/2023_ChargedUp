@@ -70,16 +70,18 @@ public class Arm extends SubsystemBase {
 
   ///////// Constants ///////////////
   // Constant values for ARM movement, must be researched and tuned via tuner
-  final double ARM_DRIVE_SPEED = .2;
-  final double WRIST_DRIVE_SPEED = .2;
+  final double ARM_FORWARD_SPEED = .3;
+  final double ARM_REVERSE_SPEED = -.5;
+  final double WRIST_FORWARD_SPEED = .5;
+  final double WRIST_REVERSE_SPEED = -.3;
   final double ARM_GEAR_RATIO = 10 * 4 * 4;
-  final double WRIST_GEAR_RATIO = 10 * 7 * 7;
-  final int WRIST_REVERSE_SOFT_LIMIT = 32000;
-  final int WRIST_FORWARD_SOFT_LIMIT = 264000; // 264,904, 265763, 266612
+  final double WRIST_GEAR_RATIO = 7 * 5 * 5;
+  final int WRIST_REVERSE_SOFT_LIMIT = 16000;
+  final int WRIST_FORWARD_SOFT_LIMIT = 200000; // 264,904, 265763, 266612
   final int ARM_REVERSE_SOFT_LIMIT = 10000; // TODO TUNE THIS
   final int ARM_FORWARD_SOFT_LIMIT = (int)(2048 * ARM_GEAR_RATIO * 1/6); // 60 degrees rotation
-  final double WRIST_MAX_STATOR_CURRENT = 12.5;
-  final double ARM_MAX_STATOR_CURRENT = 5;
+  final double WRIST_MAX_STATOR_CURRENT = 20;
+  final double ARM_MAX_STATOR_CURRENT = 20;
   final int MOTION_MAGIC_SLOT = 0;
   final DoubleSolenoid.Value GRIPPER_CONTRACT = DoubleSolenoid.Value.kForward;
   final DoubleSolenoid.Value GRIPPER_EXPAND   = DoubleSolenoid.Value.kReverse;
@@ -119,8 +121,8 @@ public class Arm extends SubsystemBase {
     arm_config.statorCurrLimit = stator_limit;
     
     // Set max speeds for output
-    arm_config.peakOutputForward = ARM_DRIVE_SPEED;
-    arm_config.peakOutputReverse = -ARM_DRIVE_SPEED;
+    arm_config.peakOutputForward = ARM_FORWARD_SPEED;
+    arm_config.peakOutputReverse = ARM_REVERSE_SPEED;
 
     // Configure the arm
     m_arm_motor.configAllSettings(arm_config);
@@ -142,21 +144,21 @@ public class Arm extends SubsystemBase {
     wrist_config.forwardLimitSwitchNormal = LimitSwitchNormal.NormallyOpen;
     wrist_config.reverseSoftLimitEnable = true;
     wrist_config.forwardSoftLimitEnable = true;
-    wrist_config.reverseSoftLimitThreshold = ARM_REVERSE_SOFT_LIMIT;
-    wrist_config.forwardSoftLimitThreshold = ARM_FORWARD_SOFT_LIMIT;
+    wrist_config.reverseSoftLimitThreshold = WRIST_REVERSE_SOFT_LIMIT;
+    wrist_config.forwardSoftLimitThreshold = WRIST_FORWARD_SOFT_LIMIT;
 
-    // Set current limits for the ARM
+    // Set current limits for the Wrist
     stator_limit = wrist_config.statorCurrLimit;
-    stator_limit.currentLimit = ARM_MAX_STATOR_CURRENT;
+    stator_limit.currentLimit = WRIST_MAX_STATOR_CURRENT;
     stator_limit.enable = true;
-    stator_limit.triggerThresholdCurrent = ARM_MAX_STATOR_CURRENT + 1;
+    stator_limit.triggerThresholdCurrent = WRIST_MAX_STATOR_CURRENT + 1;
     wrist_config.statorCurrLimit = stator_limit;
     
     // Set max speeds for output
-    wrist_config.peakOutputForward = ARM_DRIVE_SPEED;
-    wrist_config.peakOutputReverse = -ARM_DRIVE_SPEED;
-    // Configure the arm
-    m_wrist_motor.configAllSettings(arm_config);
+    wrist_config.peakOutputForward = WRIST_FORWARD_SPEED;
+    wrist_config.peakOutputReverse = WRIST_REVERSE_SPEED;
+    // Configure the wrist
+    m_wrist_motor.configAllSettings(wrist_config);
     m_wrist_motor.setInverted(TalonFXInvertType.Clockwise);
     m_wrist_motor.setNeutralMode(NeutralMode.Brake);
 
@@ -223,14 +225,14 @@ public class Arm extends SubsystemBase {
     while (!m_arm_forward_limit.get() && !m_arm_reverse_limit.get()) {
       // only drive base if limit is not hit
       if (!m_arm_forward_limit.get()) {
-        m_arm_motor.set(ControlMode.PercentOutput, -ARM_DRIVE_SPEED);
+        m_arm_motor.set(ControlMode.PercentOutput, -ARM_FORWARD_SPEED);
       }else {
         m_arm_motor.set(ControlMode.PercentOutput, 0);
       }
 
       // only drive upper stage if limit is not hit
       if (!m_arm_reverse_limit.get()) {
-        m_wrist_motor.set(ControlMode.PercentOutput, -WRIST_DRIVE_SPEED);
+        m_wrist_motor.set(ControlMode.PercentOutput, -WRIST_FORWARD_SPEED);
       }else {
         m_wrist_motor.set(ControlMode.PercentOutput, 0);
       }
@@ -346,8 +348,8 @@ public class Arm extends SubsystemBase {
     return runOnce(
       () -> {
         NetworkTable driveTab = NetworkTableInstance.getDefault().getTable("Shuffleboard").getSubTable("Arm Test");
-        double forward_speed = driveTab.getEntry("Arm Fwd Spd").getDouble(ARM_DRIVE_SPEED);
-        double reverse_speed = driveTab.getEntry("Arm Rev Spd").getDouble(-ARM_DRIVE_SPEED);
+        double forward_speed = driveTab.getEntry("Arm Fwd Spd").getDouble(ARM_FORWARD_SPEED);
+        double reverse_speed = driveTab.getEntry("Arm Rev Spd").getDouble(ARM_REVERSE_SPEED);
 
         // Just in case they put values that aren't positive or negative on Shuffleboard as an accident, make sure it's right
         if( reverse_speed > 0 ){
