@@ -391,7 +391,7 @@ public class DriveTrain extends SubsystemBase {
 		  m_right_leader.set(ControlMode.PercentOutput, 0);
         });
   }
-	public void configure_motion_magic(double velocity, double time_to_velo, double kp) {
+	public void configure_motion_magic_test(double velocity, double time_to_velo, double kp) {
 		double acceleration = velocity/time_to_velo;
 
 		m_left_leader.configMotionCruiseVelocity(velocity);
@@ -408,20 +408,23 @@ public class DriveTrain extends SubsystemBase {
 		m_right_leader.configAllowableClosedloopError(0, MM_TOLERANCE);
 	}
 
-	public boolean drive_motion_magic(int setpoint){
-		m_setpoint = setpoint;
+	public void configure_motion_magic(int setpoint){
+		int current_pos = (int)m_left_leader.getSelectedSensorPosition();
+		m_setpoint = current_pos + setpoint;
+	}
+
+	public boolean drive_motion_magic(){
 		boolean done;
-		SmartDashboard.putNumber("Setpoint", setpoint);
-		m_left_leader.set(ControlMode.MotionMagic, setpoint, DemandType.ArbitraryFeedForward, arbFF);
-		m_right_leader.set(ControlMode.MotionMagic, setpoint, DemandType.ArbitraryFeedForward, arbFF);
+		m_left_leader.set(ControlMode.MotionMagic, m_setpoint, DemandType.ArbitraryFeedForward, arbFF);
+		m_right_leader.set(ControlMode.MotionMagic, m_setpoint, DemandType.ArbitraryFeedForward, arbFF);
 
 		double currentPos_L = m_left_leader.getSelectedSensorPosition();
 		double currentPos_R = m_right_leader.getSelectedSensorPosition();
 
 		// boolean left_done = m_left_leader.getClosedLoopError() < MM_TOLERANCE;
 		// boolean right_done = m_right_leader.getClosedLoopError() < MM_TOLERANCE;
-		boolean left_done = Math.abs((setpoint - currentPos_L)) < MM_TOLERANCE;
-		boolean right_done = Math.abs(setpoint - currentPos_R)  < MM_TOLERANCE;
+		boolean left_done = Math.abs((m_setpoint - currentPos_L)) < MM_TOLERANCE;
+		boolean right_done = Math.abs(m_setpoint - currentPos_R)  < MM_TOLERANCE;
 
 		done = left_done && right_done;
 

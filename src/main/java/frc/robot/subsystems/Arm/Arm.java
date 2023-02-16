@@ -76,13 +76,16 @@ public class Arm extends SubsystemBase {
   final double WRIST_REVERSE_SPEED = -.3;
   final double ARM_GEAR_RATIO = 10 * 4 * 4;
   final double WRIST_GEAR_RATIO = 7 * 5 * 5;
-  final int WRIST_REVERSE_SOFT_LIMIT = 16000;
+  final int WRIST_REVERSE_SOFT_LIMIT = 16000;// TODO TUNE THESE
   final int WRIST_FORWARD_SOFT_LIMIT = 200000; // 264,904, 265763, 266612
-  final int ARM_REVERSE_SOFT_LIMIT = 10000; // TODO TUNE THIS
+  final int ARM_REVERSE_SOFT_LIMIT = 10000; 
   final int ARM_FORWARD_SOFT_LIMIT = (int)(2048 * ARM_GEAR_RATIO * 1/6); // 60 degrees rotation
   final double WRIST_MAX_STATOR_CURRENT = 20;
   final double ARM_MAX_STATOR_CURRENT = 20;
-  final int MOTION_MAGIC_SLOT = 0;
+  final int ARM_MM_FORWARD_SLOT = 0;
+  final int ARM_MM_REVERSE_SLOT = 1;
+  final int WRIST_MM_FORWARD_SLOT = 0;
+  final int WRIST_MM_REVERSE_SLOT = 1;
   final DoubleSolenoid.Value GRIPPER_CONTRACT = DoubleSolenoid.Value.kForward;
   final DoubleSolenoid.Value GRIPPER_EXPAND   = DoubleSolenoid.Value.kReverse;
 
@@ -100,7 +103,7 @@ public class Arm extends SubsystemBase {
     TalonFXConfiguration wrist_config = new TalonFXConfiguration();
 
     // Setup the ARM stage motor
-    m_arm_motor.configSelectedFeedbackSensor(TalonFXFeedbackDevice.IntegratedSensor, MOTION_MAGIC_SLOT, 0);
+    m_arm_motor.configSelectedFeedbackSensor(TalonFXFeedbackDevice.IntegratedSensor, ARM_MM_FORWARD_SLOT, 0);
     arm_config.primaryPID.selectedFeedbackSensor = FeedbackDevice.IntegratedSensor;
     m_arm_motor.configReverseLimitSwitchSource(LimitSwitchSource.FeedbackConnector, LimitSwitchNormal.NormallyOpen);
     m_arm_motor.configForwardLimitSwitchSource(LimitSwitchSource.FeedbackConnector, LimitSwitchNormal.NormallyOpen);
@@ -134,7 +137,7 @@ public class Arm extends SubsystemBase {
     m_arm_motor.setNeutralMode(NeutralMode.Brake);
 
     // Configure the Wrist motor
-    m_wrist_motor.configSelectedFeedbackSensor(TalonFXFeedbackDevice.IntegratedSensor, MOTION_MAGIC_SLOT, 0);
+    m_wrist_motor.configSelectedFeedbackSensor(TalonFXFeedbackDevice.IntegratedSensor, ARM_MM_FORWARD_SLOT, 0);
     wrist_config.primaryPID.selectedFeedbackSensor = FeedbackDevice.IntegratedSensor;
     m_wrist_motor.configReverseLimitSwitchSource(LimitSwitchSource.FeedbackConnector, LimitSwitchNormal.NormallyOpen);
     m_wrist_motor.configForwardLimitSwitchSource(LimitSwitchSource.FeedbackConnector, LimitSwitchNormal.NormallyOpen);
@@ -340,7 +343,7 @@ public class Arm extends SubsystemBase {
     // Subsystem::RunOnce implicitly requires `this` subsystem.
     return runOnce(
         () -> {
-          m_arm_motor.setSelectedSensorPosition(0);
+          m_wrist_motor.setSelectedSensorPosition(0);
         });
   }
 
