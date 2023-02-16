@@ -9,7 +9,7 @@ import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 
-public class DriveMotionMagic extends CommandBase {
+public class DriveMotionMagicTest extends CommandBase {
   DriveTrain m_dt;
   int m_target_in_ticks;
   boolean m_done;
@@ -17,7 +17,7 @@ public class DriveMotionMagic extends CommandBase {
   NetworkTableEntry m_target_distance, m_time_to_velo, m_target_velocity, m_left_result, m_right_result, m_kp;
 
   /** Creates a new DriveMotionMagic. */
-  public DriveMotionMagic( DriveTrain dt) {
+  public DriveMotionMagicTest( DriveTrain dt) {
     m_dt = dt;
     // Use addRequirements() here to declare subsystem dependencies.
     addRequirements(m_dt);

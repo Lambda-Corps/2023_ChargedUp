@@ -12,8 +12,8 @@ import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import frc.robot.subsystems.DriveTrain.DefaultDriveTrainCommand;
-import frc.robot.subsystems.DriveTrain.DriveMMSequence;
-import frc.robot.subsystems.DriveTrain.DriveMotionMagic;
+import frc.robot.subsystems.DriveTrain.DriveMMSequenceTest;
+import frc.robot.subsystems.DriveTrain.DriveMotionMagicTest;
 import frc.robot.subsystems.DriveTrain.DriveTrain;
 import frc.robot.subsystems.DriveTrain.SetMaxSpeedCommand;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -93,10 +93,10 @@ public class RobotContainer {
     driveTestTab.add("Left Encoder Result", 0).withPosition(3, 3).withSize(1,1);
     driveTestTab.add("Right Encoder Result", 0).withPosition(4, 3).withSize(1,1);
     driveTestTab.add("MM kP", 0).withPosition(5, 3).withSize(1,1);
-    driveTestTab.add("Drive MM", new DriveMotionMagic(m_drivetrain)).withPosition(6,3).withSize(2, 1);
+    driveTestTab.add("Drive MM", new DriveMotionMagicTest(m_drivetrain)).withPosition(6,3).withSize(2, 1);
     driveTestTab.addDouble("Left Error", m_drivetrain::getLeftError).withPosition(0,4).withSize(1,1);
     driveTestTab.addDouble("Right Error", m_drivetrain::getRightError).withPosition(1,4).withSize(1,1);
-    driveTestTab.add("DriveMM Sequence", new DriveMMSequence(m_drivetrain)).withPosition(2, 4).withSize(1, 1);
+    driveTestTab.add("DriveMM Sequence", new DriveMMSequenceTest(m_drivetrain)).withPosition(2, 4).withSize(1, 1);
 
     // driveTestTab.add("Robot Heading", 0).withPosition(0, 0).withSize(2, 2).withWidget(BuiltInWidgets.kGyro);
     

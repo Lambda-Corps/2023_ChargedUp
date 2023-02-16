@@ -12,14 +12,14 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 // NOTE:  Consider using this command inline, rather than writing a subclass.  For more
 // information, see:
 // https://docs.wpilib.org/en/stable/docs/software/commandbased/convenience-features.html
-public class DriveMMInstant extends InstantCommand {
+public class DriveMMInstantTest extends InstantCommand {
   DriveTrain m_dt;
   int m_target_in_ticks;
   boolean m_done;
   int m_count;
   
   NetworkTableEntry m_target_distance, m_time_to_velo, m_target_velocity, m_left_result, m_right_result, m_kp;
-  public DriveMMInstant(DriveTrain dt) {
+  public DriveMMInstantTest(DriveTrain dt) {
     m_dt = dt;
     
     NetworkTable driveTab = NetworkTableInstance.getDefault().getTable("Shuffleboard").getSubTable("Drive Test");
