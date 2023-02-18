@@ -7,6 +7,7 @@ package frc.robot;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import frc.robot.subsystems.Arm.Arm;
+import frc.robot.subsystems.Arm.ArmDriveToPositionPIDTest;
 import frc.robot.subsystems.Arm.DriveArmManually;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
@@ -54,9 +55,11 @@ public class RobotContainer {
    * edu.wpi.first.wpilibj2.command.button.JoystickButton}.
    */
   private void configureButtonBindings() {
-    m_partner_controller.a().whileTrue(new DriveArmManually(m_arm, m_partner_controller));
-    m_partner_controller.rightBumper().onTrue(m_arm.contractGripperCommand());
-    m_partner_controller.leftBumper().onTrue(m_arm.expandGripperCommand());
+    m_partner_controller.rightBumper().whileTrue(new DriveArmManually(m_arm, m_partner_controller));
+    m_partner_controller.leftBumper().whileTrue(new ArmDriveToPositionPIDTest(m_arm, m_partner_controller));
+    m_partner_controller.start().onTrue(m_arm.stopArmAndWristCommand());
+    m_partner_controller.a().onTrue(m_arm.contractGripperCommand());
+    m_partner_controller.b().onTrue(m_arm.expandGripperCommand());
     
     m_driver_controller.leftBumper().onTrue(m_drivetrain.shiftToHighGear());
     m_driver_controller.leftBumper().onFalse(m_drivetrain.shiftToLowGear());
@@ -143,7 +146,7 @@ public class RobotContainer {
     armTestTab.add("Arm Rev Lim", 10000).withPosition(7, 2).withSize(1, 1);
 
     // Add the commands to the page
-    armTestTab.add("Zero Wrist Encoder", m_arm.setArmEncoderToZero()).withPosition(0, 2).withSize(2, 1);
+    armTestTab.add("Zero Wrist Encoder", m_arm.setWristEncoderToZero()).withPosition(0, 2).withSize(2, 1);
     armTestTab.add("Zero Arm Encoder", m_arm.setArmEncoderToZero()).withPosition(2, 2).withSize(2, 1);
     armTestTab.add("Set Arm Max Speed", m_arm.setArmMaxSpeed()).withPosition(0, 3).withSize(2, 1);
     armTestTab.add("Set Wrist Max Speed", m_arm.setWristMaxSpeed()).withPosition(2, 3).withSize(2, 1);

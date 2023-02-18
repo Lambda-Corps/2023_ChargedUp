@@ -6,16 +6,9 @@ package drivetraintest;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.*;
-
 import org.junit.jupiter.api.*;
 import edu.wpi.first.hal.HAL;
-import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.DifferentialDrivetrainSim;
-import edu.wpi.first.wpilibj.simulation.DifferentialDrivetrainSim.KitbotGearing;
-import edu.wpi.first.wpilibj.simulation.DifferentialDrivetrainSim.KitbotMotor;
-import edu.wpi.first.wpilibj.simulation.DifferentialDrivetrainSim.KitbotWheelSize;
-
 import com.ctre.phoenix.motorcontrol.TalonFXSimCollection;
 import frc.robot.subsystems.DriveTrain.DriveTrain;
 

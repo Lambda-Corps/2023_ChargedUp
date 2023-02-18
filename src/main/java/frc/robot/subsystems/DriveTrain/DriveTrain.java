@@ -233,11 +233,11 @@ public class DriveTrain extends SubsystemBase {
 		forward = MathUtil.clamp(forward, -m_drive_absMax, m_drive_absMax);
 		turn = MathUtil.clamp(turn, -m_drive_absMax, m_drive_absMax);
 
-		// //forward = -m_forward_limiter.calculate(forward) * m_drive_absMax;
-		// if(forward != 0 || turn != 0) {
-		// 	forward = m_forward_limiter.calculate(forward) * m_drive_absMax;
-		// 	turn = m_rotation_limiter.calculate(turn) * m_drive_absMax;
-		// }
+		//forward = -m_forward_limiter.calculate(forward) * m_drive_absMax;
+		if(forward != 0 || turn != 0) {
+			forward = m_forward_limiter.calculate(forward) * m_drive_absMax;
+			turn = m_rotation_limiter.calculate(turn) * m_drive_absMax;
+		}
 
 		var speeds = DifferentialDrive.curvatureDriveIK(forward, turn, true);
 
