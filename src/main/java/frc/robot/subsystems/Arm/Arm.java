@@ -14,9 +14,11 @@ import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.StatorCurrentLimitConfiguration;
 import com.ctre.phoenix.motorcontrol.TalonFXFeedbackDevice;
 import com.ctre.phoenix.motorcontrol.TalonFXInvertType;
+import com.ctre.phoenix.motorcontrol.can.SlotConfiguration;
 import com.ctre.phoenix.motorcontrol.can.TalonFXConfiguration;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
@@ -49,16 +51,14 @@ public class Arm extends SubsystemBase {
   }
 
   public enum ArmPosition {
-    Manual_Control,
-    Retracted,
+    Stowed,
     GroundPickup,
     SubstationPickup,
-    ConeScoreLow,
-    ConeScoreMid,
-    ConeScoreHigh,
-    CubeScoreLow,
-    CubeScoreMid,
-    CubeScoreHigh,
+    ScoreLow,
+    ScoreConeMid,
+    ScoreConeHigh,
+    ScoreCubeMid,
+    ScoreCubeHigh,
   }
 
   public enum ArmTask {
@@ -76,18 +76,39 @@ public class Arm extends SubsystemBase {
   final double WRIST_REVERSE_SPEED = -.3;
   final double ARM_GEAR_RATIO = 10 * 4 * 4;
   final double WRIST_GEAR_RATIO = 7 * 5 * 5;
-  final int WRIST_REVERSE_SOFT_LIMIT = 16000;// TODO TUNE THESE
+  final int WRIST_REVERSE_SOFT_LIMIT = 1000;// TODO TUNE THESE
   final int WRIST_FORWARD_SOFT_LIMIT = 200000; // 264,904, 265763, 266612
-  final int ARM_REVERSE_SOFT_LIMIT = 10000; 
+  final int ARM_REVERSE_SOFT_LIMIT = 1000; 
   final int ARM_FORWARD_SOFT_LIMIT = (int)(2048 * ARM_GEAR_RATIO * 1/6); // 60 degrees rotation
   final double WRIST_MAX_STATOR_CURRENT = 20;
   final double ARM_MAX_STATOR_CURRENT = 20;
   final int ARM_MM_FORWARD_SLOT = 0;
   final int ARM_MM_REVERSE_SLOT = 1;
+  final int ARM_MANUAL_SLOT = 2;
   final int WRIST_MM_FORWARD_SLOT = 0;
   final int WRIST_MM_REVERSE_SLOT = 1;
+  final int WRIST_MANUAL_SLOT = 2;
   final DoubleSolenoid.Value GRIPPER_CONTRACT = DoubleSolenoid.Value.kForward;
   final DoubleSolenoid.Value GRIPPER_EXPAND   = DoubleSolenoid.Value.kReverse;
+  final int WRIST_POSITION_STEP = (int)(WRIST_FORWARD_SOFT_LIMIT / 20); // subdivide wrist into 20 steps
+  final int ARM_POSITION_STEP = (int)(ARM_FORWARD_SOFT_LIMIT / 12); // subdivide arm into 12 steps
+  // Encoder Measurements for the relevant scoring positions
+  final int ARM_STOW = 0;
+  final int WRIST_STOW = 0;
+  final int ARM_GROUND_PICKUP = 0; // TODO - 18 Feb, measure all of these and save
+  final int WRIST_GROUND_PICKUP = 0;
+  final int ARM_SUBSTATION = 0;
+  final int WRIST_SUBSTATION = 0;
+  final int ARM_SCORE_LOW = 0;
+  final int WRIST_SCORE_LOW = 0;
+  final int ARM_CONE_MID = 0;
+  final int WRIST_CONE_MID = 0;
+  final int ARM_CONE_HIGH = 0;
+  final int WRIST_CONE_HIGH = 0;
+  final int ARM_CUBE_HIGH = 0;
+  final int WRIST_CUBE_HIGH = 0;
+  final int ARM_CUBE_MID = 0;
+  final int WRIST_CUBE_MID = 0;
 
   /** Creates a new Arm. */
   public Arm() {
@@ -310,6 +331,37 @@ public class Arm extends SubsystemBase {
     m_wrist_motor.set(ControlMode.PercentOutput, wrist_speed);
   }
 
+  public void drive_manually_by_position(double arm_speed, double wrist_speed){
+    // Make sure we've got a number larger than 10%
+    arm_speed = MathUtil.applyDeadband(arm_speed, .1);
+    wrist_speed = MathUtil.applyDeadband(wrist_speed, .1);
+
+    // Get the current encoder positions, and then calculate the future position
+    // if we were to allow movement
+    double arm_position = m_arm_motor.getSelectedSensorPosition();
+    double wrist_position = m_wrist_motor.getSelectedSensorPosition();
+
+    if( arm_speed != 0 ){
+      int next_position = (int)( arm_position + ((arm_speed > 0) ? ARM_POSITION_STEP : ARM_POSITION_STEP * -1));
+      // If it is within limits, then set the new position as the movement
+      if( next_position < ARM_FORWARD_SOFT_LIMIT || next_position > ARM_REVERSE_SOFT_LIMIT) {
+        arm_position = next_position;
+      }
+    }
+
+    if( wrist_speed != 0){
+      int next_position = (int)( wrist_position + ((arm_speed > 0) ? WRIST_POSITION_STEP : WRIST_POSITION_STEP * -1));
+      // If it is within limits, then set the new position as the movement
+      if( next_position < WRIST_FORWARD_SOFT_LIMIT || next_position > WRIST_REVERSE_SOFT_LIMIT) {
+        wrist_position = next_position;
+      }
+    }
+
+    // TODO calculate the FF to add in here
+    m_arm_motor.set(ControlMode.Position, arm_position);
+    m_wrist_motor.set(ControlMode.Position, wrist_position);
+  }
+
   ////////////////////// ARM INLINE COMMANDS  /////////////////////
   public CommandBase expandGripperCommand() {
     // Inline construction of command goes here.
@@ -371,7 +423,21 @@ public class Arm extends SubsystemBase {
   public CommandBase setWristMaxSpeed(){
     return runOnce (
       () -> {
-        System.out.println("Set Wrist Speed here");
+        NetworkTable driveTab = NetworkTableInstance.getDefault().getTable("Shuffleboard").getSubTable("Arm Test");
+        double forward_speed = driveTab.getEntry("Wrist Fwd Spd").getDouble(WRIST_FORWARD_SPEED);
+        double reverse_speed = driveTab.getEntry("Wrist Rev Spd").getDouble(WRIST_REVERSE_SPEED);
+
+        // Just in case they put values that aren't positive or negative on Shuffleboard as an accident, make sure it's right
+        if( reverse_speed > 0 ){
+          reverse_speed = reverse_speed * -1;
+        }
+
+        if( forward_speed < 0 ){
+          forward_speed = forward_speed * -1;
+        }
+
+        m_wrist_motor.configPeakOutputForward(forward_speed);
+        m_wrist_motor.configPeakOutputReverse(reverse_speed);
     });
   }
 }
