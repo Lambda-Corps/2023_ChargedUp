@@ -357,6 +357,10 @@ public class Arm extends SubsystemBase {
       }
     }
 
+    // Set the arm and wrist motors with their proper PID slot, calculate the FeedForward, and set the motors
+    m_arm_motor.selectProfileSlot(ARM_MANUAL_SLOT, 0);
+    m_wrist_motor.selectProfileSlot(ARM_MANUAL_SLOT, 0);
+
     // TODO calculate the FF to add in here
     m_arm_motor.set(ControlMode.Position, arm_position);
     m_wrist_motor.set(ControlMode.Position, wrist_position);
