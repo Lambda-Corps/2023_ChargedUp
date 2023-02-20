@@ -525,19 +525,10 @@ public class Arm extends SubsystemBase {
       }
     }
 
-<<<<<<< Updated upstream
     if (wrist_speed != 0) {
-      int next_position = (int) (wrist_position
-          + ((arm_speed > 0) ? WRIST_POSITION_STEP : WRIST_POSITION_STEP * -1));
+      int next_position = (int) (wrist_position + ((wrist_speed > 0) ? WRIST_POSITION_STEP : WRIST_POSITION_STEP * -1));
       // If it is within limits, then set the new position as the movement
       if (next_position < WRIST_FORWARD_SOFT_LIMIT || next_position > WRIST_REVERSE_SOFT_LIMIT) {
-=======
-    if( wrist_speed != 0){
-      int next_position = (int)( wrist_position + ((wrist_speed > 0) ? WRIST_POSITION_STEP : WRIST_POSITION_STEP * -1));
-      MathUtil.clamp(next_position, WRIST_REVERSE_SOFT_LIMIT, WRIST_FORWARD_SOFT_LIMIT);
-      // If it is within limits, then set the new position as the movement
-      // if( next_position < WRIST_FORWARD_SOFT_LIMIT || next_position > WRIST_REVERSE_SOFT_LIMIT) {
->>>>>>> Stashed changes
         wrist_position = next_position;
       // }
     }
@@ -559,11 +550,7 @@ public class Arm extends SubsystemBase {
     if (wrist_speed > 0) {
       m_wrist_motor.selectProfileSlot(WRIST_MANUAL_FORWARD_SLOT, 0);
       wrist_ArbFF = WRIST_MANUAL_FORWARD_FF;
-<<<<<<< Updated upstream
-    } else if (arm_speed < 0) {
-=======
     } else if ( wrist_speed < 0) {
->>>>>>> Stashed changes
       m_wrist_motor.selectProfileSlot(WRIST_MANUAL_REVERSE_SLOT, 0);
       wrist_ArbFF = WRIST_MANUAL_REVERSE_FF;
     } else {
