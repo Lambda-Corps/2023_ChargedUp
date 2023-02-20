@@ -41,7 +41,7 @@ public class Arm extends SubsystemBase {
   public ArmPosition arm_position;
   public ArmTask arm_task;
 
-  public enum ArmState {
+public enum ArmState {
     Active,
     Inactive,
   }
@@ -292,6 +292,15 @@ public class Arm extends SubsystemBase {
   public void periodic() {
     m_arm_position.set(m_arm_motor.getSelectedSensorPosition());
     m_wrist_position.set(m_wrist_motor.getSelectedSensorPosition());
+
+    // falcon hard limit returns 1 if closed, 0 if open. Our limits are normally open
+    if (m_arm_motor.isRevLimitSwitchClosed() == 1) {
+      m_arm_motor.setSelectedSensorPosition(0);
+    }
+
+    if (m_wrist_motor.isRevLimitSwitchClosed() == 1) {
+      m_wrist_motor.setSelectedSensorPosition(0);
+    }
   }
 
   public void moveArmManually(double bottom_speed, double top_speed) {
