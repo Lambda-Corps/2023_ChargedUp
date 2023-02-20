@@ -43,7 +43,7 @@ public class TurnToAngleWithGyroTest extends CommandBase {
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-    if (m_dt.turn_target_degrees(m_target_degrees)) {
+    if (m_dt.turn_target_degrees()) {
       m_count_done++;
     } else {
       m_count_done = 0;

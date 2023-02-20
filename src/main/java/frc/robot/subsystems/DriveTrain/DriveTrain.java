@@ -127,6 +127,7 @@ public class DriveTrain extends SubsystemBase {
 			m_max_speed_entry;
 
 	final int MM_TOLERANCE = 200;
+	double TURN_DRIVE_FF = .1;
 	int m_setpoint = 0;
 	double m_turn_setpoint = 0;
 
@@ -208,7 +209,7 @@ public class DriveTrain extends SubsystemBase {
 		m_rotation_limiter = new SlewRateLimiter(3);
 		m_drive_absMax = MAX_TELEOP_DRIVE_SPEED;
 
-		m_gyro.calibrate();
+		m_gyro.reset();
 
 		// Create topics in the Shuffleboard table
 		NetworkTableInstance nt_inst = NetworkTableInstance.getDefault();
@@ -413,10 +414,19 @@ public class DriveTrain extends SubsystemBase {
 		m_turn_setpoint = -m_gyro.getAngle() + angle_setpoint;
 	}
 
-	public boolean turn_target_degrees(double angle_setpoint) {
-		boolean ret = false;
-
+	public boolean turn_target_degrees() {
 		double turn_output = m_turn_pid_controller.calculate(-m_gyro.getAngle(), m_turn_setpoint);
+
+		turn_output = MathUtil.clamp(turn_output, -.5, .5);
+		if( turn_output > 0 ){
+			if (turn_output < TURN_DRIVE_FF){
+				turn_output = TURN_DRIVE_FF;
+			}
+		} else if ( turn_output < 0 ){
+			if( turn_output > -TURN_DRIVE_FF){
+				turn_output = -TURN_DRIVE_FF;
+			}
+		}
 
 		teleop_drive(0, turn_output);
 		return m_turn_pid_controller.atSetpoint();
