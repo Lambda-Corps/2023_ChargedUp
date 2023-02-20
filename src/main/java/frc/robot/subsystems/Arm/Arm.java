@@ -138,20 +138,21 @@ public class Arm extends SubsystemBase {
   final double ARM_MANUAL_FORWARD_KD = 0;
   final double ARM_MANUAL_FORWARD_KF = 0;
   final double ARM_MANUAL_FORWARD_FF = .3;
-  final double ARM_MANUAL_REVERSE_KP = (ARM_REVERSE_SPEED * 1023) / 2048;
+  final double ARM_MANUAL_REVERSE_KP = (ARM_REVERSE_SPEED * 1023) / 512;
   final double ARM_MANUAL_REVERSE_KI = 0;
   final double ARM_MANUAL_REVERSE_KD = 0;
   final double ARM_MANUAL_REVERSE_KF = 0;
   final double ARM_MANUAL_REVERSE_FF = -.3;
-  final double WRIST_MANUAL_FORWARD_KP = (WRIST_FORWARD_SPEED * 1023) / 2048;
+  final double WRIST_MANUAL_FORWARD_KP = (WRIST_FORWARD_SPEED * 1023) / 512;
   final double WRIST_MANUAL_FORWARD_KI = 0;
   final double WRIST_MANUAL_FORWARD_KD = 0;
   final double WRIST_MANUAL_FORWARD_KF = 0;
-  final double WRIST_MANUAL_FORWARD_FF = .075;
-  final double WRIST_MANUAL_REVERSE_KP = (WRIST_REVERSE_SPEED * 1023) / 2048;
+  final double WRIST_MANUAL_FORWARD_FF = .1;
+  final double WRIST_MANUAL_REVERSE_KP = (WRIST_REVERSE_SPEED * 1023) / 512;
   final double WRIST_MANUAL_REVERSE_KI = 0;
   final double WRIST_MANUAL_REVERSE_KD = 0;
   final double WRIST_MANUAL_REVERSE_KF = 0;
+  final double WRIST_MANUAL_REVERSE_FF = -.01;
 
   // Encoder Measurements for the relevant scoring positions
   final static int ARM_STOW = 0;
@@ -508,8 +509,8 @@ public class Arm extends SubsystemBase {
 
   public void drive_manually_by_position(double arm_speed, double wrist_speed) {
     // Make sure we've got a number larger than 10%
-    arm_speed = MathUtil.applyDeadband(arm_speed, .1);
-    wrist_speed = MathUtil.applyDeadband(wrist_speed, .1);
+    arm_speed = MathUtil.applyDeadband(arm_speed, .02);
+    wrist_speed = MathUtil.applyDeadband(wrist_speed, .02);
 
     // Get the current encoder positions, and then calculate the future position
     // if we were to allow movement
@@ -524,13 +525,21 @@ public class Arm extends SubsystemBase {
       }
     }
 
+<<<<<<< Updated upstream
     if (wrist_speed != 0) {
       int next_position = (int) (wrist_position
           + ((arm_speed > 0) ? WRIST_POSITION_STEP : WRIST_POSITION_STEP * -1));
       // If it is within limits, then set the new position as the movement
       if (next_position < WRIST_FORWARD_SOFT_LIMIT || next_position > WRIST_REVERSE_SOFT_LIMIT) {
+=======
+    if( wrist_speed != 0){
+      int next_position = (int)( wrist_position + ((wrist_speed > 0) ? WRIST_POSITION_STEP : WRIST_POSITION_STEP * -1));
+      MathUtil.clamp(next_position, WRIST_REVERSE_SOFT_LIMIT, WRIST_FORWARD_SOFT_LIMIT);
+      // If it is within limits, then set the new position as the movement
+      // if( next_position < WRIST_FORWARD_SOFT_LIMIT || next_position > WRIST_REVERSE_SOFT_LIMIT) {
+>>>>>>> Stashed changes
         wrist_position = next_position;
-      }
+      // }
     }
 
     // Set the arm and wrist motors with their proper PID slot, calculate the
@@ -550,10 +559,15 @@ public class Arm extends SubsystemBase {
     if (wrist_speed > 0) {
       m_wrist_motor.selectProfileSlot(WRIST_MANUAL_FORWARD_SLOT, 0);
       wrist_ArbFF = WRIST_MANUAL_FORWARD_FF;
+<<<<<<< Updated upstream
     } else if (arm_speed < 0) {
+=======
+    } else if ( wrist_speed < 0) {
+>>>>>>> Stashed changes
       m_wrist_motor.selectProfileSlot(WRIST_MANUAL_REVERSE_SLOT, 0);
+      wrist_ArbFF = WRIST_MANUAL_REVERSE_FF;
     } else {
-      // Don't do anything
+      wrist_ArbFF = WRIST_MANUAL_FORWARD_FF / 2;
     }
 
     m_arm_motor.set(ControlMode.Position, arm_position, DemandType.ArbitraryFeedForward, arm_ArbFF);
