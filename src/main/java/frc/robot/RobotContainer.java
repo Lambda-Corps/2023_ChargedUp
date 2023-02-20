@@ -17,6 +17,7 @@ import frc.robot.subsystems.DriveTrain.DriveMMSequenceTest;
 import frc.robot.subsystems.DriveTrain.DriveMotionMagicTest;
 import frc.robot.subsystems.DriveTrain.DriveTrain;
 import frc.robot.subsystems.DriveTrain.SetMaxSpeedCommand;
+import frc.robot.subsystems.DriveTrain.TurnToAngleWithGyroTest;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.PrintCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -100,8 +101,18 @@ public class RobotContainer {
     driveTestTab.addDouble("Left Error", m_drivetrain::getLeftError).withPosition(0,4).withSize(1,1);
     driveTestTab.addDouble("Right Error", m_drivetrain::getRightError).withPosition(1,4).withSize(1,1);
     driveTestTab.add("DriveMM Sequence", new DriveMMSequenceTest(m_drivetrain)).withPosition(2, 4).withSize(1, 1);
+    driveTestTab.add("Target Degrees", 0).withPosition(6, 1).withSize(1, 1);
+    driveTestTab.addNumber("Curr Heading", m_drivetrain::getHeading).withPosition(4,0).withSize(1,1);
+    driveTestTab.add("Gyro", m_drivetrain.getGyro()).withPosition(3, 1).withSize(2, 2).withWidget(BuiltInWidgets.kGyro);
+    driveTestTab.addNumber("Yaw", m_drivetrain::getYaw).withPosition(0, 2).withSize(1, 1);
+    driveTestTab.addNumber("Pitch", m_drivetrain::getPitch).withPosition(1, 2).withSize(1, 1);
+    driveTestTab.addNumber("Roll", m_drivetrain::getRoll).withPosition(2, 2).withSize(1, 1);
+    driveTestTab.addNumber("Angle", m_drivetrain::getAngle).withPosition(5, 2).withSize(1, 1);
 
-    // driveTestTab.add("Robot Heading", 0).withPosition(0, 0).withSize(2, 2).withWidget(BuiltInWidgets.kGyro);
+
+    // PID Tuning
+    driveTestTab.add("Turn PID", m_drivetrain.get_dt_turn_pidcontroller()).withPosition(5, 0);
+    driveTestTab.add("Turn with PID", new TurnToAngleWithGyroTest(m_drivetrain)).withPosition(6, 0).withSize(2, 1);
     
   }
 
