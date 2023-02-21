@@ -133,8 +133,11 @@ public class DriveTrain extends SubsystemBase {
 
 	DoubleSolenoid m_shifter;
 
+<<<<<<< HEAD
 	PIDController m_turn_pid_controller;
 
+=======
+>>>>>>> arm_state_machine_test
 	/** Creates a new DriveTrain. */
 	public DriveTrain() {
 		m_gyro = new AHRS(SPI.Port.kMXP);
@@ -228,8 +231,11 @@ public class DriveTrain extends SubsystemBase {
 
 		m_shifter = new DoubleSolenoid(PneumaticsModuleType.CTREPCM, 0, 1);
 		m_shifter.set(LOW_GEAR);
+<<<<<<< HEAD
 
 		m_turn_pid_controller = new PIDController(0, 0, 0);
+=======
+>>>>>>> arm_state_machine_test
 	}
 
 	@Override
@@ -379,6 +385,7 @@ public class DriveTrain extends SubsystemBase {
 		return m_drive_absMax;
 	}
 
+<<<<<<< HEAD
 	// Get the robot's heading in degrees scaled to 360
 	// Output is negated because the Navx is Clockwise positive, but
 	// our robot is NWU orientation, nor CounterClockWise positive.
@@ -440,6 +447,8 @@ public class DriveTrain extends SubsystemBase {
 		return m_turn_pid_controller;
 	}
 
+=======
+>>>>>>> arm_state_machine_test
 	/**
 	 * Example command factory method.
 	 *
