@@ -49,6 +49,7 @@ public class Arm extends SubsystemBase {
 
   public enum ArmState {
     Active,
+    Holding,
     Inactive,
   }
 
@@ -102,9 +103,9 @@ public class Arm extends SubsystemBase {
   final double WRIST_REVERSE_SPEED = -.3;
   final double ARM_GEAR_RATIO = 10 * 4 * 4;
   final double WRIST_GEAR_RATIO = 7 * 5 * 5;
-  final int WRIST_REVERSE_SOFT_LIMIT = 1500;// TODO TUNE THESE
-  final int WRIST_FORWARD_SOFT_LIMIT = 123000; // 264,904, 265763, 266612
-  final int ARM_REVERSE_SOFT_LIMIT = 1000;
+  final int WRIST_REVERSE_SOFT_LIMIT = 0;// TODO TUNE THESE
+  final int WRIST_FORWARD_SOFT_LIMIT = 123000;
+  final int ARM_REVERSE_SOFT_LIMIT = 0;
   final int ARM_FORWARD_SOFT_LIMIT = 46000;
   // final int ARM_FORWARD_SOFT_LIMIT = (int)(2048 * ARM_GEAR_RATIO * 1/6); // 60
   // degrees rotation
@@ -155,25 +156,26 @@ public class Arm extends SubsystemBase {
   final double WRIST_MANUAL_REVERSE_FF = -.01;
 
   // Encoder Measurements for the relevant scoring positions
+  // TODO -- These need to be refined
   final static int ARM_STOW = 0;
   final static int WRIST_STOW = 0;
-  final static int ARM_GROUND_PICKUP = 999; // TODO - 18 Feb, measure all of these and save
-  final static int WRIST_GROUND_PICKUP = 999;
+  final static int ARM_GROUND_PICKUP = 40000;
+  final static int WRIST_GROUND_PICKUP = 0;
   final static int ARM_SUBSTATION = 0;
-  final static int WRIST_SUBSTATION = 0;
+  final static int WRIST_SUBSTATION = 70000;
   final static int ARM_SCORE_LOW = 0;
-  final static int WRIST_SCORE_LOW = 0;
-  final static int ARM_CONE_MID = 0;
-  final static int WRIST_CONE_MID = 0;
-  final static int ARM_CONE_HIGH = 0;
-  final static int WRIST_CONE_HIGH = 0;
-  final static int ARM_CUBE_HIGH = 0;
-  final static int WRIST_CUBE_HIGH = 0;
-  final static int ARM_CUBE_MID = 0;
-  final static int WRIST_CUBE_MID = 0;
+  final static int WRIST_SCORE_LOW = 28000;
+  final static int ARM_CONE_MID = 36500;
+  final static int WRIST_CONE_MID = 65000;
+  final static int ARM_CONE_HIGH = 46300;
+  final static int WRIST_CONE_HIGH = 96000;
+  final static int ARM_CUBE_HIGH = 46300;
+  final static int WRIST_CUBE_HIGH = 88000;
+  final static int ARM_CUBE_MID = 35000;
+  final static int WRIST_CUBE_MID = 49000;
   final static int ARM_POSITION_TOLERANCE = 100;
   final static int WRIST_POSITION_TOLERANCE = 100;
-  
+
   /** Creates a new Arm. */
   public Arm() {
     // Configure top and bottom arm talons. NOTE: set invertType such that positive
@@ -229,15 +231,6 @@ public class Arm extends SubsystemBase {
     wrist_manual_reverse.kD = WRIST_MANUAL_REVERSE_KD;
     wrist_manual_reverse.kF = WRIST_MANUAL_REVERSE_KF;
     wrist_config.slot3 = wrist_manual_reverse;
-
-    // arm_config.slot0 = new SlotConfiguration();
-    // arm_config.slot1 = new SlotConfiguration();
-    // arm_config.slot2 = m_arm_manual_forward;
-    // arm_config.slot3 = m_arm_manual_reverse;
-    // wrist_config.slot0 = new SlotConfiguration();
-    // wrist_config.slot1 = new SlotConfiguration();
-    // wrist_config.slot2 = m_wrist_manual_forward;
-    // wrist_config.slot3 = m_wrist_manual_reverse;
 
     // Setup the ARM stage motor
     m_arm_motor.configSelectedFeedbackSensor(TalonFXFeedbackDevice.IntegratedSensor, ARM_MM_FORWARD_SLOT, 0);
@@ -329,9 +322,16 @@ public class Arm extends SubsystemBase {
     stowed_illegal_transitions.add(SuperStructurePosition.GroundPickup);
     ground_pickup_illegal_transitions.add(SuperStructurePosition.Stowed);
 
-    // The HashMap that associates specific illegal transitions per each position (as needed)
+    // The HashMap that associates specific illegal transitions per each position
+    // (as needed)
     illegal_transitions.put(SuperStructurePosition.Stowed, stowed_illegal_transitions);
     illegal_transitions.put(SuperStructurePosition.GroundPickup, ground_pickup_illegal_transitions);
+
+    // Set the motors to hold their initial positions stowed to try and minimize
+    // slop until we
+    // deliberately move them.
+    m_arm_motor.set(ControlMode.Position, SuperStructurePosition.Stowed.arm_position);
+    m_wrist_motor.set(ControlMode.Position, SuperStructurePosition.Stowed.wrist_position);
   }
 
   @Override
@@ -344,19 +344,20 @@ public class Arm extends SubsystemBase {
     checkArmSuperState();
   }
 
-  // ==================================== Arm State Machine Methods =======================================
+  // ==================================== Arm State Machine Methods
+  // =======================================
   public void checkArmSuperState() {
     System.out.println("Arm is at " + m_current_position);
     System.out.println("Requested Arm Position is at " + m_requested_position);
     if (isArmSuperAtRequestedPos()) {
       System.out.println("Arm is in requested position");
-    }else {
+    } else {
       System.out.println("Arm is not at requested position");
 
       if (isTransitionValid()) {
         System.out.println("Arm transition is legal");
         System.out.println("Moving arm to " + m_requested_position);
-      }else {
+      } else {
         System.out.println("Arm transition is illegal");
       }
     }
@@ -389,11 +390,13 @@ public class Arm extends SubsystemBase {
     boolean isIllegal = false;
     for (int i = 0; i < illegal_transitions.get(m_current_position).size(); i++) {
       if (m_requested_position == illegal_transitions.get(m_current_position).get(i)) {
-        System.out.println("testing " + m_requested_position + " against the list of illegal moves entry: " + illegal_transitions.get(m_current_position).get(i));
+        System.out.println("testing " + m_requested_position + " against the list of illegal moves entry: "
+            + illegal_transitions.get(m_current_position).get(i));
         isIllegal = true;
-      }else {
+      } else {
         isIllegal = false;
-        System.out.println("testing " + m_requested_position + " against " + illegal_transitions.get(m_current_position).get(i));
+        System.out.println(
+            "testing " + m_requested_position + " against " + illegal_transitions.get(m_current_position).get(i));
       }
     }
 
@@ -573,7 +576,33 @@ public class Arm extends SubsystemBase {
     }
   }
 
+  /**
+   * Convert encoder ticks to degrees for the arm
+   */
+  public double armToDegrees(double positionCounts) {
+    return positionCounts * (360.0 / (ARM_GEAR_RATIO * 2048.0));
+  }
 
+  /**
+   * 
+   */
+  public double degreesToFalconARM(double degrees) {
+      return degrees / (360.0 / (ARM_GEAR_RATIO * 2048.0));
+  }
+
+  /**
+   * Convert encoder ticks to degrees for the arm
+   */
+  public double wristToDegrees(double positionCounts) {
+    return positionCounts * (360.0 / (WRIST_GEAR_RATIO * 2048.0));
+  }
+
+  /**
+   * 
+   */
+  public double degreesToFalconWrist(double degrees) {
+      return degrees / (360.0 / (WRIST_GEAR_RATIO * 2048.0));
+  }
 
   ////////////////////// ARM INLINE COMMANDS /////////////////////
   public CommandBase expandGripperCommand() {
