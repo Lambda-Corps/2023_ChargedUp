@@ -15,7 +15,6 @@ import com.ctre.phoenix.motorcontrol.InvertType;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.TalonFXInvertType;
 import com.ctre.phoenix.motorcontrol.TalonFXSimCollection;
-import com.ctre.phoenix.motorcontrol.can.TalonFXConfiguration;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 import com.kauailabs.navx.frc.AHRS;
 
@@ -73,11 +72,10 @@ public class DriveTrain extends SubsystemBase {
 	// * 24.75) * kEncoderTicksPerInch ) );
 	public final static int kEncoderUnitsPerRotation = 35000;
 	public final static double kEncoderTicksPerDegree = kEncoderUnitsPerRotation / 360;
-	private final int kTimeoutMs = 0;
-	private final double kNeutralDeadband = 0.002;
+	// private final double kNeutralDeadband = 0.002;
 	private final double kControllerDeadband = 0.1;
 	private final double kTrackWidthMeters = .546;
-	private final double kTrackWidthInches = 24.75;
+	// private final double kTrackWidthInches = 24.75;
 	private final double kRobotMass = 55.3;
 
 	private final double MAX_TELEOP_DRIVE_SPEED = 1.0;
@@ -163,8 +161,8 @@ public class DriveTrain extends SubsystemBase {
 		m_right_leader.setNeutralMode(NeutralMode.Brake);
 
 		/** Config Objects for motor controllers */
-		TalonFXConfiguration _leftConfig = new TalonFXConfiguration();
-		TalonFXConfiguration _rightConfig = new TalonFXConfiguration();
+		// TalonFXConfiguration _leftConfig = new TalonFXConfiguration();
+		// TalonFXConfiguration _rightConfig = new TalonFXConfiguration();
 
 		// setEncodersToZero();
 		m_right_leader.setSelectedSensorPosition(0);

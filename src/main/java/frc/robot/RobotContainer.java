@@ -166,11 +166,16 @@ public class RobotContainer {
     armTestTab.add("Set Wrist Max Speed", m_arm.setWristMaxSpeed()).withPosition(2, 3).withSize(2, 1);
 
     // Add some test commands for the arm state machine
-    armTestTab.add("Stow Arm Test", new SetArmRequestedPosition(m_arm, SuperStructurePosition.Stowed)).withPosition(0, 4).withSize(2, 1);
-    armTestTab.add("Ground_Pickup Arm Test", new SetArmRequestedPosition(m_arm, SuperStructurePosition.GroundPickup)).withPosition(2, 4).withSize(2, 1);
-    armTestTab.add("Substation Arm Test", new SetArmRequestedPosition(m_arm, SuperStructurePosition.SubstationPickup)).withPosition(4, 4).withSize(2, 1);
-    armTestTab.add("Cube Score High Arm Test", new SetArmRequestedPosition(m_arm, SuperStructurePosition.ScoreCubeHigh)).withPosition(6, 4).withSize(2, 1);
-    armTestTab.add("Set Current Pos to Req Pos", new SetCurrentPosToRequestedPosTest(m_arm)).withPosition(8, 4).withSize(2, 1);
+    armTestTab.add("Stow Test", m_arm.requestMoveArmCommand(SuperStructurePosition.Stowed).unless(()->m_arm.isTransitionValid(SuperStructurePosition.Stowed))).withPosition(0, 4).withSize(2, 1);
+    armTestTab.add("Ground Pickup Test", m_arm.requestMoveArmCommand(SuperStructurePosition.GroundPickup).unless(()->m_arm.isTransitionValid(SuperStructurePosition.GroundPickup))).withPosition(2, 4).withSize(2, 1);
+    armTestTab.add("Substation Arm Test", m_arm.requestMoveArmCommand(SuperStructurePosition.SubstationPickup).unless(()->m_arm.isTransitionValid(SuperStructurePosition.SubstationPickup))).withPosition(4, 4).withSize(2, 1);
+    armTestTab.add("Score Cube High Test", m_arm.requestMoveArmCommand(SuperStructurePosition.ScoreCubeHigh).unless(()->m_arm.isTransitionValid(SuperStructurePosition.ScoreCubeHigh))).withPosition(6, 4).withSize(2, 1);
+    armTestTab.add("Score Cone Test", m_arm.requestMoveArmCommand(SuperStructurePosition.ScoreConeMid).unless(()->m_arm.isTransitionValid(SuperStructurePosition.ScoreCubeMid))).withPosition(8, 4).withSize(2, 1);
+    // armTestTab.add("Stow Arm Test", new SetArmRequestedPosition(m_arm, SuperStructurePosition.Stowed)).withPosition(0, 4).withSize(2, 1);
+    // armTestTab.add("Ground_Pickup Arm Test", new SetArmRequestedPosition(m_arm, SuperStructurePosition.GroundPickup)).withPosition(2, 4).withSize(2, 1);
+    // armTestTab.add("Substation Arm Test", new SetArmRequestedPosition(m_arm, SuperStructurePosition.SubstationPickup)).withPosition(4, 4).withSize(2, 1);
+    // armTestTab.add("Cube Score High Arm Test", new SetArmRequestedPosition(m_arm, SuperStructurePosition.ScoreCubeHigh)).withPosition(6, 4).withSize(2, 1);
+    // armTestTab.add("Set Current Pos to Req Pos", new SetCurrentPosToRequestedPosTest(m_arm)).withPosition(8, 4).withSize(2, 1);
     // armTestTab.add("Max Speed", 0).withPosition(0, 2).withSize(1,1);
     // armTestTab.add("Reset Max Speed", m_drivetrain.setMaxValue()).withPosition(1, 2).withSize(2, 1);
     // // Set the max speed variables

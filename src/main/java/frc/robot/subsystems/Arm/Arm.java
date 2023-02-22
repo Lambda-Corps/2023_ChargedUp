@@ -26,6 +26,7 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.StringPublisher;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
@@ -36,6 +37,7 @@ public class Arm extends SubsystemBase {
   WPI_TalonFX m_arm_motor, m_wrist_motor;
   DigitalInput m_arm_forward_limit, m_arm_reverse_limit, m_wrist_reverse_limit, m_wrist_forward_limit;
   DoublePublisher m_arm_position, m_wrist_position;
+  StringPublisher m_super_position;
 
   DoubleSolenoid m_gripper;
 
@@ -60,14 +62,59 @@ public class Arm extends SubsystemBase {
   }
 
   public enum SuperStructurePosition {
-    Stowed(ARM_STOW, WRIST_STOW),
-    GroundPickup(ARM_GROUND_PICKUP, WRIST_GROUND_PICKUP),
-    SubstationPickup(ARM_SUBSTATION, WRIST_SUBSTATION),
-    ScoreLow(ARM_SCORE_LOW, WRIST_SCORE_LOW),
-    ScoreConeMid(ARM_CONE_MID, WRIST_CONE_MID),
-    ScoreConeHigh(ARM_CONE_HIGH, WRIST_CONE_HIGH),
-    ScoreCubeMid(ARM_CUBE_MID, WRIST_CUBE_MID),
-    ScoreCubeHigh(ARM_CUBE_HIGH, WRIST_CUBE_HIGH);
+    Stowed(ARM_STOW, WRIST_STOW){
+      @Override
+      public String toString() {
+          return "Stowed";
+      }
+    },
+    GroundPickup(ARM_GROUND_PICKUP, WRIST_GROUND_PICKUP){
+      @Override
+      public String toString() {
+          return "Stowed";
+      }
+    },
+    SubstationPickup(ARM_SUBSTATION, WRIST_SUBSTATION){
+      @Override
+      public String toString() {
+          return "Stowed";
+      }
+    },
+    ScoreLow(ARM_SCORE_LOW, WRIST_SCORE_LOW){
+      @Override
+      public String toString() {
+          return "Score Low";
+      }},
+    ScoreConeMid(ARM_CONE_MID, WRIST_CONE_MID){
+      @Override
+      public String toString() {
+          return "Cone Mid";
+      }
+    },
+    ScoreConeHigh(ARM_CONE_HIGH, WRIST_CONE_HIGH){
+      @Override
+      public String toString() {
+          return "Cone High";
+      }
+    },
+    ScoreCubeMid(ARM_CUBE_MID, WRIST_CUBE_MID){
+      @Override
+      public String toString() {
+          return "Cube Mid";
+      }
+    },
+    ScoreCubeHigh(ARM_CUBE_HIGH, WRIST_CUBE_HIGH){
+      @Override
+      public String toString() {
+          return "Cube High";
+      }
+    },
+    Manual(1, 1){
+      @Override
+      public String toString() {
+          return "Manual";
+      }
+    }; // Default small values to make sure calculations won't fail
 
     private int arm_position, wrist_position;
     private ArrayList<SuperStructurePosition> illegal_transitions;
@@ -99,17 +146,19 @@ public class Arm extends SubsystemBase {
   // Constant values for ARM movement, must be researched and tuned via tuner
   final double ARM_FORWARD_SPEED = .4;
   final double ARM_REVERSE_SPEED = -.4;
-  final double WRIST_FORWARD_SPEED = .5;
-  final double WRIST_REVERSE_SPEED = -.3;
+  final double WRIST_FORWARD_SPEED = .7;
+  final double WRIST_REVERSE_SPEED = -.4;
+  final double WRIST_FORWARD_COSINE_FF = .07; // When arm is horizontal, calculation should be 1 * .07
   final double ARM_GEAR_RATIO = 10 * 4 * 4;
   final double WRIST_GEAR_RATIO = 7 * 5 * 5;
-  final int WRIST_REVERSE_SOFT_LIMIT = 0;// TODO TUNE THESE
-  final int WRIST_FORWARD_SOFT_LIMIT = 123000;
+  final int WRIST_REVERSE_SOFT_LIMIT = 0;
+  final int WRIST_FORWARD_SOFT_LIMIT = 94000;
   final int ARM_REVERSE_SOFT_LIMIT = 0;
   final int ARM_FORWARD_SOFT_LIMIT = 46000;
+  final int SAFE__MOVE_WRIST_POSITION = 10000; // Puts the wrist up at 11 degrees
   // final int ARM_FORWARD_SOFT_LIMIT = (int)(2048 * ARM_GEAR_RATIO * 1/6); // 60
   // degrees rotation
-  final double WRIST_MAX_STATOR_CURRENT = 20;
+  final double WRIST_MAX_STATOR_CURRENT = 25;
   final double ARM_MAX_STATOR_CURRENT = 20;
   final int ARM_MM_FORWARD_SLOT = 0;
   final int ARM_MM_REVERSE_SLOT = 1;
@@ -122,11 +171,11 @@ public class Arm extends SubsystemBase {
   final DoubleSolenoid.Value GRIPPER_CONTRACT = DoubleSolenoid.Value.kForward;
   final DoubleSolenoid.Value GRIPPER_EXPAND = DoubleSolenoid.Value.kReverse;
 
-  // The wrist travels 133 degrees total, for manual steps try to go 1 degree at a
+  // The wrist travels 90 degrees total, for manual steps try to go 3 degrees at a
   // time
-  final int WRIST_POSITION_STEP = (int) (WRIST_FORWARD_SOFT_LIMIT / 65);
-  // The arm travels 52 degrees total, for manual steps try one degree at a time
-  final int ARM_POSITION_STEP = (int) (ARM_FORWARD_SOFT_LIMIT / 26);
+  final int WRIST_POSITION_STEP = (int) (WRIST_FORWARD_SOFT_LIMIT / 30);
+  // The arm travels 46 degrees total, for manual steps try one degree at a time
+  final int ARM_POSITION_STEP = (int) (ARM_FORWARD_SOFT_LIMIT / 23);
 
   /*
    * KP Calculations are:
@@ -138,12 +187,12 @@ public class Arm extends SubsystemBase {
   final double ARM_MANUAL_FORWARD_KI = 0;
   final double ARM_MANUAL_FORWARD_KD = 0;
   final double ARM_MANUAL_FORWARD_KF = 0;
-  final double ARM_MANUAL_FORWARD_FF = .3;
+  final double ARM_MANUAL_FORWARD_FF = 0;
   final double ARM_MANUAL_REVERSE_KP = (ARM_REVERSE_SPEED * 1023) / 512;
   final double ARM_MANUAL_REVERSE_KI = 0;
   final double ARM_MANUAL_REVERSE_KD = 0;
   final double ARM_MANUAL_REVERSE_KF = 0;
-  final double ARM_MANUAL_REVERSE_FF = -.3;
+  final double ARM_MANUAL_REVERSE_FF = 0;
   final double WRIST_MANUAL_FORWARD_KP = (WRIST_FORWARD_SPEED * 1023) / 512;
   final double WRIST_MANUAL_FORWARD_KI = 0;
   final double WRIST_MANUAL_FORWARD_KD = 0;
@@ -156,7 +205,6 @@ public class Arm extends SubsystemBase {
   final double WRIST_MANUAL_REVERSE_FF = -.01;
 
   // Encoder Measurements for the relevant scoring positions
-  // TODO -- These need to be refined
   final static int ARM_STOW = 0;
   final static int WRIST_STOW = 0;
   final static int ARM_GROUND_PICKUP = 40000;
@@ -310,6 +358,8 @@ public class Arm extends SubsystemBase {
     m_arm_position = shuffleboard.getDoubleTopic("ArmEncoder").publish();
     m_wrist_position = shuffleboard.getDoubleTopic("WristEncoder").publish();
 
+    m_super_position = shuffleboard.getStringTopic("Super Position").publish();
+
     m_gripper = new DoubleSolenoid(PneumaticsModuleType.CTREPCM, GRIPPER_SOLENOID_CHANNEL_A,
         GRIPPER_SOLENOID_CHANNEL_B);
     // Set the gripper to contracted for our preload
@@ -342,23 +392,26 @@ public class Arm extends SubsystemBase {
     checkReverseLimits();
 
     checkArmSuperState();
+
+    // TODO Don't keep this in here:
+    m_super_position.set(m_current_position.toString());
   }
 
   // ==================================== Arm State Machine Methods
   // =======================================
   public void checkArmSuperState() {
-    System.out.println("Arm is at " + m_current_position);
-    System.out.println("Requested Arm Position is at " + m_requested_position);
+    // System.out.println("Arm is at " + m_current_position);
+    // System.out.println("Requested Arm Position is at " + m_requested_position);
     if (isArmSuperAtRequestedPos()) {
-      System.out.println("Arm is in requested position");
+      // System.out.println("Arm is in requested position");
     } else {
-      System.out.println("Arm is not at requested position");
+      // System.out.println("Arm is not at requested position");
 
-      if (isTransitionValid()) {
-        System.out.println("Arm transition is legal");
-        System.out.println("Moving arm to " + m_requested_position);
+      if (isTransitionValid(m_requested_position)) {
+        // System.out.println("Arm transition is legal");
+        // System.out.println("Moving arm to " + m_requested_position);
       } else {
-        System.out.println("Arm transition is illegal");
+        // System.out.println("Arm transition is illegal");
       }
     }
   }
@@ -386,20 +439,30 @@ public class Arm extends SubsystemBase {
     return isAtPosition;
   }
 
-  public boolean isTransitionValid() {
+  public boolean isTransitionValid(SuperStructurePosition requestedPosition) {
     boolean isIllegal = false;
-    for (int i = 0; i < illegal_transitions.get(m_current_position).size(); i++) {
-      if (m_requested_position == illegal_transitions.get(m_current_position).get(i)) {
-        System.out.println("testing " + m_requested_position + " against the list of illegal moves entry: "
-            + illegal_transitions.get(m_current_position).get(i));
+
+    // If the position is a known position, we can make a smart decision
+    if( m_current_position != SuperStructurePosition.Manual ){
+      if( illegal_transitions.containsKey(m_current_position) ){
+        ArrayList<SuperStructurePosition> illegals = illegal_transitions.get(m_current_position);
+
+        for( SuperStructurePosition pos : illegals ){
+          if (requestedPosition == pos){
+            isIllegal = true;
+            break;
+          }
+        }
+      }
+    } else {
+      // If the position is Manual, we just need to make sure the wrist is in a safe zone so we don't
+      // clip the bumpers on the move
+      double wrist_pos = m_wrist_motor.getSelectedSensorPosition();
+      if( wrist_pos <= SAFE__MOVE_WRIST_POSITION){
         isIllegal = true;
-      } else {
-        isIllegal = false;
-        System.out.println(
-            "testing " + m_requested_position + " against " + illegal_transitions.get(m_current_position).get(i));
       }
     }
-
+    
     return isIllegal;
   }
 
@@ -478,16 +541,16 @@ public class Arm extends SubsystemBase {
     return m_arm_reverse_limit;
   }
 
-  private int radiansToNativeUnits(double radians) {
-    double ticks = (radians / (2 * Math.PI)) * 2048;
-    return (int) ticks;
-  }
+  // private int radiansToNativeUnits(double radians) {
+  //   double ticks = (radians / (2 * Math.PI)) * 2048;
+  //   return (int) ticks;
+  // }
 
   // Converts to native units per 100 ms
-  private int velocityToNativeUnits(double radPerSec) {
-    double radPer100ms = radPerSec / 1000;
-    return radiansToNativeUnits(radPer100ms);
-  }
+  // private int velocityToNativeUnits(double radPerSec) {
+  //   double radPer100ms = radPerSec / 1000;
+  //   return radiansToNativeUnits(radPer100ms);
+  // }
 
   public boolean getArmForwardLimit() {
     return m_arm_forward_limit.get();
@@ -695,5 +758,15 @@ public class Arm extends SubsystemBase {
           m_arm_motor.set(ControlMode.PercentOutput, 0);
           m_wrist_motor.set(ControlMode.PercentOutput, 0);
         });
+  }
+
+  public CommandBase requestMoveArmCommand(SuperStructurePosition position){
+    return runOnce(
+      () -> {
+        System.out.println("Moving Superposition to: " + position);
+        m_current_position = position;
+        // m_arm_motor.set(ControlMode.MotionMagic, position.arm_position);
+        // m_wrist_motor.set(ControlMode.MotionMagic, position.wrist_position);
+      });
   }
 }

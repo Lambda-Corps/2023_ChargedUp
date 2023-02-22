@@ -109,8 +109,6 @@ public class ArmTest {
     
     @Test
     void testArmReverseLimits() {
-        double upper_speed = -1;
-        double lower_speed = -1;
         double busV = 12;
         var lower_sim = m_bottom_motor.getSimCollection();
         var upper_sim = m_upper_motor.getSimCollection();
