@@ -71,13 +71,13 @@ public class Arm extends SubsystemBase {
     GroundPickup(ARM_GROUND_PICKUP, WRIST_GROUND_PICKUP){
       @Override
       public String toString() {
-          return "Stowed";
+          return "Ground Pickup";
       }
     },
     SubstationPickup(ARM_SUBSTATION, WRIST_SUBSTATION){
       @Override
       public String toString() {
-          return "Stowed";
+          return "Substation";
       }
     },
     ScoreLow(ARM_SCORE_LOW, WRIST_SCORE_LOW){
@@ -407,7 +407,7 @@ public class Arm extends SubsystemBase {
     } else {
       // System.out.println("Arm is not at requested position");
 
-      if (isTransitionValid(m_requested_position)) {
+      if (isTransitionInValid(m_requested_position)) {
         // System.out.println("Arm transition is legal");
         // System.out.println("Moving arm to " + m_requested_position);
       } else {
@@ -439,8 +439,8 @@ public class Arm extends SubsystemBase {
     return isAtPosition;
   }
 
-  public boolean isTransitionValid(SuperStructurePosition requestedPosition) {
-    boolean isIllegal = false;
+  public boolean isTransitionInValid(SuperStructurePosition requestedPosition) {
+    boolean isInvalid = false;
 
     // If the position is a known position, we can make a smart decision
     if( m_current_position != SuperStructurePosition.Manual ){
@@ -449,7 +449,8 @@ public class Arm extends SubsystemBase {
 
         for( SuperStructurePosition pos : illegals ){
           if (requestedPosition == pos){
-            isIllegal = true;
+            // System.out.println("Invalid request: " + m_current_position + " to " + pos);
+            isInvalid = true;
             break;
           }
         }
@@ -459,11 +460,13 @@ public class Arm extends SubsystemBase {
       // clip the bumpers on the move
       double wrist_pos = m_wrist_motor.getSelectedSensorPosition();
       if( wrist_pos <= SAFE__MOVE_WRIST_POSITION){
-        isIllegal = true;
+        // System.out.println("Invalid Manual to " + requestedPosition);
+        isInvalid = true;
       }
     }
     
-    return isIllegal;
+    // TODO Set some variable so people know it's invalid like LED or Boolean flash
+    return isInvalid;
   }
 
   public void forceSetCurrentPos() { // FOR TESTING ONLY DO NOT USE AT COMPS
@@ -763,7 +766,7 @@ public class Arm extends SubsystemBase {
   public CommandBase requestMoveArmCommand(SuperStructurePosition position){
     return runOnce(
       () -> {
-        System.out.println("Moving Superposition to: " + position);
+        System.out.println("Moving Superposition to: " + position.toString());
         m_current_position = position;
         // m_arm_motor.set(ControlMode.MotionMagic, position.arm_position);
         // m_wrist_motor.set(ControlMode.MotionMagic, position.wrist_position);
