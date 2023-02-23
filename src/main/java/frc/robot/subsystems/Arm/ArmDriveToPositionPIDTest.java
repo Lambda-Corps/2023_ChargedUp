@@ -8,8 +8,6 @@ import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 
-import static frc.robot.Constants.*;
-
 public class ArmDriveToPositionPIDTest extends CommandBase {
   Arm m_arm;
   CommandXboxController m_remote;
@@ -37,11 +35,11 @@ public class ArmDriveToPositionPIDTest extends CommandBase {
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-    double arm, wrist;
-    arm = m_remote.getRawAxis(PARTNER_LEFT_AXIS);
-    wrist = m_remote.getRawAxis(PARTNER_RIGHT_AXIS);
+    // double arm, wrist;
+    // arm = m_remote.getRawAxis(PARTNER_LEFT_AXIS);
+    // wrist = m_remote.getRawAxis(PARTNER_RIGHT_AXIS);
 
-    m_arm.drive_manually_by_position(arm, wrist);
+    // m_arm.drive_manually_by_position(arm, wrist);
   }
 
   // Called once the command ends or is interrupted.

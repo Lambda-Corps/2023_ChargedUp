@@ -10,7 +10,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import com.ctre.phoenix.motorcontrol.ControlMode;
-import com.ctre.phoenix.motorcontrol.DemandType;
 import com.ctre.phoenix.motorcontrol.FeedbackDevice;
 import com.ctre.phoenix.motorcontrol.LimitSwitchNormal;
 import com.ctre.phoenix.motorcontrol.LimitSwitchSource;
@@ -22,7 +21,6 @@ import com.ctre.phoenix.motorcontrol.can.SlotConfiguration;
 import com.ctre.phoenix.motorcontrol.can.TalonFXConfiguration;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 
-import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
@@ -160,14 +158,12 @@ public class Arm extends SubsystemBase {
   // degrees rotation
   final double WRIST_MAX_STATOR_CURRENT = 25;
   final double ARM_MAX_STATOR_CURRENT = 20;
-  final int ARM_MM_FORWARD_SLOT = 0;
-  final int ARM_MM_REVERSE_SLOT = 1;
-  final int ARM_MANUAL_FORWARD_SLOT = 2;
-  final int ARM_MANUAL_REVERSE_SLOT = 3;
+  final int ARM_MM_SLOT = 0;
+  final int ARM_HOLD_POSITION_SLOT = 2;
   final int WRIST_MM_FORWARD_SLOT = 0;
   final int WRIST_MM_REVERSE_SLOT = 1;
-  final int WRIST_MANUAL_FORWARD_SLOT = 2;
-  final int WRIST_MANUAL_REVERSE_SLOT = 3;
+  final int WRIST_HOLD_POSITION_SLOT = 2;
+
   final DoubleSolenoid.Value GRIPPER_CONTRACT = DoubleSolenoid.Value.kForward;
   final DoubleSolenoid.Value GRIPPER_EXPAND = DoubleSolenoid.Value.kReverse;
 
@@ -183,27 +179,33 @@ public class Arm extends SubsystemBase {
    * That means, we want to saturate the feedback (full recovery) with an error
    * value
    */
-  final double ARM_MANUAL_FORWARD_KP = 3.2; // Tuned manually (ARM_FORWARD_SPEED * 1023) / 2048;
-  final double ARM_MANUAL_FORWARD_KI = 0;
-  final double ARM_MANUAL_FORWARD_KD = 0;
-  final double ARM_MANUAL_FORWARD_KF = 0;
-  final double ARM_MANUAL_FORWARD_FF = 0;
-  final double ARM_MANUAL_REVERSE_KP = (ARM_REVERSE_SPEED * 1023) / 512;
-  final double ARM_MANUAL_REVERSE_KI = 0;
-  final double ARM_MANUAL_REVERSE_KD = 0;
-  final double ARM_MANUAL_REVERSE_KF = 0;
-  final double ARM_MANUAL_REVERSE_FF = 0;
-  final double WRIST_MANUAL_FORWARD_KP = (WRIST_FORWARD_SPEED * 1023) / 512;
-  final double WRIST_MANUAL_FORWARD_KI = 0;
-  final double WRIST_MANUAL_FORWARD_KD = 0;
-  final double WRIST_MANUAL_FORWARD_KF = 0;
-  final double WRIST_MANUAL_FORWARD_FF = .1;
-  final double WRIST_MANUAL_REVERSE_KP = (WRIST_REVERSE_SPEED * 1023) / 512;
-  final double WRIST_MANUAL_REVERSE_KI = 0;
-  final double WRIST_MANUAL_REVERSE_KD = 0;
-  final double WRIST_MANUAL_REVERSE_KF = 0;
-  final double WRIST_MANUAL_REVERSE_FF = -.01;
-
+  final double ARM_MM_KP = (ARM_FORWARD_SPEED * 1023) / 2048; // Tuned manually (ARM_FORWARD_SPEED * 1023) / 2048;
+  final double ARM_MM_KI = 0;
+  final double ARM_MM_KD = 0;
+  final double ARM_MM_KF = 0.051; // (.4 * 1023) / 8000
+  final double ARM_MM_FF = 0;
+  final int ARM_MM_VELOCITY = 8000;
+  final int ARM_MM_ACCELERATION = (int)(ARM_MM_VELOCITY / 1); // 1 Second to full velocity
+  final double ARM_HOLD_POSITION_KP = (ARM_FORWARD_SPEED * 1023) / 512; // Tuned manually (ARM_FORWARD_SPEED * 1023) / 2048;
+  final double ARM_HOLD_POSITION_KI = 0;
+  final double ARM_HOLD_POSITION_KD = 0;
+  final double ARM_HOLD_POSITION_KF = 0;
+  final double WRIST_MM_FORWARD_KP = (WRIST_FORWARD_SPEED * 1023) / 2048;
+  final double WRIST_MM_FORWARD_KI = 0;
+  final double WRIST_MM_FORWARD_KD = 0;
+  final double WRIST_MM_FORWARD_KF = .07; // (.7 * 1023) / 10000  
+  final int WRIST_MM_FORWARD_VELOCITY = 10000;
+  final int WRIST_MM_FORWARD_ACCELERATION = (int)(WRIST_MM_FORWARD_VELOCITY / 1); // 1 second to full velocity
+  final double WRIST_MM_REVERSE_KP = (WRIST_REVERSE_SPEED * 1023) / 2048;
+  final double WRIST_MM_REVERSE_KI = 0;
+  final double WRIST_MM_REVERSE_KD = 0;
+  final double WRIST_MM_REVERSE_KF = 0.058; // (-.4 * 1023) / -7000
+  final int WRIST_MM_REVERSE_VELOCITY = 7000;
+  final int WRIST_MM_REVERSE_ACCELERATION = (int)(WRIST_MM_REVERSE_VELOCITY / 1); // 1 second to full velocity
+  final double WRIST_HOLD_POSITION_KP = (WRIST_FORWARD_SPEED * 1023) / 512; // Tuned manually (ARM_FORWARD_SPEED * 1023) / 2048;
+  final double WRIST_HOLD_POSITION_KI = 0;
+  final double WRIST_HOLD_POSITION_KD = 0;
+  final double WRIST_HOLD_POSITION_KF = 0;
   // Encoder Measurements for the relevant scoring positions
   final static int ARM_STOW = 0;
   final static int WRIST_STOW = 0;
@@ -239,49 +241,58 @@ public class Arm extends SubsystemBase {
     TalonFXConfiguration wrist_config = new TalonFXConfiguration();
 
     // Setup the PID control variables for arm movement
-    SlotConfiguration arm_manual_forward = arm_config.slot2;
-    arm_manual_forward.allowableClosedloopError = ARM_POSITION_STEP / 2;
+    SlotConfiguration arm_mm = arm_config.slot0;
+    arm_mm.allowableClosedloopError = 10;
     // arm_manual_forward.closedLoopPeakOutput = ARM_FORWARD_SPEED;
-    arm_manual_forward.closedLoopPeakOutput = .5;
-    arm_manual_forward.closedLoopPeriod = 1;
-    arm_manual_forward.kP = ARM_MANUAL_FORWARD_KP;
-    arm_manual_forward.kI = ARM_MANUAL_FORWARD_KI;
-    arm_manual_forward.kD = ARM_MANUAL_FORWARD_KD;
-    arm_manual_forward.kF = ARM_MANUAL_FORWARD_KF;
-    arm_config.slot2 = arm_manual_forward;
+    arm_mm.closedLoopPeakOutput = .4;
+    arm_mm.closedLoopPeriod = 1;
+    arm_mm.kP = ARM_MM_KP;
+    arm_mm.kI = ARM_MM_KI;
+    arm_mm.kD = ARM_MM_KD;
+    arm_mm.kF = ARM_MM_KF;
+    arm_config.slot0 = arm_mm;
 
-    SlotConfiguration arm_manual_reverse = arm_config.slot3;
-    arm_manual_reverse.allowableClosedloopError = ARM_POSITION_STEP / 2;
-    arm_manual_reverse.closedLoopPeakOutput = ARM_REVERSE_SPEED;
-    arm_manual_reverse.closedLoopPeriod = 1;
-    arm_manual_reverse.kP = ARM_MANUAL_REVERSE_KP;
-    arm_manual_reverse.kI = ARM_MANUAL_REVERSE_KI;
-    arm_manual_reverse.kD = ARM_MANUAL_REVERSE_KD;
-    arm_manual_reverse.kF = ARM_MANUAL_REVERSE_KF;
-    arm_config.slot3 = arm_manual_reverse;
+    SlotConfiguration arm_hold_config = arm_config.slot2;
+    arm_hold_config.allowableClosedloopError = 10;
+    arm_hold_config.closedLoopPeriod = 1;
+    arm_hold_config.kP = ARM_HOLD_POSITION_KP;
+    arm_hold_config.kI = ARM_HOLD_POSITION_KI;
+    arm_hold_config.kD = ARM_HOLD_POSITION_KD;
+    arm_hold_config.kF = ARM_HOLD_POSITION_KF;
+    arm_config.slot2 = arm_hold_config;
+  
 
-    SlotConfiguration wrist_manual_forward = wrist_config.slot2;
-    wrist_manual_forward.allowableClosedloopError = WRIST_POSITION_STEP / 2;
-    wrist_manual_forward.closedLoopPeakOutput = WRIST_FORWARD_SPEED;
-    wrist_manual_forward.closedLoopPeriod = 1;
-    wrist_manual_forward.kP = WRIST_MANUAL_FORWARD_KP;
-    wrist_manual_forward.kI = WRIST_MANUAL_FORWARD_KI;
-    wrist_manual_forward.kD = WRIST_MANUAL_FORWARD_KD;
-    wrist_manual_forward.kF = WRIST_MANUAL_FORWARD_KF;
-    wrist_config.slot2 = wrist_manual_forward;
+    SlotConfiguration wrist_mm_forward = wrist_config.slot0;
+    wrist_mm_forward.allowableClosedloopError = 10;
+    wrist_mm_forward.closedLoopPeakOutput = WRIST_FORWARD_SPEED;
+    wrist_mm_forward.closedLoopPeriod = 1;
+    wrist_mm_forward.kP = WRIST_MM_FORWARD_KP;
+    wrist_mm_forward.kI = WRIST_MM_FORWARD_KI;
+    wrist_mm_forward.kD = WRIST_MM_FORWARD_KD;
+    wrist_mm_forward.kF = WRIST_MM_FORWARD_KF;
+    wrist_config.slot0 = wrist_mm_forward;
 
-    SlotConfiguration wrist_manual_reverse = wrist_config.slot3;
-    wrist_manual_reverse.allowableClosedloopError = WRIST_POSITION_STEP / 2;
-    wrist_manual_reverse.closedLoopPeakOutput = WRIST_REVERSE_SPEED;
-    wrist_manual_reverse.closedLoopPeriod = 1;
-    wrist_manual_reverse.kP = WRIST_MANUAL_REVERSE_KP;
-    wrist_manual_reverse.kI = WRIST_MANUAL_REVERSE_KI;
-    wrist_manual_reverse.kD = WRIST_MANUAL_REVERSE_KD;
-    wrist_manual_reverse.kF = WRIST_MANUAL_REVERSE_KF;
-    wrist_config.slot3 = wrist_manual_reverse;
+    SlotConfiguration wrist_mm_reverse = wrist_config.slot1;
+    wrist_mm_reverse.allowableClosedloopError = 10;
+    wrist_mm_reverse.closedLoopPeakOutput = WRIST_REVERSE_SPEED;
+    wrist_mm_reverse.closedLoopPeriod = 1;
+    wrist_mm_reverse.kP = WRIST_MM_REVERSE_KP;
+    wrist_mm_reverse.kI = WRIST_MM_REVERSE_KI;
+    wrist_mm_reverse.kD = WRIST_MM_REVERSE_KD;
+    wrist_mm_reverse.kF = WRIST_MM_REVERSE_KF;
+    wrist_config.slot1 = wrist_mm_reverse;
+
+    SlotConfiguration wrist_hold_config = arm_config.slot2;
+    wrist_hold_config.allowableClosedloopError = 10;
+    wrist_hold_config.closedLoopPeriod = 1;
+    wrist_hold_config.kP = WRIST_HOLD_POSITION_KP;
+    wrist_hold_config.kI = WRIST_HOLD_POSITION_KI;
+    wrist_hold_config.kD = WRIST_HOLD_POSITION_KD;
+    wrist_hold_config.kF = WRIST_HOLD_POSITION_KF;
+    wrist_config.slot2 = wrist_hold_config;
 
     // Setup the ARM stage motor
-    m_arm_motor.configSelectedFeedbackSensor(TalonFXFeedbackDevice.IntegratedSensor, ARM_MM_FORWARD_SLOT, 0);
+    m_arm_motor.configSelectedFeedbackSensor(TalonFXFeedbackDevice.IntegratedSensor, ARM_MM_SLOT, 0);
     arm_config.primaryPID.selectedFeedbackSensor = FeedbackDevice.IntegratedSensor;
     m_arm_motor.configReverseLimitSwitchSource(LimitSwitchSource.FeedbackConnector, LimitSwitchNormal.NormallyOpen);
     m_arm_motor.configForwardLimitSwitchSource(LimitSwitchSource.FeedbackConnector, LimitSwitchNormal.NormallyOpen);
@@ -315,7 +326,7 @@ public class Arm extends SubsystemBase {
     m_arm_motor.setNeutralMode(NeutralMode.Brake);
 
     // Configure the Wrist motor
-    m_wrist_motor.configSelectedFeedbackSensor(TalonFXFeedbackDevice.IntegratedSensor, ARM_MM_FORWARD_SLOT, 0);
+    m_wrist_motor.configSelectedFeedbackSensor(TalonFXFeedbackDevice.IntegratedSensor, ARM_MM_SLOT, 0);
     wrist_config.primaryPID.selectedFeedbackSensor = FeedbackDevice.IntegratedSensor;
     m_wrist_motor.configReverseLimitSwitchSource(LimitSwitchSource.FeedbackConnector,
         LimitSwitchNormal.NormallyOpen);
@@ -407,7 +418,7 @@ public class Arm extends SubsystemBase {
     } else {
       // System.out.println("Arm is not at requested position");
 
-      if (isTransitionInValid(m_requested_position)) {
+      if (isTransitionInvalid(m_requested_position)) {
         // System.out.println("Arm transition is legal");
         // System.out.println("Moving arm to " + m_requested_position);
       } else {
@@ -439,7 +450,7 @@ public class Arm extends SubsystemBase {
     return isAtPosition;
   }
 
-  public boolean isTransitionInValid(SuperStructurePosition requestedPosition) {
+  public boolean isTransitionInvalid(SuperStructurePosition requestedPosition) {
     boolean isInvalid = false;
 
     // If the position is a known position, we can make a smart decision
@@ -574,60 +585,6 @@ public class Arm extends SubsystemBase {
   public void drive_manually(double arm_speed, double wrist_speed) {
     m_arm_motor.set(ControlMode.PercentOutput, arm_speed);
     m_wrist_motor.set(ControlMode.PercentOutput, wrist_speed);
-  }
-
-  public void drive_manually_by_position(double arm_speed, double wrist_speed) {
-    // Make sure we've got a number larger than 10%
-    arm_speed = MathUtil.applyDeadband(arm_speed, .02);
-    wrist_speed = MathUtil.applyDeadband(wrist_speed, .02);
-
-    // Get the current encoder positions, and then calculate the future position
-    // if we were to allow movement
-    double arm_position = m_arm_motor.getSelectedSensorPosition();
-    double wrist_position = m_wrist_motor.getSelectedSensorPosition();
-
-    if (arm_speed != 0) {
-      int next_position = (int) (arm_position + ((arm_speed > 0) ? ARM_POSITION_STEP : ARM_POSITION_STEP * -1));
-      // If it is within limits, then set the new position as the movement
-      if (next_position < ARM_FORWARD_SOFT_LIMIT || next_position > ARM_REVERSE_SOFT_LIMIT) {
-        arm_position = next_position;
-      }
-    }
-
-    if (wrist_speed != 0) {
-      int next_position = (int) (wrist_position + ((wrist_speed > 0) ? WRIST_POSITION_STEP : WRIST_POSITION_STEP * -1));
-      // If it is within limits, then set the new position as the movement
-      if (next_position < WRIST_FORWARD_SOFT_LIMIT || next_position > WRIST_REVERSE_SOFT_LIMIT) {
-        wrist_position = next_position;
-      }
-    }
-
-    // Set the arm and wrist motors with their proper PID slot, calculate the
-    // FeedForward, and set the motors
-    double arm_ArbFF = 0;
-    double wrist_ArbFF = 0;
-    if (arm_speed > 0) {
-      m_arm_motor.selectProfileSlot(ARM_MANUAL_FORWARD_SLOT, 0);
-      arm_ArbFF = ARM_MANUAL_FORWARD_FF;
-    } else if (arm_speed < 0) {
-      m_arm_motor.selectProfileSlot(ARM_MANUAL_REVERSE_SLOT, 0);
-      arm_ArbFF = ARM_MANUAL_REVERSE_FF;
-    } else {
-      // Don't do anything
-    }
-
-    if (wrist_speed > 0) {
-      m_wrist_motor.selectProfileSlot(WRIST_MANUAL_FORWARD_SLOT, 0);
-      wrist_ArbFF = WRIST_MANUAL_FORWARD_FF;
-    } else if ( wrist_speed < 0) {
-      m_wrist_motor.selectProfileSlot(WRIST_MANUAL_REVERSE_SLOT, 0);
-      wrist_ArbFF = WRIST_MANUAL_REVERSE_FF;
-    } else {
-      wrist_ArbFF = WRIST_MANUAL_FORWARD_FF / 2;
-    }
-
-    m_arm_motor.set(ControlMode.Position, arm_position, DemandType.ArbitraryFeedForward, arm_ArbFF);
-    m_wrist_motor.set(ControlMode.Position, wrist_position, DemandType.ArbitraryFeedForward, wrist_ArbFF);
   }
 
   public void checkReverseLimits() {
