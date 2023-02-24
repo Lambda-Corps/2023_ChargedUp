@@ -131,6 +131,14 @@ public class Arm extends SubsystemBase {
       illegal_transitions = new ArrayList<SuperStructurePosition>();
       illegal_transitions.add(illegalPosition);
     }
+
+    public int getArmPosition(){
+      return this.arm_position;
+    }
+
+    public int getWristPosition(){
+      return this.wrist_position;
+    }
   }
 
   public enum ArmTask {
@@ -627,6 +635,69 @@ public class Arm extends SubsystemBase {
       return degrees / (360.0 / (WRIST_GEAR_RATIO * 2048.0));
   }
 
+  public void configure_wrist_motion_magic_test(double velocity, double time_to_velo, double kP){
+     // Dividing by zero is very bad, will crash most systems. 
+		if( time_to_velo == 0 ){
+			time_to_velo = 1;
+		}
+		double acceleration = velocity / time_to_velo;
+
+    m_wrist_motor.selectProfileSlot(ARM_MM_SLOT, 0);
+    m_wrist_motor.config_kP(ARM_MM_SLOT, kP);
+    m_wrist_motor.configMotionCruiseVelocity(velocity);
+    m_wrist_motor.configMotionAcceleration(acceleration);
+
+    // If we're within 10 ticks we feel good
+    m_wrist_motor.configAllowableClosedloopError(ARM_MM_SLOT, 10);
+  }
+
+  public void move_wrist_motion_magic(int target_in_ticks){
+    m_wrist_motor.set(ControlMode.MotionMagic, target_in_ticks);
+  }
+
+  public boolean is_wrist_mm_done(int target_ticks){
+    double wrist_pos = m_wrist_motor.getSelectedSensorPosition();
+
+    return Math.abs((target_ticks - wrist_pos)) < WRIST_POSITION_TOLERANCE;
+  }
+
+  public void configure_arm_motion_magic_test(double velocity, double time_to_velo, double kP){
+    // Dividing by zero is very bad, will crash most systems. 
+		if( time_to_velo == 0 ){
+			time_to_velo = 1;
+		}
+		double acceleration = velocity / time_to_velo;
+
+    m_arm_motor.selectProfileSlot(ARM_MM_SLOT, 0);
+    m_arm_motor.config_kP(ARM_MM_SLOT, kP);
+    m_arm_motor.configMotionCruiseVelocity(velocity);
+    m_arm_motor.configMotionAcceleration(acceleration);
+    // If we're within 10 ticks we feel good
+    m_arm_motor.configAllowableClosedloopError(ARM_MM_SLOT, 10);
+  }
+
+  public void move_arm_motion_magic(int target_in_ticks){
+    m_arm_motor.set(ControlMode.MotionMagic, target_in_ticks);
+  }
+
+  public boolean is_arm_mm_done(int target_ticks){
+    double arm_pos = m_arm_motor.getSelectedSensorPosition();
+
+    return Math.abs((target_ticks - arm_pos)) < ARM_POSITION_TOLERANCE;
+  }
+
+  public void holdPosition(){
+    double arm_pos = m_arm_motor.getSelectedSensorPosition();
+    double wrist_pos = m_wrist_motor.getSelectedSensorPosition();
+
+    // Set the arm and wrist to their hold position slots as primary pids
+    m_arm_motor.selectProfileSlot(ARM_HOLD_POSITION_SLOT, 0);
+    m_wrist_motor.selectProfileSlot(WRIST_HOLD_POSITION_SLOT, 0);
+
+    // Set the motor to hold with PID
+    m_arm_motor.set(ControlMode.Position, arm_pos);
+    m_wrist_motor.set(ControlMode.Position, wrist_pos);
+  }
   ////////////////////// ARM INLINE COMMANDS /////////////////////
   public CommandBase expandGripperCommand() {
     // Inline construction of command goes here.

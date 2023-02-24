@@ -470,6 +470,10 @@ public class DriveTrain extends SubsystemBase {
 	}
 
 	public void configure_motion_magic_test(double velocity, double time_to_velo, double kp) {
+		// Dividing by zero is very bad, will crash most systems. 
+		if( time_to_velo == 0 ){
+			time_to_velo = 1;
+		}
 		double acceleration = velocity / time_to_velo;
 
 		m_left_leader.configMotionCruiseVelocity(velocity);
