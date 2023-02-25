@@ -15,7 +15,8 @@ public class ArmDriveToPositionPIDTest extends CommandBase {
   SuperStructurePosition m_position;
   int m_target_ticks;
 
-  boolean m_done;
+  boolean m_done, m_direction_is_forward;
+  int m_half_second_limit_hit;
   int m_count;
 
   NetworkTableEntry m_kPEntry, m_time_to_velo, m_target_velocity, m_target;
@@ -26,11 +27,11 @@ public class ArmDriveToPositionPIDTest extends CommandBase {
     
     addRequirements(m_arm);
     // Use addRequirements() here to declare subsystem dependencies.
-    NetworkTable driveTab = NetworkTableInstance.getDefault().getTable("Shuffleboard").getSubTable("Drive Test");
-    m_kPEntry = driveTab.getEntry("Arm kP");
-    m_time_to_velo = driveTab.getEntry("Time to Velo");
-    m_target_velocity = driveTab.getEntry("Target Velocity");
-    m_target = driveTab.getEntry("Target Ticks");
+    NetworkTable armTab = NetworkTableInstance.getDefault().getTable("Shuffleboard").getSubTable("Arm Test");
+    m_kPEntry = armTab.getEntry("Arm kP");
+    m_time_to_velo = armTab.getEntry("Time to Velo");
+    m_target_velocity = armTab.getEntry("Target Velocity");
+    m_target = armTab.getEntry("Target Ticks");
 
   }
 
@@ -38,12 +39,17 @@ public class ArmDriveToPositionPIDTest extends CommandBase {
   @Override
   public void initialize() {
     m_done = false;
+    m_half_second_limit_hit = 0;
     m_count = 0;
-    m_target_ticks = (int)(m_target.getDouble(SuperStructurePosition.Stowed.getArmPosition()));
-
+    // m_target_ticks = (int)(m_target.getDouble(SuperStructurePosition.Stowed.getArmPosition()));
+    m_target_ticks = m_position.getArmPosition();
     m_arm.configure_arm_motion_magic_test(m_target_velocity.getDouble(0), m_time_to_velo.getDouble(1), m_kPEntry.getDouble(0));
 
     m_arm.move_arm_motion_magic(m_target_ticks);
+
+    // m_direction_is_forward = (m_arm.getArmPosition()):
+
+    m_direction_is_forward = (m_arm.getSuperStructurePosition().getArmPosition() < m_position.getArmPosition());
   }
 
   // Called every time the scheduler runs while the command is scheduled.
@@ -56,17 +62,32 @@ public class ArmDriveToPositionPIDTest extends CommandBase {
     else{
       m_count = 0;
     }
+    
+    if( m_direction_is_forward && m_arm.is_arm_fwd_limit_hit() ){
+      m_half_second_limit_hit++;
+    } else if( !m_direction_is_forward && m_arm.is_arm_rev_limit_hit() ){
+      m_half_second_limit_hit++;
+    }
+    else{
+      m_half_second_limit_hit = 0;
+    }
   }
 
   // Called once the command ends or is interrupted.
   @Override
   public void end(boolean interrupted) {
-    m_arm.holdPosition();
+    if( !interrupted ){
+      if( !m_direction_is_forward && m_arm.is_arm_rev_limit_hit()){
+        m_arm.set_arm_encoder_to_zero();
+      }
+
+      m_arm.set_current_position(m_position);
+    }
   }
 
   // Returns true when the command should end.
   @Override
   public boolean isFinished() {
-    return m_count > 5;
+    return (m_count > 5) || (m_half_second_limit_hit >= 25);
   }
 }

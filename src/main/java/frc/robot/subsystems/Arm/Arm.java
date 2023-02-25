@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import com.ctre.phoenix.motorcontrol.ControlMode;
+import com.ctre.phoenix.motorcontrol.DemandType;
 import com.ctre.phoenix.motorcontrol.FeedbackDevice;
 import com.ctre.phoenix.motorcontrol.LimitSwitchNormal;
 import com.ctre.phoenix.motorcontrol.LimitSwitchSource;
@@ -34,7 +35,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 public class Arm extends SubsystemBase {
   WPI_TalonFX m_arm_motor, m_wrist_motor;
   DigitalInput m_arm_forward_limit, m_arm_reverse_limit, m_wrist_reverse_limit, m_wrist_forward_limit;
-  DoublePublisher m_arm_position, m_wrist_position;
+  DoublePublisher m_arm_position, m_wrist_position, m_wrist_motor_rev, m_arm_motor_rev, m_arm_mm_error, m_wrist_mm_error;
   StringPublisher m_super_position;
 
   DoubleSolenoid m_gripper;
@@ -156,11 +157,11 @@ public class Arm extends SubsystemBase {
   final double WRIST_REVERSE_SPEED = -.4;
   final double WRIST_FORWARD_COSINE_FF = .07; // When arm is horizontal, calculation should be 1 * .07
   final double ARM_GEAR_RATIO = 10 * 4 * 4;
-  final double WRIST_GEAR_RATIO = 7 * 5 * 5;
+  final double WRIST_GEAR_RATIO = 7 * 5 * 4;
   final int WRIST_REVERSE_SOFT_LIMIT = 0;
   final int WRIST_FORWARD_SOFT_LIMIT = 94000;
   final int ARM_REVERSE_SOFT_LIMIT = 0;
-  final int ARM_FORWARD_SOFT_LIMIT = 46000;
+  final int ARM_FORWARD_SOFT_LIMIT = 47000;
   final int SAFE__MOVE_WRIST_POSITION = 10000; // Puts the wrist up at 11 degrees
   // final int ARM_FORWARD_SOFT_LIMIT = (int)(2048 * ARM_GEAR_RATIO * 1/6); // 60
   // degrees rotation
@@ -308,7 +309,7 @@ public class Arm extends SubsystemBase {
     // Configure limit switches
     arm_config.reverseLimitSwitchNormal = LimitSwitchNormal.NormallyOpen;
     arm_config.forwardLimitSwitchNormal = LimitSwitchNormal.NormallyOpen;
-    arm_config.reverseSoftLimitEnable = true;
+    arm_config.reverseSoftLimitEnable = false;
     arm_config.forwardSoftLimitEnable = true;
     arm_config.reverseSoftLimitThreshold = ARM_REVERSE_SOFT_LIMIT;
     arm_config.forwardSoftLimitThreshold = ARM_FORWARD_SOFT_LIMIT;
@@ -377,6 +378,10 @@ public class Arm extends SubsystemBase {
     m_arm_position = shuffleboard.getDoubleTopic("ArmEncoder").publish();
     m_wrist_position = shuffleboard.getDoubleTopic("WristEncoder").publish();
 
+    m_wrist_motor_rev = shuffleboard.getDoubleTopic("Wrist Rev").publish();
+    m_arm_motor_rev = shuffleboard.getDoubleTopic("Arm Rev").publish();
+    m_arm_mm_error = shuffleboard.getDoubleTopic("Arm MM Error").publish();
+    m_wrist_mm_error = shuffleboard.getDoubleTopic("Wrist MM Error").publish();
     m_super_position = shuffleboard.getStringTopic("Super Position").publish();
 
     m_gripper = new DoubleSolenoid(PneumaticsModuleType.CTREPCM, GRIPPER_SOLENOID_CHANNEL_A,
@@ -403,12 +408,27 @@ public class Arm extends SubsystemBase {
     m_wrist_motor.set(ControlMode.Position, SuperStructurePosition.Stowed.wrist_position);
   }
 
+  public int getWristReverseLimitFromMotor(){
+    return m_wrist_motor.isRevLimitSwitchClosed();
+  }
+
   @Override
   public void periodic() {
     m_arm_position.set(m_arm_motor.getSelectedSensorPosition());
     m_wrist_position.set(m_wrist_motor.getSelectedSensorPosition());
 
-    checkReverseLimits();
+    m_wrist_motor_rev.set(m_wrist_motor.isRevLimitSwitchClosed());
+    m_arm_motor_rev.set(m_arm_motor.isRevLimitSwitchClosed());
+
+    if(m_wrist_motor.isRevLimitSwitchClosed() > 0){
+      m_wrist_motor.setSelectedSensorPosition(0);
+    }
+
+    // if(m_arm_motor.isRevLimitSwitchClosed() > 0){
+    //   m_arm_motor.setSelectedSensorPosition(0);
+    // }
+
+    // checkReverseLimits();
 
     checkArmSuperState();
 
@@ -419,6 +439,10 @@ public class Arm extends SubsystemBase {
   // ==================================== Arm State Machine Methods
   // =======================================
   public void checkArmSuperState() {
+    if( m_arm_motor.getSelectedSensorPosition() <= 0 && m_wrist_motor.getSelectedSensorPosition() <= 0){
+      m_current_position = SuperStructurePosition.Stowed;
+    }
+
     // System.out.println("Arm is at " + m_current_position);
     // System.out.println("Requested Arm Position is at " + m_requested_position);
     if (isArmSuperAtRequestedPos()) {
@@ -491,6 +515,10 @@ public class Arm extends SubsystemBase {
   public void forceSetCurrentPos() { // FOR TESTING ONLY DO NOT USE AT COMPS
     m_current_position = m_requested_position;
   }
+
+  public void set_current_position( SuperStructurePosition position ){
+    m_current_position = position;
+  }
   // ======================================================================================================
 
   public void moveArmManually(double bottom_speed, double top_speed) {
@@ -547,7 +575,7 @@ public class Arm extends SubsystemBase {
     return arm_control_mode;
   }
 
-  public SuperStructurePosition getArmPosition() {
+  public SuperStructurePosition getSuperStructurePosition() {
     return m_current_position;
   }
 
@@ -599,10 +627,12 @@ public class Arm extends SubsystemBase {
     // falcon hard limit returns 1 if closed, 0 if open. Our limits are normally
     // open
     if (m_arm_motor.isRevLimitSwitchClosed() == 1) {
+      System.out.println("Arm Switch close");
       m_arm_motor.setSelectedSensorPosition(0);
     }
 
     if (m_wrist_motor.isRevLimitSwitchClosed() == 1) {
+      System.out.println("Wrist Switch close");
       m_wrist_motor.setSelectedSensorPosition(0);
     }
   }
@@ -635,29 +665,44 @@ public class Arm extends SubsystemBase {
       return degrees / (360.0 / (WRIST_GEAR_RATIO * 2048.0));
   }
 
-  public void configure_wrist_motion_magic_test(double velocity, double time_to_velo, double kP){
+  public void configure_wrist_motion_magic_test(double velocity, double time_to_velo, double kP, boolean isForward){
      // Dividing by zero is very bad, will crash most systems. 
 		if( time_to_velo == 0 ){
 			time_to_velo = 1;
 		}
 		double acceleration = velocity / time_to_velo;
 
-    m_wrist_motor.selectProfileSlot(ARM_MM_SLOT, 0);
-    m_wrist_motor.config_kP(ARM_MM_SLOT, kP);
-    m_wrist_motor.configMotionCruiseVelocity(velocity);
-    m_wrist_motor.configMotionAcceleration(acceleration);
+    if (isForward ){
+      m_wrist_motor.selectProfileSlot(WRIST_MM_FORWARD_SLOT, 0);
+      m_wrist_motor.config_kP(WRIST_MM_FORWARD_SLOT, kP);
+      m_arm_motor.config_kF(WRIST_MM_FORWARD_SLOT, (WRIST_FORWARD_SPEED * 1023)/velocity);
+      m_wrist_motor.configMotionCruiseVelocity(velocity);
+      m_wrist_motor.configMotionAcceleration(acceleration);
+    } else {
+      m_wrist_motor.selectProfileSlot(WRIST_MM_REVERSE_SLOT, 0);
+      m_wrist_motor.config_kP(WRIST_MM_REVERSE_SLOT, kP);
+      m_arm_motor.config_kF(WRIST_MM_REVERSE_SLOT, (WRIST_REVERSE_SPEED * 1023)/velocity);
+      m_wrist_motor.configMotionCruiseVelocity(velocity);
+      m_wrist_motor.configMotionAcceleration(acceleration);
+    }
+    
 
     // If we're within 10 ticks we feel good
-    m_wrist_motor.configAllowableClosedloopError(ARM_MM_SLOT, 10);
+    // m_wrist_motor.configAllowableClosedloopError(ARM_MM_SLOT, 10);
   }
 
-  public void move_wrist_motion_magic(int target_in_ticks){
-    m_wrist_motor.set(ControlMode.MotionMagic, target_in_ticks);
+  public void move_wrist_motion_magic(int target_in_ticks, boolean isForward){
+    double arbFF = 0;
+    if( isForward ){
+      arbFF = WRIST_FORWARD_COSINE_FF * Math.cos(wristToDegrees(m_wrist_motor.getSelectedSensorPosition()));
+    }
+    m_wrist_motor.set(ControlMode.MotionMagic, target_in_ticks, DemandType.ArbitraryFeedForward, arbFF);
   }
 
   public boolean is_wrist_mm_done(int target_ticks){
     double wrist_pos = m_wrist_motor.getSelectedSensorPosition();
 
+    m_wrist_mm_error.set(Math.abs(target_ticks - wrist_pos));
     return Math.abs((target_ticks - wrist_pos)) < WRIST_POSITION_TOLERANCE;
   }
 
@@ -670,10 +715,11 @@ public class Arm extends SubsystemBase {
 
     m_arm_motor.selectProfileSlot(ARM_MM_SLOT, 0);
     m_arm_motor.config_kP(ARM_MM_SLOT, kP);
+    m_arm_motor.config_kF(ARM_MM_SLOT, (ARM_FORWARD_SPEED * 1023)/velocity);
     m_arm_motor.configMotionCruiseVelocity(velocity);
     m_arm_motor.configMotionAcceleration(acceleration);
     // If we're within 10 ticks we feel good
-    m_arm_motor.configAllowableClosedloopError(ARM_MM_SLOT, 10);
+    // m_arm_motor.configAllowableClosedloopError(ARM_MM_SLOT, 10);
   }
 
   public void move_arm_motion_magic(int target_in_ticks){
@@ -682,8 +728,28 @@ public class Arm extends SubsystemBase {
 
   public boolean is_arm_mm_done(int target_ticks){
     double arm_pos = m_arm_motor.getSelectedSensorPosition();
-
+    m_arm_mm_error.set(Math.abs(target_ticks - arm_pos));
     return Math.abs((target_ticks - arm_pos)) < ARM_POSITION_TOLERANCE;
+  }
+
+  public void set_arm_encoder_to_zero() {
+    m_arm_motor.setSelectedSensorPosition(0);
+  }
+
+  public boolean is_arm_rev_limit_hit() {
+    return m_arm_motor.isRevLimitSwitchClosed() == 1;
+  }
+
+  public boolean is_arm_fwd_limit_hit() {
+    return m_arm_motor.isFwdLimitSwitchClosed() == 1;
+  }
+
+  public boolean is_wrist_rev_limit_hit() {
+    return m_wrist_motor.isRevLimitSwitchClosed() == 1;
+  }
+
+  public boolean is_wrist_fwd_limit_hit() {
+    return m_wrist_motor.isFwdLimitSwitchClosed() == 1;
   }
 
   public void holdPosition(){

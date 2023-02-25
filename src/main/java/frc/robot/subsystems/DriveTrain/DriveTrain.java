@@ -203,7 +203,7 @@ public class DriveTrain extends SubsystemBase {
 
 		// Setup the drive train limiting test variables
 		// Default the slew rate 3 meters per second
-		m_forward_limiter = new SlewRateLimiter(1);
+		m_forward_limiter = new SlewRateLimiter(3);
 		m_rotation_limiter = new SlewRateLimiter(3);
 		m_drive_absMax = MAX_TELEOP_DRIVE_SPEED;
 

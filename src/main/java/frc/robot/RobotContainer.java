@@ -60,8 +60,8 @@ public class RobotContainer {
   private void configureButtonBindings() {
     m_partner_controller.rightBumper().whileTrue(new DriveArmManually(m_arm, m_partner_controller));
     m_partner_controller.start().onTrue(m_arm.stopArmAndWristCommand());
-    // m_partner_controller.a().onTrue(m_arm.contractGripperCommand());
-    // m_partner_controller.b().onTrue(m_arm.expandGripperCommand());
+    m_partner_controller.a().onTrue(m_arm.contractGripperCommand());
+    m_partner_controller.b().onTrue(m_arm.expandGripperCommand());
     
     m_driver_controller.leftBumper().onTrue(m_drivetrain.shiftToHighGear());
     m_driver_controller.leftBumper().onFalse(m_drivetrain.shiftToLowGear());
@@ -134,12 +134,14 @@ public class RobotContainer {
     armTestTab.add("ArmEncoder", 0).withPosition(0, 0).withSize(1, 1);
     armTestTab.addBoolean("ArmForward", m_arm::getArmForwardLimit).withPosition(1, 0).withSize(1,1);
     armTestTab.addBoolean("ArmReverse", m_arm::getArmReverseLimit).withPosition(2, 0).withSize(1,1);
+    armTestTab.add("Arm Rev", 0).withPosition(3, 0).withSize(1, 1);
     
   
     armTestTab.add("WristEncoder", 0).withPosition(0, 1).withSize(1, 1);
 
     armTestTab.addBoolean("WristForward", m_arm::getWristForwardLimit).withPosition(1, 1).withSize(1,1);
     armTestTab.addBoolean("WristReverse", m_arm::getWristReverseLimit).withPosition(2, 1).withSize(1,1);
+    armTestTab.add("Wrist Rev", 0).withPosition(3, 1).withSize(1, 1);
     armTestTab.add("Scheduler", m_arm).withPosition(8, 0).withSize(2, 1);
     
     // PIDF Values
@@ -171,6 +173,11 @@ public class RobotContainer {
     // Add the commands to the page
     armTestTab.add("Zero Wrist Encoder", m_arm.setWristEncoderToZero()).withPosition(0, 2).withSize(2, 1);
     armTestTab.add("Zero Arm Encoder", m_arm.setArmEncoderToZero()).withPosition(2, 2).withSize(2, 1);
+    armTestTab.add("Time to Velo", 1).withPosition(4, 2).withSize(1, 1);
+    armTestTab.add("Target Velocity", 1000).withPosition(5, 2).withSize(1, 1);
+    armTestTab.add("Arm MM Error", 0).withPosition(6, 2).withSize(1, 1);
+    armTestTab.add("Wrist MM Error", 0).withPosition(7, 2).withSize(1, 1);
+
     // armTestTab.add("Set Arm Max Speed", m_arm.setArmMaxSpeed()).withPosition(0, 3).withSize(2, 1);
     // armTestTab.add("Set Wrist Max Speed", m_arm.setWristMaxSpeed()).withPosition(2, 3).withSize(2, 1);
 
@@ -184,7 +191,7 @@ public class RobotContainer {
     // armTestTab.add("Score Cone Mid", m_arm.requestMoveArmCommand(SuperStructurePosition.ScoreConeMid).unless(()->m_arm.isTransitionInvalid(SuperStructurePosition.ScoreConeMid))).withPosition(2, 5).withSize(2, 1);
     // armTestTab.add("Score Low", m_arm.requestMoveArmCommand(SuperStructurePosition.ScoreLow).unless(()->m_arm.isTransitionInvalid(SuperStructurePosition.ScoreLow))).withPosition(4, 5).withSize(2, 1);
     // armTestTab.add("Manual", m_arm.requestMoveArmCommand(SuperStructurePosition.Manual).unless(()->m_arm.isTransitionInvalid(SuperStructurePosition.Manual))).withPosition(6, 5).withSize(2, 1);
-    // armTestTab.add("Super Position", "None yet").withPosition(8, 5).withSize(2, 1);
+    armTestTab.add("Super Position", "None yet").withPosition(8, 5).withSize(2, 1);
     
     armTestTab.add("Arm Stow MM Test", new ArmDriveToPositionPIDTest(m_arm, SuperStructurePosition.Stowed).unless(()->m_arm.isTransitionInvalid(SuperStructurePosition.Stowed)))                   .withPosition(0, 3).withSize(2, 1);
     armTestTab.add("Arm Ground MM Test", new ArmDriveToPositionPIDTest(m_arm, SuperStructurePosition.GroundPickup).unless(()->m_arm.isTransitionInvalid(SuperStructurePosition.GroundPickup)))     .withPosition(2, 3).withSize(2, 1);

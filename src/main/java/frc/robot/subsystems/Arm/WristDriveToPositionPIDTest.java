@@ -13,9 +13,9 @@ import frc.robot.subsystems.Arm.Arm.SuperStructurePosition;
 public class WristDriveToPositionPIDTest extends CommandBase {
   Arm m_arm;
   SuperStructurePosition m_position;
-  int m_target_ticks;
+  int m_target_ticks, m_half_second_limit_hit;
 
-  boolean m_done;
+  boolean m_done, m_is_forward_movement;
   int m_count;
 
   NetworkTableEntry m_kPEntry, m_time_to_velo, m_target_velocity, m_target;
@@ -26,11 +26,11 @@ public class WristDriveToPositionPIDTest extends CommandBase {
     
     addRequirements(m_arm);
     // Use addRequirements() here to declare subsystem dependencies.
-    NetworkTable driveTab = NetworkTableInstance.getDefault().getTable("Shuffleboard").getSubTable("Drive Test");
-    m_kPEntry = driveTab.getEntry("Wrist kP");
-    m_time_to_velo = driveTab.getEntry("Time to Velo");
-    m_target_velocity = driveTab.getEntry("Target Velocity");
-    m_target = driveTab.getEntry("Target Ticks");
+    NetworkTable armTab = NetworkTableInstance.getDefault().getTable("Shuffleboard").getSubTable("Arm Test");
+    m_kPEntry = armTab.getEntry("Wrist kP");
+    m_time_to_velo = armTab.getEntry("Time to Velo");
+    m_target_velocity = armTab.getEntry("Target Velocity");
+    m_target = armTab.getEntry("Target Ticks");
 
   }
 
@@ -39,11 +39,13 @@ public class WristDriveToPositionPIDTest extends CommandBase {
   public void initialize() {
     m_done = false;
     m_count = 0;
-    m_target_ticks = (int)(m_target.getDouble(SuperStructurePosition.Stowed.getArmPosition()));
+    m_half_second_limit_hit = 0;
+    m_is_forward_movement = m_arm.getSuperStructurePosition().getWristPosition() < m_position.getWristPosition();
+    // m_target_ticks = (int)(m_target.getDouble(SuperStructurePosition.Stowed.getArmPosition()));
+    m_target_ticks = m_position.getWristPosition();
+    m_arm.configure_wrist_motion_magic_test(m_target_velocity.getDouble(0), m_time_to_velo.getDouble(1), m_kPEntry.getDouble(0), m_is_forward_movement);
 
-    m_arm.configure_wrist_motion_magic_test(m_target_velocity.getDouble(0), m_time_to_velo.getDouble(1), m_kPEntry.getDouble(0));
-
-    m_arm.move_wrist_motion_magic(m_target_ticks);
+    m_arm.move_wrist_motion_magic(m_target_ticks, m_is_forward_movement);
   }
 
   // Called every time the scheduler runs while the command is scheduled.
@@ -56,17 +58,28 @@ public class WristDriveToPositionPIDTest extends CommandBase {
     else{
       m_count = 0;
     }
+
+    if( m_is_forward_movement && m_arm.is_wrist_fwd_limit_hit() ){
+      m_half_second_limit_hit++;
+    } else if( !m_is_forward_movement && m_arm.is_wrist_rev_limit_hit() ){
+      m_half_second_limit_hit++;
+    }
+    else{
+      m_half_second_limit_hit = 0;
+    }
   }
 
   // Called once the command ends or is interrupted.
   @Override
   public void end(boolean interrupted) {
-    m_arm.holdPosition();
+    if( !interrupted ){
+      m_arm.set_current_position(m_position);
+    }
   }
 
   // Returns true when the command should end.
   @Override
   public boolean isFinished() {
-    return m_count > 5;
+    return (m_count > 5) || (m_half_second_limit_hit >= 25);
   }
 }
