@@ -40,7 +40,7 @@ public class WristDriveToPositionPIDTest extends CommandBase {
     m_done = false;
     m_count = 0;
     m_half_second_limit_hit = 0;
-    m_is_forward_movement = m_arm.getSuperStructurePosition().getWristPosition() < m_position.getWristPosition();
+    m_is_forward_movement = m_arm.getSuperStructureWristPosition() < m_position.getWristPosition();
     // m_target_ticks = (int)(m_target.getDouble(SuperStructurePosition.Stowed.getArmPosition()));
     m_target_ticks = m_position.getWristPosition();
     m_arm.configure_wrist_motion_magic_test(m_target_velocity.getDouble(0), m_time_to_velo.getDouble(1), m_kPEntry.getDouble(0), m_is_forward_movement);
@@ -74,6 +74,7 @@ public class WristDriveToPositionPIDTest extends CommandBase {
   public void end(boolean interrupted) {
     if( !interrupted ){
       m_arm.set_current_position(m_position);
+      m_arm.holdPosition();
     }
   }
 

@@ -31,7 +31,7 @@ public class DriveArmManually extends CommandBase {
   public void execute() {
     double arm, wrist;
     arm = m_partner_controller.getRawAxis(PARTNER_LEFT_AXIS);
-    wrist = m_partner_controller.getRawAxis(PARTNER_RIGHT_AXIS);
+    wrist = -m_partner_controller.getRawAxis(PARTNER_RIGHT_AXIS);
 
     m_arm.drive_manually(arm, wrist);
   }

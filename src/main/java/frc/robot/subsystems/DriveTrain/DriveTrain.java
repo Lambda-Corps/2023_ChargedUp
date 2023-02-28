@@ -125,6 +125,8 @@ public class DriveTrain extends SubsystemBase {
 			m_max_speed_entry;
 
 	final int MM_TOLERANCE = 200;
+	final int FORWARD_SLEW_RATE = 3;
+	final int TURN_SLEW_RATE = 3;
 	double TURN_DRIVE_FF = .1;
 	int m_setpoint = 0;
 	double m_turn_setpoint = 0;
@@ -203,8 +205,8 @@ public class DriveTrain extends SubsystemBase {
 
 		// Setup the drive train limiting test variables
 		// Default the slew rate 3 meters per second
-		m_forward_limiter = new SlewRateLimiter(3);
-		m_rotation_limiter = new SlewRateLimiter(3);
+		m_forward_limiter = new SlewRateLimiter(FORWARD_SLEW_RATE);
+		m_rotation_limiter = new SlewRateLimiter(TURN_SLEW_RATE);
 		m_drive_absMax = MAX_TELEOP_DRIVE_SPEED;
 
 		m_gyro.reset();
@@ -255,6 +257,14 @@ public class DriveTrain extends SubsystemBase {
 		if (forward != 0 || turn != 0) {
 			forward = m_forward_limiter.calculate(forward) * m_drive_absMax;
 			turn = m_rotation_limiter.calculate(turn) * m_drive_absMax;
+		} else {
+			if (forward != 0){
+				m_forward_limiter.reset(FORWARD_SLEW_RATE);
+			}
+			if( turn != 0 ){
+				m_rotation_limiter.reset(TURN_SLEW_RATE);
+				
+			}
 		}
 
 		var speeds = DifferentialDrive.curvatureDriveIK(forward, turn, true);

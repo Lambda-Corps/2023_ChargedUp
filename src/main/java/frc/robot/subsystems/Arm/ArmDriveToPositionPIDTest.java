@@ -49,7 +49,7 @@ public class ArmDriveToPositionPIDTest extends CommandBase {
 
     // m_direction_is_forward = (m_arm.getArmPosition()):
 
-    m_direction_is_forward = (m_arm.getSuperStructurePosition().getArmPosition() < m_position.getArmPosition());
+    m_direction_is_forward = (m_arm.getSuperStructureArmPosition() < m_position.getArmPosition());
   }
 
   // Called every time the scheduler runs while the command is scheduled.

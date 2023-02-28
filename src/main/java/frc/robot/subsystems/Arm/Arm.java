@@ -27,8 +27,6 @@ import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StringPublisher;
 import edu.wpi.first.wpilibj.DigitalInput;
-import edu.wpi.first.wpilibj.DoubleSolenoid;
-import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
@@ -37,8 +35,6 @@ public class Arm extends SubsystemBase {
   DigitalInput m_arm_forward_limit, m_arm_reverse_limit, m_wrist_reverse_limit, m_wrist_forward_limit;
   DoublePublisher m_arm_position, m_wrist_position, m_wrist_motor_rev, m_arm_motor_rev, m_arm_mm_error, m_wrist_mm_error;
   StringPublisher m_super_position;
-
-  DoubleSolenoid m_gripper;
 
   private ArmState arm_state;
   private ArmControlMode arm_control_mode;
@@ -154,18 +150,18 @@ public class Arm extends SubsystemBase {
   final double ARM_FORWARD_SPEED = .4;
   final double ARM_REVERSE_SPEED = -.4;
   final double WRIST_FORWARD_SPEED = .7;
-  final double WRIST_REVERSE_SPEED = -.4;
-  final double WRIST_FORWARD_COSINE_FF = .07; // When arm is horizontal, calculation should be 1 * .07
+  final double WRIST_REVERSE_SPEED = -.25;
+  final double WRIST_FORWARD_COSINE_FF = .09; // When arm is horizontal, calculation should be 1 * .07
   final double ARM_GEAR_RATIO = 10 * 4 * 4;
   final double WRIST_GEAR_RATIO = 7 * 5 * 4;
   final int WRIST_REVERSE_SOFT_LIMIT = 0;
-  final int WRIST_FORWARD_SOFT_LIMIT = 94000;
+  final int WRIST_FORWARD_SOFT_LIMIT = 58000;
   final int ARM_REVERSE_SOFT_LIMIT = 0;
-  final int ARM_FORWARD_SOFT_LIMIT = 47000;
+  final int ARM_FORWARD_SOFT_LIMIT = 50000;
   final int SAFE__MOVE_WRIST_POSITION = 10000; // Puts the wrist up at 11 degrees
   // final int ARM_FORWARD_SOFT_LIMIT = (int)(2048 * ARM_GEAR_RATIO * 1/6); // 60
   // degrees rotation
-  final double WRIST_MAX_STATOR_CURRENT = 25;
+  final double WRIST_MAX_STATOR_CURRENT = 30;
   final double ARM_MAX_STATOR_CURRENT = 20;
   final int ARM_MM_SLOT = 0;
   final int ARM_HOLD_POSITION_SLOT = 2;
@@ -173,8 +169,7 @@ public class Arm extends SubsystemBase {
   final int WRIST_MM_REVERSE_SLOT = 1;
   final int WRIST_HOLD_POSITION_SLOT = 2;
 
-  final DoubleSolenoid.Value GRIPPER_CONTRACT = DoubleSolenoid.Value.kForward;
-  final DoubleSolenoid.Value GRIPPER_EXPAND = DoubleSolenoid.Value.kReverse;
+
 
   // The wrist travels 90 degrees total, for manual steps try to go 3 degrees at a
   // time
@@ -219,19 +214,19 @@ public class Arm extends SubsystemBase {
   final static int ARM_STOW = 0;
   final static int WRIST_STOW = 0;
   final static int ARM_GROUND_PICKUP = 40000;
-  final static int WRIST_GROUND_PICKUP = 0;
+  final static int WRIST_GROUND_PICKUP = 7500;
   final static int ARM_SUBSTATION = 0;
-  final static int WRIST_SUBSTATION = 70000;
+  final static int WRIST_SUBSTATION = 45000;
   final static int ARM_SCORE_LOW = 0;
-  final static int WRIST_SCORE_LOW = 28000;
+  final static int WRIST_SCORE_LOW = 15000;
   final static int ARM_CONE_MID = 36500;
-  final static int WRIST_CONE_MID = 65000;
+  final static int WRIST_CONE_MID = 49000;
   final static int ARM_CONE_HIGH = 46300;
-  final static int WRIST_CONE_HIGH = 96000;
+  final static int WRIST_CONE_HIGH = 57000;
   final static int ARM_CUBE_HIGH = 46300;
-  final static int WRIST_CUBE_HIGH = 88000;
+  final static int WRIST_CUBE_HIGH = 57000;
   final static int ARM_CUBE_MID = 35000;
-  final static int WRIST_CUBE_MID = 49000;
+  final static int WRIST_CUBE_MID = 30000;
   final static int ARM_POSITION_TOLERANCE = 100;
   final static int WRIST_POSITION_TOLERANCE = 100;
 
@@ -291,7 +286,7 @@ public class Arm extends SubsystemBase {
     wrist_mm_reverse.kF = WRIST_MM_REVERSE_KF;
     wrist_config.slot1 = wrist_mm_reverse;
 
-    SlotConfiguration wrist_hold_config = arm_config.slot2;
+    SlotConfiguration wrist_hold_config = wrist_config.slot2;
     wrist_hold_config.allowableClosedloopError = 10;
     wrist_hold_config.closedLoopPeriod = 1;
     wrist_hold_config.kP = WRIST_HOLD_POSITION_KP;
@@ -384,10 +379,7 @@ public class Arm extends SubsystemBase {
     m_wrist_mm_error = shuffleboard.getDoubleTopic("Wrist MM Error").publish();
     m_super_position = shuffleboard.getStringTopic("Super Position").publish();
 
-    m_gripper = new DoubleSolenoid(PneumaticsModuleType.CTREPCM, GRIPPER_SOLENOID_CHANNEL_A,
-        GRIPPER_SOLENOID_CHANNEL_B);
-    // Set the gripper to contracted for our preload
-    m_gripper.set(GRIPPER_CONTRACT);
+
 
     m_current_position = SuperStructurePosition.Stowed;
     m_requested_position = SuperStructurePosition.Stowed;
@@ -404,7 +396,9 @@ public class Arm extends SubsystemBase {
     // Set the motors to hold their initial positions stowed to try and minimize
     // slop until we
     // deliberately move them.
+    m_arm_motor.selectProfileSlot(ARM_HOLD_POSITION_SLOT, 0);
     m_arm_motor.set(ControlMode.Position, SuperStructurePosition.Stowed.arm_position);
+    m_wrist_motor.selectProfileSlot(WRIST_HOLD_POSITION_SLOT, 0);
     m_wrist_motor.set(ControlMode.Position, SuperStructurePosition.Stowed.wrist_position);
   }
 
@@ -575,8 +569,13 @@ public class Arm extends SubsystemBase {
     return arm_control_mode;
   }
 
-  public SuperStructurePosition getSuperStructurePosition() {
-    return m_current_position;
+  public double getSuperStructureWristPosition() {
+
+    return m_wrist_motor.getSelectedSensorPosition();
+  }
+
+  public double getSuperStructureArmPosition(){
+    return m_arm_motor.getSelectedSensorPosition();
   }
 
   public ArmTask getArmTask() {
@@ -694,9 +693,14 @@ public class Arm extends SubsystemBase {
   public void move_wrist_motion_magic(int target_in_ticks, boolean isForward){
     double arbFF = 0;
     if( isForward ){
-      arbFF = WRIST_FORWARD_COSINE_FF * Math.cos(wristToDegrees(m_wrist_motor.getSelectedSensorPosition()));
+      arbFF = getWristArbFF();
     }
+    // m_wrist_motor.set(ControlMode.MotionMagic, target_in_ticks);
     m_wrist_motor.set(ControlMode.MotionMagic, target_in_ticks, DemandType.ArbitraryFeedForward, arbFF);
+  }
+  
+  private double getWristArbFF(){
+    return WRIST_FORWARD_COSINE_FF * Math.cos(wristToDegrees(m_wrist_motor.getSelectedSensorPosition()));
   }
 
   public boolean is_wrist_mm_done(int target_ticks){
@@ -762,26 +766,10 @@ public class Arm extends SubsystemBase {
 
     // Set the motor to hold with PID
     m_arm_motor.set(ControlMode.Position, arm_pos);
-    m_wrist_motor.set(ControlMode.Position, wrist_pos);
+    m_wrist_motor.set(ControlMode.Position, wrist_pos, DemandType.ArbitraryFeedForward, getWristArbFF());
   }
   ////////////////////// ARM INLINE COMMANDS /////////////////////
-  public CommandBase expandGripperCommand() {
-    // Inline construction of command goes here.
-    // Subsystem::RunOnce implicitly requires `this` subsystem.
-    return runOnce(
-        () -> {
-          m_gripper.set(GRIPPER_EXPAND);
-        });
-  }
 
-  public CommandBase contractGripperCommand() {
-    // Inline construction of command goes here.
-    // Subsystem::RunOnce implicitly requires `this` subsystem.
-    return runOnce(
-        () -> {
-          m_gripper.set(GRIPPER_CONTRACT);
-        });
-  }
 
   public CommandBase setArmEncoderToZero() {
     // Inline construction of command goes here.
@@ -857,7 +845,7 @@ public class Arm extends SubsystemBase {
         });
   }
 
-  public CommandBase requestMoveArmCommand(SuperStructurePosition position){
+  public CommandBase requestMoveSuperstructure(SuperStructurePosition position){
     return runOnce(
       () -> {
         System.out.println("Moving Superposition to: " + position.toString());

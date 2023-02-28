@@ -20,6 +20,7 @@ import frc.robot.subsystems.DriveTrain.DriveMotionMagicTest;
 import frc.robot.subsystems.DriveTrain.DriveTrain;
 import frc.robot.subsystems.DriveTrain.SetMaxSpeedCommand;
 import frc.robot.subsystems.DriveTrain.TurnToAngleWithGyroTest;
+import frc.robot.subsystems.Gripper.Gripper;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.PrintCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -38,6 +39,7 @@ public class RobotContainer {
   // The robot's subsystems and commands are defined here...
   private final DriveTrain m_drivetrain = new DriveTrain();
   private final Arm m_arm = new  Arm();
+  private final Gripper m_gripper = new  Gripper();
 
   //private final ExampleCommand m_autoCommand = new ExampleCommand(m_exampleSubsystem);
 
@@ -60,20 +62,20 @@ public class RobotContainer {
   private void configureButtonBindings() {
     m_partner_controller.rightBumper().whileTrue(new DriveArmManually(m_arm, m_partner_controller));
     m_partner_controller.start().onTrue(m_arm.stopArmAndWristCommand());
-    m_partner_controller.a().onTrue(m_arm.contractGripperCommand());
-    m_partner_controller.b().onTrue(m_arm.expandGripperCommand());
+    m_partner_controller.a().onTrue(m_gripper.contractGripperCommand());
+    m_partner_controller.b().onTrue(m_gripper.expandGripperCommand());
     
     m_driver_controller.leftBumper().onTrue(m_drivetrain.shiftToHighGear());
     m_driver_controller.leftBumper().onFalse(m_drivetrain.shiftToLowGear());
 
-    m_partner_controller.x().onTrue(m_arm.requestMoveArmCommand(SuperStructurePosition.Stowed).unless(()->m_arm.isTransitionInvalid(SuperStructurePosition.Stowed)));
-    m_partner_controller.povLeft().onTrue(m_arm.requestMoveArmCommand(SuperStructurePosition.GroundPickup).unless(()->m_arm.isTransitionInvalid(SuperStructurePosition.GroundPickup)));
-    m_partner_controller.povUp().onTrue(m_arm.requestMoveArmCommand(SuperStructurePosition.SubstationPickup).unless(()->m_arm.isTransitionInvalid(SuperStructurePosition.SubstationPickup)));
-    m_partner_controller.povRight().onTrue(m_arm.requestMoveArmCommand(SuperStructurePosition.ScoreCubeHigh).unless(()->m_arm.isTransitionInvalid(SuperStructurePosition.ScoreCubeHigh)));
-    m_partner_controller.povDown().onTrue(m_arm.requestMoveArmCommand(SuperStructurePosition.ScoreCubeMid).unless(()->m_arm.isTransitionInvalid(SuperStructurePosition.ScoreCubeMid)));
-    m_partner_controller.y().onTrue(m_arm.requestMoveArmCommand(SuperStructurePosition.ScoreConeHigh).unless(()->m_arm.isTransitionInvalid(SuperStructurePosition.ScoreConeHigh)));
-    m_partner_controller.b().onTrue(m_arm.requestMoveArmCommand(SuperStructurePosition.ScoreConeMid).unless(()->m_arm.isTransitionInvalid(SuperStructurePosition.ScoreConeMid)));
-    m_partner_controller.a().onTrue(m_arm.requestMoveArmCommand(SuperStructurePosition.ScoreLow).unless(()->m_arm.isTransitionInvalid(SuperStructurePosition.ScoreLow)));
+    m_partner_controller.x().onTrue(m_arm.requestMoveSuperstructure(SuperStructurePosition.Stowed).unless(()->m_arm.isTransitionInvalid(SuperStructurePosition.Stowed)));
+    m_partner_controller.povLeft().onTrue(m_arm.requestMoveSuperstructure(SuperStructurePosition.GroundPickup).unless(()->m_arm.isTransitionInvalid(SuperStructurePosition.GroundPickup)));
+    m_partner_controller.povUp().onTrue(m_arm.requestMoveSuperstructure(SuperStructurePosition.SubstationPickup).unless(()->m_arm.isTransitionInvalid(SuperStructurePosition.SubstationPickup)));
+    m_partner_controller.povRight().onTrue(m_arm.requestMoveSuperstructure(SuperStructurePosition.ScoreCubeHigh).unless(()->m_arm.isTransitionInvalid(SuperStructurePosition.ScoreCubeHigh)));
+    m_partner_controller.povDown().onTrue(m_arm.requestMoveSuperstructure(SuperStructurePosition.ScoreCubeMid).unless(()->m_arm.isTransitionInvalid(SuperStructurePosition.ScoreCubeMid)));
+    m_partner_controller.y().onTrue(m_arm.requestMoveSuperstructure(SuperStructurePosition.ScoreConeHigh).unless(()->m_arm.isTransitionInvalid(SuperStructurePosition.ScoreConeHigh)));
+    m_partner_controller.b().onTrue(m_arm.requestMoveSuperstructure(SuperStructurePosition.ScoreConeMid).unless(()->m_arm.isTransitionInvalid(SuperStructurePosition.ScoreConeMid)));
+    m_partner_controller.a().onTrue(m_arm.requestMoveSuperstructure(SuperStructurePosition.ScoreLow).unless(()->m_arm.isTransitionInvalid(SuperStructurePosition.ScoreLow)));
 
 
   }
@@ -142,7 +144,9 @@ public class RobotContainer {
     armTestTab.addBoolean("WristForward", m_arm::getWristForwardLimit).withPosition(1, 1).withSize(1,1);
     armTestTab.addBoolean("WristReverse", m_arm::getWristReverseLimit).withPosition(2, 1).withSize(1,1);
     armTestTab.add("Wrist Rev", 0).withPosition(3, 1).withSize(1, 1);
-    armTestTab.add("Scheduler", m_arm).withPosition(8, 0).withSize(2, 1);
+    armTestTab.add("Arm", m_arm).withPosition(8, 0).withSize(2, 1);
+    armTestTab.add("Gripper", m_gripper).withPosition(8, 1).withSize(2, 1);
+    armTestTab.add("Drivetrain", m_drivetrain).withPosition(8, 2).withSize(2, 1);
     
     // PIDF Values
     armTestTab.add("Arm kP", 0).withPosition(4, 0).withSize(1, 1);
