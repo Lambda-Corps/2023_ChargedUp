@@ -691,12 +691,12 @@ public class Arm extends SubsystemBase {
   }
 
   public void move_wrist_motion_magic(int target_in_ticks, boolean isForward){
-    double arbFF = 0;
     if( isForward ){
-      arbFF = getWristArbFF();
+      m_wrist_motor.set(ControlMode.MotionMagic, target_in_ticks, DemandType.ArbitraryFeedForward, getWristArbFF());
+    } else {
+      m_wrist_motor.set(ControlMode.MotionMagic, target_in_ticks);
     }
-    // m_wrist_motor.set(ControlMode.MotionMagic, target_in_ticks);
-    m_wrist_motor.set(ControlMode.MotionMagic, target_in_ticks, DemandType.ArbitraryFeedForward, arbFF);
+    
   }
   
   private double getWristArbFF(){
