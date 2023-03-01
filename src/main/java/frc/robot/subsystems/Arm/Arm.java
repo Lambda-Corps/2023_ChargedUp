@@ -148,7 +148,7 @@ public class Arm extends SubsystemBase {
   ///////// Constants ///////////////
   // Constant values for ARM movement, must be researched and tuned via tuner
   final double ARM_FORWARD_SPEED = .5;
-  final double ARM_REVERSE_SPEED = -.5;
+  final double ARM_REVERSE_SPEED = -.6;
   final double WRIST_FORWARD_SPEED = .7;
   final double WRIST_REVERSE_SPEED = -.25;
   final double WRIST_FORWARD_COSINE_FF = .09; // When arm is horizontal, calculation should be 1 * .07
@@ -162,7 +162,7 @@ public class Arm extends SubsystemBase {
   // final int ARM_FORWARD_SOFT_LIMIT = (int)(2048 * ARM_GEAR_RATIO * 1/6); // 60
   // degrees rotation
   final double WRIST_MAX_STATOR_CURRENT = 30;
-  final double ARM_MAX_STATOR_CURRENT = 20;
+  final double ARM_MAX_STATOR_CURRENT = 30;
   final int ARM_MM_SLOT = 0;
   final int ARM_HOLD_POSITION_SLOT = 2;
   final int WRIST_MM_FORWARD_SLOT = 0;
@@ -313,7 +313,7 @@ public class Arm extends SubsystemBase {
     StatorCurrentLimitConfiguration stator_limit = arm_config.statorCurrLimit;
     stator_limit.currentLimit = ARM_MAX_STATOR_CURRENT;
     stator_limit.enable = true;
-    stator_limit.triggerThresholdCurrent = ARM_MAX_STATOR_CURRENT + 1;
+    stator_limit.triggerThresholdCurrent = ARM_MAX_STATOR_CURRENT + 5;
     arm_config.statorCurrLimit = stator_limit;
 
     // Set max speeds for output
