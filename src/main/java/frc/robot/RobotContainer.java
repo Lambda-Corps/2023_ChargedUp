@@ -62,8 +62,8 @@ public class RobotContainer {
   private void configureButtonBindings() {
     m_partner_controller.rightBumper().whileTrue(new DriveArmManually(m_arm, m_partner_controller));
     m_partner_controller.start().onTrue(m_arm.stopArmAndWristCommand());
-    m_partner_controller.a().onTrue(m_gripper.contractGripperCommand());
-    m_partner_controller.b().onTrue(m_gripper.expandGripperCommand());
+    m_partner_controller.leftStick().onTrue(m_gripper.contractGripperCommand());
+    m_partner_controller.rightStick().onTrue(m_gripper.expandGripperCommand());
     
     m_driver_controller.leftBumper().onTrue(m_drivetrain.shiftToHighGear());
     m_driver_controller.leftBumper().onFalse(m_drivetrain.shiftToLowGear());

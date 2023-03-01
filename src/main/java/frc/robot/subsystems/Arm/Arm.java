@@ -626,12 +626,12 @@ public class Arm extends SubsystemBase {
     // falcon hard limit returns 1 if closed, 0 if open. Our limits are normally
     // open
     if (m_arm_motor.isRevLimitSwitchClosed() == 1) {
-      System.out.println("Arm Switch close");
+      // System.out.println("Arm Switch close");
       m_arm_motor.setSelectedSensorPosition(0);
     }
 
     if (m_wrist_motor.isRevLimitSwitchClosed() == 1) {
-      System.out.println("Wrist Switch close");
+      // System.out.println("Wrist Switch close");
       m_wrist_motor.setSelectedSensorPosition(0);
     }
   }
