@@ -278,7 +278,7 @@ public class Arm extends SubsystemBase {
 
     SlotConfiguration wrist_mm_reverse = wrist_config.slot1;
     wrist_mm_reverse.allowableClosedloopError = 10;
-    wrist_mm_reverse.closedLoopPeakOutput = WRIST_REVERSE_SPEED;
+    wrist_mm_reverse.closedLoopPeakOutput = Math.abs(WRIST_REVERSE_SPEED); // Must be an absolute value
     wrist_mm_reverse.closedLoopPeriod = 1;
     wrist_mm_reverse.kP = WRIST_MM_REVERSE_KP;
     wrist_mm_reverse.kI = WRIST_MM_REVERSE_KI;
@@ -691,12 +691,12 @@ public class Arm extends SubsystemBase {
   }
 
   public void move_wrist_motion_magic(int target_in_ticks, boolean isForward){
-    double arbFF = 0;
     if( isForward ){
-      arbFF = getWristArbFF();
+      m_wrist_motor.set(ControlMode.MotionMagic, target_in_ticks, DemandType.ArbitraryFeedForward, getWristArbFF());
+    }else {
+      m_wrist_motor.set(ControlMode.MotionMagic, target_in_ticks);
     }
     // m_wrist_motor.set(ControlMode.MotionMagic, target_in_ticks);
-    m_wrist_motor.set(ControlMode.MotionMagic, target_in_ticks, DemandType.ArbitraryFeedForward, arbFF);
   }
   
   private double getWristArbFF(){
@@ -767,6 +767,10 @@ public class Arm extends SubsystemBase {
     // Set the motor to hold with PID
     m_arm_motor.set(ControlMode.Position, arm_pos);
     m_wrist_motor.set(ControlMode.Position, wrist_pos, DemandType.ArbitraryFeedForward, getWristArbFF());
+  }
+
+  public void set_current_position_to_manual() {
+    m_current_position = SuperStructurePosition.Manual;
   }
   ////////////////////// ARM INLINE COMMANDS /////////////////////
 
