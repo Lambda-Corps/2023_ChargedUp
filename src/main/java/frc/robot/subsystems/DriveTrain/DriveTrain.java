@@ -126,7 +126,7 @@ public class DriveTrain extends SubsystemBase {
 
 	final int MM_TOLERANCE = 200;
 	double TURN_DRIVE_FF = .1;
-	int m_setpoint = 0;
+	int m_setpoint = 2;
 	double m_turn_setpoint = 0;
 
 	DoubleSolenoid m_shifter;
@@ -400,12 +400,11 @@ public class DriveTrain extends SubsystemBase {
 		return m_gyro.getAngle();
 	}
 
-	public void configurePIDTurn(double kP, double kD, double kI, double setpoint){
+	public void configurePIDTurn(double kP, double kD, double kI){
 		m_turn_pid_controller = new PIDController(kP, kI, kD);
 		
 		m_turn_pid_controller.setTolerance(1);
 		m_turn_pid_controller.enableContinuousInput(-180, 180);
-		m_turn_pid_controller.setSetpoint(setpoint);
 	}
 
 	public void set_turn_target_setpoint(double angle_setpoint){
@@ -505,7 +504,7 @@ public class DriveTrain extends SubsystemBase {
 
 		// boolean left_done = m_left_leader.getClosedLoopError() < MM_TOLERANCE;
 		// boolean right_done = m_right_leader.getClosedLoopError() < MM_TOLERANCE;
-		boolean left_done = Math.abs((m_setpoint - currentPos_L)) < MM_TOLERANCE;
+		boolean left_done = Math.abs(m_setpoint - currentPos_L) < MM_TOLERANCE;
 		boolean right_done = Math.abs(m_setpoint - currentPos_R) < MM_TOLERANCE;
 
 		done = left_done && right_done;
@@ -567,5 +566,24 @@ public class DriveTrain extends SubsystemBase {
 					/* one-time action goes here */
 					m_shifter.set(LOW_GEAR);
 				});
+	}
+	public boolean motionMagicDrive(double target_position, boolean done) {
+	if(is_drive_mm_done(m_setpoint) == false){
+		double tolerance = MM_TOLERANCE;
+		//add ifs if we need to set negative arbFF for going backward
+		m_left_leader.set(ControlMode.MotionMagic, m_setpoint); //, DemandType.ArbitraryFeedForward, arbFF);
+		m_right_leader.set(ControlMode.MotionMagic, m_setpoint);//, DemandType.ArbitraryFeedForward, arbFF);
+		// m_left_leader.set(ControlMode.MotionMagic, target_position);
+		// m_right_leader.set(ControlMode.MotionMagic, target_position);
+	
+		double currentPos_L = m_left_leader.getSelectedSensorPosition();
+		double currentPos_R = m_right_leader.getSelectedSensorPosition();
+	
+		return Math.abs(currentPos_L - m_setpoint) < tolerance && Math.abs(currentPos_R - m_setpoint) < tolerance;
+
+	}
+	else{
+		done = true;
+	}
 	}
 }
