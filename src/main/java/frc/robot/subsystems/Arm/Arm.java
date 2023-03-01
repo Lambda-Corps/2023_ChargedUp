@@ -147,8 +147,8 @@ public class Arm extends SubsystemBase {
 
   ///////// Constants ///////////////
   // Constant values for ARM movement, must be researched and tuned via tuner
-  final double ARM_FORWARD_SPEED = .4;
-  final double ARM_REVERSE_SPEED = -.4;
+  final double ARM_FORWARD_SPEED = .5;
+  final double ARM_REVERSE_SPEED = -.5;
   final double WRIST_FORWARD_SPEED = .7;
   final double WRIST_REVERSE_SPEED = -.25;
   final double WRIST_FORWARD_COSINE_FF = .09; // When arm is horizontal, calculation should be 1 * .07
