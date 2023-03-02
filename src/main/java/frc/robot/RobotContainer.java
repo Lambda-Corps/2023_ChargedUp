@@ -108,7 +108,8 @@ public class RobotContainer {
     driveTestTab.add("Target Velocity", 0).withPosition(2, 3).withSize(1,1);
     driveTestTab.add("Left Encoder Result", 0).withPosition(3, 3).withSize(1,1);
     driveTestTab.add("Right Encoder Result", 0).withPosition(4, 3).withSize(1,1);
-    driveTestTab.add("MM kP", 0).withPosition(5, 3).withSize(1,1);
+    driveTestTab.add("MM kP", 2).withPosition(5, 3).withSize(1,1);
+    driveTestTab.add("Turn kP", .0179).withPosition(6, 2).withSize(1,1);
     driveTestTab.add("Drive MM", new DriveMotionMagicTest(m_drivetrain)).withPosition(6,3).withSize(2, 1);
     driveTestTab.addDouble("Left Error", m_drivetrain::getLeftError).withPosition(0,4).withSize(1,1);
     driveTestTab.addDouble("Right Error", m_drivetrain::getRightError).withPosition(1,4).withSize(1,1);

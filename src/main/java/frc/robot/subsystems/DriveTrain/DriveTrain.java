@@ -583,7 +583,7 @@ public class DriveTrain extends SubsystemBase {
 
 	}
 	else{
-		done = true;
+		return done = true;
 	}
 	}
 }
