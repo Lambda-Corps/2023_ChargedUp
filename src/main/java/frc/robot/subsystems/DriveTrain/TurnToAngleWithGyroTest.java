@@ -36,7 +36,7 @@ public class TurnToAngleWithGyroTest extends CommandBase {
     m_count_done = 0;
 
     m_target_degrees = m_targetdegrees.getDouble(0);
-    // m_dt.configurePIDTurn(m_kp.getDouble(0), 0 0);
+    m_dt.configurePIDTurn(m_kp.getDouble(0.015), 0 ,0);
     m_dt.set_turn_target_setpoint(m_target_degrees);
   }
 

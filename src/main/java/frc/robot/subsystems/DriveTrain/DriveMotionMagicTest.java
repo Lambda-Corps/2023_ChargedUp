@@ -43,11 +43,12 @@ public class DriveMotionMagicTest extends CommandBase {
     m_dt.configure_motion_magic(m_target_in_ticks);
     m_dt.drive_motion_magic();
   }
-
+  
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
     m_done = m_dt.is_drive_mm_done(m_target_in_ticks);
+    System.out.println(m_count);
     if(m_done){
       m_count++;
     }
