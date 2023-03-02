@@ -8,8 +8,10 @@ import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import frc.robot.subsystems.Arm.Arm;
 import frc.robot.subsystems.Arm.ArmDriveToPositionPIDTest;
+import frc.robot.subsystems.Arm.ArmThenWristSequenceCommand;
 import frc.robot.subsystems.Arm.DriveArmManually;
 import frc.robot.subsystems.Arm.WristDriveToPositionPIDTest;
+import frc.robot.subsystems.Arm.WristThenArmSequenceCommand;
 import frc.robot.subsystems.Arm.Arm.SuperStructurePosition;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
@@ -22,6 +24,7 @@ import frc.robot.subsystems.DriveTrain.SetMaxSpeedCommand;
 import frc.robot.subsystems.DriveTrain.TurnToAngleWithGyroTest;
 import frc.robot.subsystems.Gripper.Gripper;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.ConditionalCommand;
 import edu.wpi.first.wpilibj2.command.PrintCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 
@@ -68,16 +71,30 @@ public class RobotContainer {
     m_driver_controller.leftBumper().onTrue(m_drivetrain.shiftToHighGear());
     m_driver_controller.leftBumper().onFalse(m_drivetrain.shiftToLowGear());
 
-    m_partner_controller.x().onTrue(m_arm.requestMoveSuperstructure(SuperStructurePosition.Stowed).unless(()->m_arm.isTransitionInvalid(SuperStructurePosition.Stowed)));
-    m_partner_controller.povLeft().onTrue(m_arm.requestMoveSuperstructure(SuperStructurePosition.GroundPickup).unless(()->m_arm.isTransitionInvalid(SuperStructurePosition.GroundPickup)));
-    m_partner_controller.povUp().onTrue(m_arm.requestMoveSuperstructure(SuperStructurePosition.SubstationPickup).unless(()->m_arm.isTransitionInvalid(SuperStructurePosition.SubstationPickup)));
-    m_partner_controller.povRight().onTrue(m_arm.requestMoveSuperstructure(SuperStructurePosition.ScoreCubeHigh).unless(()->m_arm.isTransitionInvalid(SuperStructurePosition.ScoreCubeHigh)));
-    m_partner_controller.povDown().onTrue(m_arm.requestMoveSuperstructure(SuperStructurePosition.ScoreCubeMid).unless(()->m_arm.isTransitionInvalid(SuperStructurePosition.ScoreCubeMid)));
-    m_partner_controller.y().onTrue(m_arm.requestMoveSuperstructure(SuperStructurePosition.ScoreConeHigh).unless(()->m_arm.isTransitionInvalid(SuperStructurePosition.ScoreConeHigh)));
-    m_partner_controller.b().onTrue(m_arm.requestMoveSuperstructure(SuperStructurePosition.ScoreConeMid).unless(()->m_arm.isTransitionInvalid(SuperStructurePosition.ScoreConeMid)));
-    m_partner_controller.a().onTrue(m_arm.requestMoveSuperstructure(SuperStructurePosition.ScoreLow).unless(()->m_arm.isTransitionInvalid(SuperStructurePosition.ScoreLow)));
-
-
+    m_partner_controller.x().onTrue(new ConditionalCommand(new ArmThenWristSequenceCommand(m_arm, SuperStructurePosition.ScoreCubeMid),
+                                                           new WristThenArmSequenceCommand(m_arm, SuperStructurePosition.ScoreCubeMid),
+                                                           ()->m_arm.isForwardMovement(SuperStructurePosition.ScoreCubeMid)));
+    m_partner_controller.y().onTrue(new ConditionalCommand(new ArmThenWristSequenceCommand(m_arm, SuperStructurePosition.ScoreCubeHigh),
+                                                           new WristThenArmSequenceCommand(m_arm, SuperStructurePosition.ScoreCubeHigh),
+                                                           ()->m_arm.isForwardMovement(SuperStructurePosition.ScoreCubeHigh)));
+    m_partner_controller.a().onTrue(new ConditionalCommand(new ArmThenWristSequenceCommand(m_arm, SuperStructurePosition.ScoreConeMid),
+                                                           new WristThenArmSequenceCommand(m_arm, SuperStructurePosition.ScoreConeMid),
+                                                           ()->m_arm.isForwardMovement(SuperStructurePosition.ScoreConeMid)));
+    m_partner_controller.b().onTrue(new ConditionalCommand(new ArmThenWristSequenceCommand(m_arm, SuperStructurePosition.ScoreConeHigh),
+                                                           new WristThenArmSequenceCommand(m_arm, SuperStructurePosition.ScoreConeHigh),
+                                                           ()->m_arm.isForwardMovement(SuperStructurePosition.ScoreConeHigh)));
+    m_partner_controller.povDown().onTrue(new ConditionalCommand(new ArmThenWristSequenceCommand(m_arm, SuperStructurePosition.GroundPickup),
+                                                           new WristThenArmSequenceCommand(m_arm, SuperStructurePosition.GroundPickup),
+                                                           ()->m_arm.isForwardMovement(SuperStructurePosition.GroundPickup)));
+    m_partner_controller.povUp().onTrue(new ConditionalCommand(new ArmThenWristSequenceCommand(m_arm, SuperStructurePosition.SubstationPickup),
+                                                           new WristThenArmSequenceCommand(m_arm, SuperStructurePosition.SubstationPickup),
+                                                           ()->m_arm.isForwardMovement(SuperStructurePosition.SubstationPickup)));
+    m_partner_controller.povLeft().onTrue(new ConditionalCommand(new ArmThenWristSequenceCommand(m_arm, SuperStructurePosition.ScoreLow),
+                                                           new WristThenArmSequenceCommand(m_arm, SuperStructurePosition.ScoreLow),
+                                                           ()->m_arm.isForwardMovement(SuperStructurePosition.ScoreLow)));
+    m_partner_controller.povRight().onTrue(new ConditionalCommand(new ArmThenWristSequenceCommand(m_arm, SuperStructurePosition.Stowed),
+                                                           new WristThenArmSequenceCommand(m_arm, SuperStructurePosition.Stowed),
+                                                           ()->m_arm.isForwardMovement(SuperStructurePosition.Stowed)));
   }
 
   /**

@@ -8,6 +8,7 @@ import static frc.robot.Constants.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.function.BooleanSupplier;
 
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.DemandType;
@@ -36,8 +37,8 @@ public class Arm extends SubsystemBase {
   DoublePublisher m_arm_position, m_wrist_position, m_wrist_motor_rev, m_arm_motor_rev, m_arm_mm_error, m_wrist_mm_error;
   StringPublisher m_super_position;
 
-  private ArmState arm_state;
-  private ArmControlMode arm_control_mode;
+  private ArmState m_arm_state;
+  private ArmControlMode m_arm_control_mode;
   private SuperStructurePosition m_current_position, m_requested_position;
   private ArmTask arm_task;
   private HashMap<SuperStructurePosition, ArrayList<SuperStructurePosition>> illegal_transitions = new HashMap<SuperStructurePosition, ArrayList<SuperStructurePosition>>();
@@ -45,7 +46,7 @@ public class Arm extends SubsystemBase {
   private ArrayList<SuperStructurePosition> ground_pickup_illegal_transitions = new ArrayList<SuperStructurePosition>();
 
   public enum ArmState {
-    Active,
+    Moving,
     Holding,
     Inactive,
   }
@@ -229,6 +230,7 @@ public class Arm extends SubsystemBase {
   final static int WRIST_CUBE_MID = 30000;
   final static int ARM_POSITION_TOLERANCE = 100;
   final static int WRIST_POSITION_TOLERANCE = 100;
+  final int PID_PRIMARY = 0;
 
   /** Creates a new Arm. */
   public Arm() {
@@ -400,6 +402,8 @@ public class Arm extends SubsystemBase {
     m_arm_motor.set(ControlMode.Position, SuperStructurePosition.Stowed.arm_position);
     m_wrist_motor.selectProfileSlot(WRIST_HOLD_POSITION_SLOT, 0);
     m_wrist_motor.set(ControlMode.Position, SuperStructurePosition.Stowed.wrist_position);
+
+    m_arm_state = ArmState.Holding;
   }
 
   public int getWristReverseLimitFromMotor(){
@@ -414,9 +418,34 @@ public class Arm extends SubsystemBase {
     m_wrist_motor_rev.set(m_wrist_motor.isRevLimitSwitchClosed());
     m_arm_motor_rev.set(m_arm_motor.isRevLimitSwitchClosed());
 
-    if(m_wrist_motor.isRevLimitSwitchClosed() > 0){
-      m_wrist_motor.setSelectedSensorPosition(0);
+    switch(m_arm_state){
+      case Inactive:
+        // If the arm isn't do anything, zero both.
+        if(m_wrist_motor.isRevLimitSwitchClosed() > 0){
+          m_wrist_motor.setSelectedSensorPosition(0);
+        }
+        if(m_arm_motor.isRevLimitSwitchClosed() > 0){
+          m_arm_motor.setSelectedSensorPosition(0);
+        }
+        break;
+      case Holding:
+        // We may not be able to trust the arm's motion after a command
+        // so only deal with the wrist on hold.
+        if(m_wrist_motor.isRevLimitSwitchClosed() > 0){
+          m_wrist_motor.setSelectedSensorPosition(0);
+        }
+        break;
+      case Moving:
+        // Don't do anything
+        break;
+      default:
+        // Reset the wrist only by default
+        if(m_wrist_motor.isRevLimitSwitchClosed() > 0){
+          m_wrist_motor.setSelectedSensorPosition(0);
+        }
+        break;
     }
+
 
     // if(m_arm_motor.isRevLimitSwitchClosed() > 0){
     //   m_arm_motor.setSelectedSensorPosition(0);
@@ -435,21 +464,6 @@ public class Arm extends SubsystemBase {
   public void checkArmSuperState() {
     if( m_arm_motor.getSelectedSensorPosition() <= 0 && m_wrist_motor.getSelectedSensorPosition() <= 0){
       m_current_position = SuperStructurePosition.Stowed;
-    }
-
-    // System.out.println("Arm is at " + m_current_position);
-    // System.out.println("Requested Arm Position is at " + m_requested_position);
-    if (isArmSuperAtRequestedPos()) {
-      // System.out.println("Arm is in requested position");
-    } else {
-      // System.out.println("Arm is not at requested position");
-
-      if (isTransitionInvalid(m_requested_position)) {
-        // System.out.println("Arm transition is legal");
-        // System.out.println("Moving arm to " + m_requested_position);
-      } else {
-        // System.out.println("Arm transition is illegal");
-      }
     }
   }
 
@@ -530,7 +544,7 @@ public class Arm extends SubsystemBase {
 
   // DO NOT USE DURING MATCHES!!! ONLY RUN IN THE PITS!!!
   public void reset_arm_pos() {
-    arm_control_mode = ArmControlMode.Automatic;
+    m_arm_control_mode = ArmControlMode.Automatic;
     // while BOTH top and bottoms are false (not triggered)
     while (!m_arm_forward_limit.get() && !m_arm_reverse_limit.get()) {
       // only drive base if limit is not hit
@@ -562,11 +576,11 @@ public class Arm extends SubsystemBase {
   }
 
   public ArmState getArmState() {
-    return arm_state;
+    return m_arm_state;
   }
 
   public ArmControlMode getArmControlMode() {
-    return arm_control_mode;
+    return m_arm_control_mode;
   }
 
   public double getSuperStructureWristPosition() {
@@ -772,6 +786,25 @@ public class Arm extends SubsystemBase {
   public void set_current_position_to_manual() {
     m_current_position = SuperStructurePosition.Manual;
   }
+
+  public void configure_wrist_motion_magic(int target_ticks, boolean isForward){
+    if( isForward ){
+      m_wrist_motor.selectProfileSlot(WRIST_MM_FORWARD_SLOT, PID_PRIMARY);
+    }
+    else {
+      m_wrist_motor.selectProfileSlot(WRIST_MM_REVERSE_SLOT, PID_PRIMARY);
+    }
+  }
+
+  public boolean isForwardMovement(SuperStructurePosition pos){
+    double wristPos = m_wrist_motor.getSelectedSensorPosition();
+    double armPos = m_arm_motor.getSelectedSensorPosition();
+    return  (wristPos < pos.wrist_position) || armPos < pos.arm_position;
+  }
+
+  public void configure_arm_motion_magic(){
+    m_arm_motor.selectProfileSlot(ARM_MM_SLOT, PID_PRIMARY);
+  }
   ////////////////////// ARM INLINE COMMANDS /////////////////////
 
 
@@ -856,6 +889,33 @@ public class Arm extends SubsystemBase {
         m_current_position = position;
         // m_arm_motor.set(ControlMode.MotionMagic, position.arm_position);
         // m_wrist_motor.set(ControlMode.MotionMagic, position.wrist_position);
+      });
+  }
+
+  public CommandBase configureWristMM(BooleanSupplier isForward){
+    return runOnce(
+      () -> {
+        /* If we're going in the forward direciton we need to select a specific 
+         * PID slot on the controller, versus backward being different. 
+         * 
+         * Then just set the MM target once the configuration is done
+         */
+        if(isForward.getAsBoolean()){
+          m_wrist_motor.selectProfileSlot(WRIST_MM_FORWARD_SLOT, PID_PRIMARY);
+        }
+        else {
+          m_wrist_motor.selectProfileSlot(WRIST_MM_REVERSE_SLOT, PID_PRIMARY);
+        }
+      });
+  }
+  public CommandBase moveWristToPositionMM(SuperStructurePosition position, BooleanSupplier isForward){
+    return run(
+      () -> {
+        if( isForward.getAsBoolean() ){
+          m_wrist_motor.set(ControlMode.MotionMagic, position.wrist_position, DemandType.ArbitraryFeedForward, getWristArbFF());
+        } else {
+          m_wrist_motor.set(ControlMode.MotionMagic, position.wrist_position);
+        }
       });
   }
 }
