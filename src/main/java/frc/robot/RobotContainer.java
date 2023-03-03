@@ -48,8 +48,8 @@ public class RobotContainer {
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
-    buildDriveTestTab();
-    buildArmTestTab();
+    // buildDriveTestTab();
+    // buildArmTestTab();
     // Set subsystem default commands
     m_drivetrain.setDefaultCommand(new DefaultDriveTrainCommand(m_drivetrain, m_driver_controller));    
     // Configure the button bindings
@@ -73,28 +73,28 @@ public class RobotContainer {
 
     m_partner_controller.x().onTrue(new ConditionalCommand(new ArmThenWristSequenceCommand(m_arm, SuperStructurePosition.ScoreCubeMid),
                                                            new WristThenArmSequenceCommand(m_arm, SuperStructurePosition.ScoreCubeMid),
-                                                           ()->m_arm.isForwardMovement(SuperStructurePosition.ScoreCubeMid)));
+                                                           ()->m_arm.isBackwardMovement(SuperStructurePosition.ScoreCubeMid)));
     m_partner_controller.y().onTrue(new ConditionalCommand(new ArmThenWristSequenceCommand(m_arm, SuperStructurePosition.ScoreCubeHigh),
                                                            new WristThenArmSequenceCommand(m_arm, SuperStructurePosition.ScoreCubeHigh),
-                                                           ()->m_arm.isForwardMovement(SuperStructurePosition.ScoreCubeHigh)));
+                                                           ()->m_arm.isBackwardMovement(SuperStructurePosition.ScoreCubeHigh)));
     m_partner_controller.a().onTrue(new ConditionalCommand(new ArmThenWristSequenceCommand(m_arm, SuperStructurePosition.ScoreConeMid),
                                                            new WristThenArmSequenceCommand(m_arm, SuperStructurePosition.ScoreConeMid),
-                                                           ()->m_arm.isForwardMovement(SuperStructurePosition.ScoreConeMid)));
+                                                           ()->m_arm.isBackwardMovement(SuperStructurePosition.ScoreConeMid)));
     m_partner_controller.b().onTrue(new ConditionalCommand(new ArmThenWristSequenceCommand(m_arm, SuperStructurePosition.ScoreConeHigh),
                                                            new WristThenArmSequenceCommand(m_arm, SuperStructurePosition.ScoreConeHigh),
-                                                           ()->m_arm.isForwardMovement(SuperStructurePosition.ScoreConeHigh)));
+                                                           ()->m_arm.isBackwardMovement(SuperStructurePosition.ScoreConeHigh)));
     m_partner_controller.povDown().onTrue(new ConditionalCommand(new ArmThenWristSequenceCommand(m_arm, SuperStructurePosition.GroundPickup),
                                                            new WristThenArmSequenceCommand(m_arm, SuperStructurePosition.GroundPickup),
-                                                           ()->m_arm.isForwardMovement(SuperStructurePosition.GroundPickup)));
+                                                           ()->m_arm.isBackwardMovement(SuperStructurePosition.GroundPickup)));
     m_partner_controller.povUp().onTrue(new ConditionalCommand(new ArmThenWristSequenceCommand(m_arm, SuperStructurePosition.SubstationPickup),
                                                            new WristThenArmSequenceCommand(m_arm, SuperStructurePosition.SubstationPickup),
-                                                           ()->m_arm.isForwardMovement(SuperStructurePosition.SubstationPickup)));
+                                                           ()->m_arm.isBackwardMovement(SuperStructurePosition.SubstationPickup)));
     m_partner_controller.povLeft().onTrue(new ConditionalCommand(new ArmThenWristSequenceCommand(m_arm, SuperStructurePosition.ScoreLow),
                                                            new WristThenArmSequenceCommand(m_arm, SuperStructurePosition.ScoreLow),
-                                                           ()->m_arm.isForwardMovement(SuperStructurePosition.ScoreLow)));
+                                                           ()->m_arm.isBackwardMovement(SuperStructurePosition.ScoreLow)));
     m_partner_controller.povRight().onTrue(new ConditionalCommand(new ArmThenWristSequenceCommand(m_arm, SuperStructurePosition.Stowed),
                                                            new WristThenArmSequenceCommand(m_arm, SuperStructurePosition.Stowed),
-                                                           ()->m_arm.isForwardMovement(SuperStructurePosition.Stowed)));
+                                                           ()->m_arm.isBackwardMovement(SuperStructurePosition.Stowed)));
   }
 
   /**
@@ -129,8 +129,8 @@ public class RobotContainer {
     driveTestTab.add("Right Encoder Result", 0).withPosition(4, 3).withSize(1,1);
     driveTestTab.add("MM kP", 0).withPosition(5, 3).withSize(1,1);
     driveTestTab.add("Drive MM", new DriveMotionMagicTest(m_drivetrain)).withPosition(6,3).withSize(2, 1);
-    driveTestTab.addDouble("Left Error", m_drivetrain::getLeftError).withPosition(0,4).withSize(1,1);
-    driveTestTab.addDouble("Right Error", m_drivetrain::getRightError).withPosition(1,4).withSize(1,1);
+    // driveTestTab.addDouble("Left Error", m_drivetrain::getLeftError).withPosition(0,4).withSize(1,1);
+    // driveTestTab.addDouble("Right Error", m_drivetrain::getRightError).withPosition(1,4).withSize(1,1);
     driveTestTab.add("DriveMM Sequence", new DriveMMSequenceTest(m_drivetrain)).withPosition(2, 4).withSize(1, 1);
     driveTestTab.add("Target Degrees", 0).withPosition(6, 1).withSize(1, 1);
     driveTestTab.addNumber("Curr Heading", m_drivetrain::getHeading).withPosition(4,0).withSize(1,1);

@@ -148,14 +148,14 @@ public class Arm extends SubsystemBase {
 
   ///////// Constants ///////////////
   // Constant values for ARM movement, must be researched and tuned via tuner
-  final double ARM_FORWARD_SPEED = .5;
-  final double ARM_REVERSE_SPEED = -.6;
+  final double ARM_FORWARD_SPEED = .4;
+  final double ARM_REVERSE_SPEED = -.4;
   final double WRIST_FORWARD_SPEED = .7;
   final double WRIST_REVERSE_SPEED = -.25;
   final double WRIST_FORWARD_COSINE_FF = .09; // When arm is horizontal, calculation should be 1 * .07
   final double ARM_GEAR_RATIO = 10 * 4 * 4;
   final double WRIST_GEAR_RATIO = 7 * 5 * 4;
-  final int WRIST_REVERSE_SOFT_LIMIT = 0;
+  final int WRIST_REVERSE_SOFT_LIMIT = -1000;
   final int WRIST_FORWARD_SOFT_LIMIT = 58000;
   final int ARM_REVERSE_SOFT_LIMIT = 0;
   final int ARM_FORWARD_SOFT_LIMIT = 50000;
@@ -225,7 +225,7 @@ public class Arm extends SubsystemBase {
   final static int ARM_CONE_HIGH = 46300;
   final static int WRIST_CONE_HIGH = 57000;
   final static int ARM_CUBE_HIGH = 46300;
-  final static int WRIST_CUBE_HIGH = 57000;
+  final static int WRIST_CUBE_HIGH = 52000;
   final static int ARM_CUBE_MID = 35000;
   final static int WRIST_CUBE_MID = 30000;
   final static int ARM_POSITION_TOLERANCE = 100;
@@ -796,10 +796,11 @@ public class Arm extends SubsystemBase {
     }
   }
 
-  public boolean isForwardMovement(SuperStructurePosition pos){
+  public boolean isBackwardMovement(SuperStructurePosition pos){
     double wristPos = m_wrist_motor.getSelectedSensorPosition();
     double armPos = m_arm_motor.getSelectedSensorPosition();
-    return  (wristPos < pos.wrist_position) || armPos < pos.arm_position;
+    System.out.println("Moving arm Backward: " + (!(wristPos < pos.wrist_position) || !(armPos < pos.arm_position)));
+    return  !(wristPos < pos.wrist_position) || !(armPos < pos.arm_position);
   }
 
   public void configure_arm_motion_magic(){

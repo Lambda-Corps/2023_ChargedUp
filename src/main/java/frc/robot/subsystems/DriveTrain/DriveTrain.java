@@ -240,10 +240,10 @@ public class DriveTrain extends SubsystemBase {
 		m_2dField.setRobotPose(m_odometry.getPoseMeters());
 
 		// Update the encoder topics with timestamps
-		m_left_encoder_entry.set(m_left_leader.getSelectedSensorPosition(), 0);
-		m_right_encoder_entry.set(m_right_leader.getSelectedSensorPosition(), 0);
-		m_right_speed_entry.set(getRightSpeed(), 0);
-		m_left_speed_entry.set(getLeftSpeed(), 0);
+		// m_left_encoder_entry.set(m_left_leader.getSelectedSensorPosition(), 0);
+		// m_right_encoder_entry.set(m_right_leader.getSelectedSensorPosition(), 0);
+		// m_right_speed_entry.set(getRightSpeed(), 0);
+		// m_left_speed_entry.set(getLeftSpeed(), 0);
 	}
 
 	public void teleop_drive(double forward, double turn) {
