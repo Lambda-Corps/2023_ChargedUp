@@ -110,7 +110,7 @@ public class RobotContainer {
     driveTestTab.add("Right Encoder Result", 0).withPosition(4, 3).withSize(1,1);
     driveTestTab.add("MM kP", 2).withPosition(5, 3).withSize(1,1);
     driveTestTab.add("Turn kP", .0179).withPosition(6, 2).withSize(1,1);
-    driveTestTab.add("Drive MM", new DriveMotionMagicTest(m_drivetrain)).withPosition(6,3).withSize(2, 1);
+    driveTestTab.add("Drive MM", new DriveMotionMagicTest(m_drivetrain, 5)).withPosition(6,3).withSize(2, 1);
     driveTestTab.addDouble("Left Error", m_drivetrain::getLeftError).withPosition(0,4).withSize(1,1);
     driveTestTab.addDouble("Right Error", m_drivetrain::getRightError).withPosition(1,4).withSize(1,1);
     driveTestTab.add("DriveMM Sequence", new DriveMMSequenceTest(m_drivetrain)).withPosition(2, 4).withSize(1, 1);
@@ -125,7 +125,7 @@ public class RobotContainer {
 
     // PID Tuning
     driveTestTab.add("Turn PID", m_drivetrain.get_dt_turn_pidcontroller()).withPosition(5, 0);
-    driveTestTab.add("Turn with PID", new TurnToAngleWithGyroTest(m_drivetrain)).withPosition(6, 0).withSize(2, 1);
+    driveTestTab.add("Turn with PID", new TurnToAngleWithGyroTest(m_drivetrain, 90)).withPosition(6, 0).withSize(2, 1);
     
   }
 

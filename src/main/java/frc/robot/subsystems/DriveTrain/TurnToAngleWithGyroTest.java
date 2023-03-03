@@ -11,18 +11,20 @@ import edu.wpi.first.wpilibj2.command.CommandBase;
 
 public class TurnToAngleWithGyroTest extends CommandBase {
   DriveTrain m_dt;
+  int m_degrees;
   double m_target_degrees;
   boolean m_done;
   int m_count_done;
   NetworkTableEntry m_velocity, m_targetdegrees, m_kp;
 
   /** Creates a new TurnToAngleWithGyro. */
-  public TurnToAngleWithGyroTest(DriveTrain dt) {
+  public TurnToAngleWithGyroTest(DriveTrain dt, int degrees) {
     m_dt = dt;
+    m_degrees = degrees;
     addRequirements(m_dt);
     // Use addRequirements() here to declare subsystem dependencies.
     NetworkTable driveTab = NetworkTableInstance.getDefault().getTable("Shuffleboard").getSubTable("Drive Test");
-    m_velocity = driveTab.getEntry("Velocity");
+   // m_velocity = driveTab.getEntry("Velocity");
     m_targetdegrees = driveTab.getEntry("Target Degrees");
     m_kp = driveTab.getEntry("Turn kP");
 
@@ -34,10 +36,10 @@ public class TurnToAngleWithGyroTest extends CommandBase {
   public void initialize() {
     m_done = false;
     m_count_done = 0;
-
-    m_target_degrees = m_targetdegrees.getDouble(0);
+    m_target_degrees = m_degrees;
+    //m_target_degrees = m_targetdegrees.getDouble(0);
     m_dt.configurePIDTurn(m_kp.getDouble(0.0179), 0 ,0);
-    m_dt.set_turn_target_setpoint(m_target_degrees);
+    m_dt.set_turn_target_setpoint(m_degrees);
   }
 
   // Called every time the scheduler runs while the command is scheduled.

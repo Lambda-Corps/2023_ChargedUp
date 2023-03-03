@@ -17,8 +17,8 @@ public class DriveMMSequenceTest extends SequentialCommandGroup {
     // Add your commands in the addCommands() call, e.g.
     // addCommands(new FooCommand(), new BarCommand());
     addCommands(
-      new DriveMotionMagicTest(dt).raceWith(new WaitCommand(2)), dt.stopMotorsCommand(),
-     // new WaitCommand(1),
-      new TurnToAngleWithGyroTest(dt).raceWith(new WaitCommand(1.5)), dt.stopMotorsCommand());
+      new DriveMotionMagicTest(dt,80).raceWith(new WaitCommand(5)), dt.stopMotorsCommand(),
+     new WaitCommand(1),
+      new TurnToAngleWithGyroTest(dt, 90).raceWith(new WaitCommand(1.5)), dt.stopMotorsCommand());
   }
 }

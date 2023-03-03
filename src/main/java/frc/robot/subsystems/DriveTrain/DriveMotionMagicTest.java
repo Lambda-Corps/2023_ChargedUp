@@ -11,14 +11,16 @@ import edu.wpi.first.wpilibj2.command.CommandBase;
 
 public class DriveMotionMagicTest extends CommandBase {
   DriveTrain m_dt;
+  double m_distance;
   int m_target_in_ticks;
   boolean m_done;
   int m_count;
   NetworkTableEntry m_target_distance, m_time_to_velo, m_target_velocity, m_left_result, m_right_result, m_kp;
 
   /** Creates a new DriveMotionMagic. */
-  public DriveMotionMagicTest( DriveTrain dt) {
+  public DriveMotionMagicTest( DriveTrain dt, double distance) {
     m_dt = dt;
+    m_distance = distance;
     // Use addRequirements() here to declare subsystem dependencies.
     addRequirements(m_dt);
 
@@ -37,7 +39,8 @@ public class DriveMotionMagicTest extends CommandBase {
   public void initialize() {
     m_done = false;
     m_count = 0;
-    m_target_in_ticks = (int)(m_target_distance.getDouble(0)* DriveTrain.kEncoderTicksPerInch);
+    //m_target_in_ticks = (int)(m_target_distance.getDouble(0)* DriveTrain.kEncoderTicksPerInch);
+    m_target_in_ticks = (int)(m_distance * DriveTrain.kEncoderTicksPerInch);
 
     m_dt.configure_motion_magic_test( m_target_velocity.getDouble(0), m_time_to_velo.getDouble(0), m_kp.getDouble(0));
     m_dt.configure_motion_magic(m_target_in_ticks);

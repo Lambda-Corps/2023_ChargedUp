@@ -13,13 +13,13 @@ import edu.wpi.first.networktables.NetworkTableInstance;
 // information, see:
 // https://docs.wpilib.org/en/stable/docs/software/commandbased/convenience-features.html
 public class LeftScoreWithBalance extends SequentialCommandGroup {
-  
+
   /** Creates a new LeftScoreWithBalance. */
   public LeftScoreWithBalance() {
     // Add your commands in the addCommands() call, e.g.
     // addCommands(new FooCommand(), new BarCommand());
     addCommands(
-      
+    
     );
   }
 }

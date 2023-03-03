@@ -402,9 +402,11 @@ public class DriveTrain extends SubsystemBase {
 
 	public void configurePIDTurn(double kP, double kD, double kI){
 		m_turn_pid_controller = new PIDController(kP, kI, kD);
-		
+		SmartDashboard.putData(m_turn_pid_controller);
+
 		m_turn_pid_controller.setTolerance(1);
-		m_turn_pid_controller.enableContinuousInput(-180, 180);
+		//m_turn_pid_controller.enableContinuousInput(-180, 180);
+		m_turn_pid_controller.disableContinuousInput();
 	}
 
 	public void set_turn_target_setpoint(double angle_setpoint){
@@ -412,8 +414,8 @@ public class DriveTrain extends SubsystemBase {
 	}
 
 	public boolean turn_target_degrees() {
-		double turn_output = m_turn_pid_controller.calculate(-m_gyro.getAngle(), m_turn_setpoint);
-
+		double turn_output = m_turn_pid_controller.calculate(m_gyro.getAngle(), m_turn_setpoint);
+		SmartDashboard.putBoolean("At setpoint?", m_turn_pid_controller.atSetpoint());
 		turn_output = MathUtil.clamp(turn_output, -.5, .5);
 		if( turn_output > 0 ){
 			if (turn_output < TURN_DRIVE_FF){
