@@ -280,6 +280,36 @@ public class DriveTrain extends SubsystemBase {
 		m_left_leader.set(ControlMode.PercentOutput, speeds.left);
 	}
 
+	public void turn_ccw_positive(double turn){
+		turn = MathUtil.applyDeadband(turn, kControllerDeadband);
+
+		if( Robot.isReal() ){
+			// Make sure we don't have output that is too high
+			turn = MathUtil.clamp(turn, -m_drive_absMax, m_drive_absMax);
+
+			// If we're too low, add the FF to make sure the robot keeps spinning
+			if( turn > 0 ){
+				if(turn < TURN_DRIVE_FF){
+					turn = TURN_DRIVE_FF;
+				}
+			}else if( turn < 0 ) {
+				if( turn > -TURN_DRIVE_FF){
+					turn = -TURN_DRIVE_FF;
+				}
+			}
+		} else {
+			// Simulation doesn't have real physics, just limit the turn speed to 
+			// 20% arbitrarily
+			turn = MathUtil.clamp(turn, -.07, .07);
+		}
+
+		// Set the motors, CCW means that the left side will go backward
+		// and the right will go forward if we are turning positive
+		SmartDashboard.putNumber("Turn Output", turn);
+		m_right_leader.set(ControlMode.PercentOutput, turn);
+		m_left_leader.set(ControlMode.PercentOutput, -turn);
+	}
+
 	@Override
 	public void simulationPeriodic() {
 		/* Pass the robot battery voltage to the simulated Talon FXs */
@@ -300,8 +330,8 @@ public class DriveTrain extends SubsystemBase {
 		 * using getInverted() so we can catch a possible bug in the
 		 * robot code where the wrong value is passed to setInverted().
 		 */
-		m_drivetrainSimulator.setInputs(m_leftDriveSim.getMotorOutputLeadVoltage(),
-				-m_rightDriveSim.getMotorOutputLeadVoltage());
+		m_drivetrainSimulator.setInputs(-m_leftDriveSim.getMotorOutputLeadVoltage(),
+				m_rightDriveSim.getMotorOutputLeadVoltage());
 
 		/*
 		 * Advance the model by 20 ms. Note that if you are running this
@@ -320,16 +350,16 @@ public class DriveTrain extends SubsystemBase {
 		 */
 		m_leftDriveSim.setIntegratedSensorRawPosition(
 				distanceToNativeUnits(
-						m_drivetrainSimulator.getLeftPositionMeters()));
+						-m_drivetrainSimulator.getLeftPositionMeters()));
 		m_leftDriveSim.setIntegratedSensorVelocity(
 				velocityToNativeUnits(
-						m_drivetrainSimulator.getLeftVelocityMetersPerSecond()));
+						-m_drivetrainSimulator.getLeftVelocityMetersPerSecond()));
 		m_rightDriveSim.setIntegratedSensorRawPosition(
 				distanceToNativeUnits(
-						-m_drivetrainSimulator.getRightPositionMeters()));
+						m_drivetrainSimulator.getRightPositionMeters()));
 		m_rightDriveSim.setIntegratedSensorVelocity(
 				velocityToNativeUnits(
-						-m_drivetrainSimulator.getRightVelocityMetersPerSecond()));
+						m_drivetrainSimulator.getRightVelocityMetersPerSecond()));
 
 		int dev = SimDeviceDataJNI.getSimDeviceHandle("navX-Sensor[0]");
 		SimDouble angle = new SimDouble(SimDeviceDataJNI.getSimValueHandle(dev, "Yaw"));
@@ -390,8 +420,12 @@ public class DriveTrain extends SubsystemBase {
 	// Get the robot's heading in degrees scaled to 360
 	// Output is negated because the Navx is Clockwise positive, but
 	// our robot is NWU orientation, nor CounterClockWise positive.
-	public double getHeading() {
+	public double getScaledHeading() {
 		return Math.IEEEremainder(-m_gyro.getAngle(), 360);
+	}
+
+	public double getCCWPositiveHeading(){
+		return -m_gyro.getAngle();
 	}
 
 	public double getYaw(){
@@ -414,29 +448,24 @@ public class DriveTrain extends SubsystemBase {
 		m_turn_pid_controller = new PIDController(kP, kI, kD);
 		
 		m_turn_pid_controller.setTolerance(1);
-		m_turn_pid_controller.enableContinuousInput(-180, 180);
+		// m_turn_pid_controller.enableContinuousInput(-180, 180);
 		m_turn_pid_controller.setSetpoint(setpoint);
 	}
 
 	public void set_turn_target_setpoint(double angle_setpoint){
-		m_turn_setpoint = -m_gyro.getAngle() + angle_setpoint;
+		m_turn_setpoint = getCCWPositiveHeading() + angle_setpoint;
+		m_turn_pid_controller.setTolerance(1);
 	}
 
 	public boolean turn_target_degrees() {
-		double turn_output = m_turn_pid_controller.calculate(-m_gyro.getAngle(), m_turn_setpoint);
+		// Calculate the error between our setpoint and current angle
+		// The Navx is reversed, so used CCWPositiveHeading which negates the output
+		double turn_output = m_turn_pid_controller.calculate(getCCWPositiveHeading(), m_turn_setpoint);
+		SmartDashboard.putNumber("P Error", m_turn_pid_controller.getPositionError());
 
-		turn_output = MathUtil.clamp(turn_output, -.5, .5);
-		if( turn_output > 0 ){
-			if (turn_output < TURN_DRIVE_FF){
-				turn_output = TURN_DRIVE_FF;
-			}
-		} else if ( turn_output < 0 ){
-			if( turn_output > -TURN_DRIVE_FF){
-				turn_output = -TURN_DRIVE_FF;
-			}
-		}
+		// Use this custom drive method to turn CCW positive
+		turn_ccw_positive(turn_output);
 
-		teleop_drive(0, turn_output);
 		return m_turn_pid_controller.atSetpoint();
 	}
 
