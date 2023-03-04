@@ -415,9 +415,6 @@ public class Arm extends SubsystemBase {
     m_arm_position.set(m_arm_motor.getSelectedSensorPosition());
     m_wrist_position.set(m_wrist_motor.getSelectedSensorPosition());
 
-    m_wrist_motor_rev.set(m_wrist_motor.isRevLimitSwitchClosed());
-    m_arm_motor_rev.set(m_arm_motor.isRevLimitSwitchClosed());
-
     switch(m_arm_state){
       case Inactive:
         // If the arm isn't do anything, zero both.

@@ -100,9 +100,6 @@ public class ArmTest {
             waitForUpdate();
         }
 
-        System.out.println("Lower Voltage: " + lower_sim.getMotorOutputLeadVoltage());
-        System.out.println("Upper Voltage: " + upper_sim.getMotorOutputLeadVoltage());
-
         // assertTrue(lower_sim.getMotorOutputLeadVoltage() < 0);
         // assertTrue(upper_sim.getMotorOutputLeadVoltage() < 0);
     }

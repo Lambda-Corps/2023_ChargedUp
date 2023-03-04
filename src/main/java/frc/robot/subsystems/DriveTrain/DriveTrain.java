@@ -132,12 +132,13 @@ public class DriveTrain extends SubsystemBase {
 	final int FORWARD_SLEW_RATE = 3;
 	final int TURN_SLEW_RATE = 3;
 	double TURN_DRIVE_FF = .1;
+	double DRIVE_STRAIGHT_FF = .2;
 	int m_setpoint = 0;
 	double m_turn_setpoint = 0;
 
 	DoubleSolenoid m_shifter;
 
-	PIDController m_turn_pid_controller;
+	PIDController m_turn_pid_controller, m_drive_pid_controller;
 
 	/** Creates a new DriveTrain. */
 	public DriveTrain() {
@@ -244,10 +245,10 @@ public class DriveTrain extends SubsystemBase {
 		m_2dField.setRobotPose(m_odometry.getPoseMeters());
 
 		// Update the encoder topics with timestamps
-		// m_left_encoder_entry.set(m_left_leader.getSelectedSensorPosition(), 0);
-		// m_right_encoder_entry.set(m_right_leader.getSelectedSensorPosition(), 0);
-		// m_right_speed_entry.set(getRightSpeed(), 0);
-		// m_left_speed_entry.set(getLeftSpeed(), 0);
+		m_left_encoder_entry.set(m_left_leader.getSelectedSensorPosition(), 0);
+		m_right_encoder_entry.set(m_right_leader.getSelectedSensorPosition(), 0);
+		m_right_speed_entry.set(getRightSpeed(), 0);
+		m_left_speed_entry.set(getLeftSpeed(), 0);
 	}
 
 	public void teleop_drive(double forward, double turn) {
@@ -489,6 +490,16 @@ public class DriveTrain extends SubsystemBase {
 		m_turn_pid_controller.setSetpoint(setpoint);
 	}
 
+	public void configurePIDDrive(double kP, double kD, double kI, double setpoint){
+		m_drive_pid_controller = new PIDController(kP, kI, kD);
+		
+		m_drive_pid_controller.setTolerance(100);
+		// m_turn_pid_controller.enableContinuousInput(-180, 180);
+		m_drive_pid_controller.setSetpoint(setpoint);
+		m_setpoint = (int)setpoint;
+		SmartDashboard.putData(m_drive_pid_controller);
+	}
+
 	public void set_turn_target_setpoint(double angle_setpoint){
 		m_turn_setpoint = getCCWPositiveHeading() + angle_setpoint;
 		m_turn_pid_controller.setTolerance(1);
@@ -503,6 +514,30 @@ public class DriveTrain extends SubsystemBase {
 		turn_ccw_positive(turn_output);
 
 		return m_turn_pid_controller.atSetpoint();
+	}
+
+	public boolean drive_straight_with_pid() {
+		// Calculate the error between our setpoint and current angle
+		// The Navx is reversed, so used CCWPositiveHeading which negates the output
+		double forward_output = m_drive_pid_controller.calculate(m_left_leader.getSelectedSensorPosition(), m_setpoint);
+		if( forward_output > 0 ){
+			if( forward_output < DRIVE_STRAIGHT_FF){
+				forward_output = DRIVE_STRAIGHT_FF;
+			}
+		} else if (forward_output < 0 ){
+			if (forward_output > -DRIVE_STRAIGHT_FF ){
+				forward_output = -DRIVE_STRAIGHT_FF;
+			}
+		}
+
+		forward_output = MathUtil.clamp(forward_output, -.7, .7);
+		forward_output = Math.copySign(forward_output * forward_output, forward_output);
+
+		forward_output = m_forward_limiter.calculate(forward_output);
+		// Use this custom drive method to turn CCW positive
+		teleop_drive(forward_output,0);
+
+		return m_drive_pid_controller.atSetpoint();
 	}
 
 	public AHRS getGyro(){
@@ -561,8 +596,8 @@ public class DriveTrain extends SubsystemBase {
 		m_right_leader.selectProfileSlot(0, 0);
 		m_right_leader.config_kP(0, kp);
 
-		m_left_leader.configAllowableClosedloopError(0, MM_TOLERANCE);
-		m_right_leader.configAllowableClosedloopError(0, MM_TOLERANCE);
+		m_left_leader.configAllowableClosedloopError(0, 10);
+		// m_right_leader.configAllowableClosedloopError(0, MM_TOLERANCE);
 	}
 
 	public void configure_motion_magic(int setpoint) {
@@ -570,10 +605,33 @@ public class DriveTrain extends SubsystemBase {
 		m_setpoint = current_pos + setpoint;
 	}
 
+	public void reset_setpoint() {
+		m_setpoint = 0;
+	}
+
+	public double get_setpoint() {
+		return m_setpoint;
+	}
+
 	public boolean drive_motion_magic() {
+		// boolean done;
+		m_left_leader.set(ControlMode.MotionMagic, m_setpoint);
+		m_right_leader.set(ControlMode.MotionMagic, m_setpoint);
+		// m_right_leader.set(ControlMode.MotionMagic, m_setpoint, DemandType.ArbitraryFeedForward, arbFF);
+
+		double currentPos_L = m_left_leader.getSelectedSensorPosition();
+		double currentPos_R = m_right_leader.getSelectedSensorPosition();
+
+		// boolean left_done = m_left_leader.getClosedLoopError() < MM_TOLERANCE;
+		// boolean right_done = m_right_leader.getClosedLoopError() < MM_TOLERANCE;
+		boolean left_done = Math.abs((m_setpoint - currentPos_L)) < MM_TOLERANCE;
+		boolean right_done = Math.abs((m_setpoint - currentPos_R)) < MM_TOLERANCE;
+
+		return left_done && right_done;
+	}
+
+	public boolean is_drive_mm_done() {
 		boolean done;
-		m_left_leader.set(ControlMode.MotionMagic, m_setpoint, DemandType.ArbitraryFeedForward, arbFF);
-		m_right_leader.set(ControlMode.MotionMagic, m_setpoint, DemandType.ArbitraryFeedForward, arbFF);
 
 		double currentPos_L = m_left_leader.getSelectedSensorPosition();
 		double currentPos_R = m_right_leader.getSelectedSensorPosition();
@@ -582,22 +640,6 @@ public class DriveTrain extends SubsystemBase {
 		// boolean right_done = m_right_leader.getClosedLoopError() < MM_TOLERANCE;
 		boolean left_done = Math.abs((m_setpoint - currentPos_L)) < MM_TOLERANCE;
 		boolean right_done = Math.abs(m_setpoint - currentPos_R) < MM_TOLERANCE;
-
-		done = left_done && right_done;
-
-		return done;
-	}
-
-	public boolean is_drive_mm_done(int setpoint) {
-		boolean done;
-
-		double currentPos_L = m_left_leader.getSelectedSensorPosition();
-		double currentPos_R = m_right_leader.getSelectedSensorPosition();
-
-		// boolean left_done = m_left_leader.getClosedLoopError() < MM_TOLERANCE;
-		// boolean right_done = m_right_leader.getClosedLoopError() < MM_TOLERANCE;
-		boolean left_done = Math.abs((setpoint - currentPos_L)) < MM_TOLERANCE;
-		boolean right_done = Math.abs(setpoint - currentPos_R) < MM_TOLERANCE;
 
 		done = left_done && right_done;
 
@@ -627,6 +669,11 @@ public class DriveTrain extends SubsystemBase {
 		return done;
 	}
 
+	public void reset_encoders() {
+		m_right_leader.setSelectedSensorPosition(0,0,0);
+		m_left_leader.setSelectedSensorPosition(0,0,0);
+	}
+
 	public boolean at_pid_setpoint(){
 		return m_turn_pid_controller.atSetpoint();
 	}
@@ -646,5 +693,13 @@ public class DriveTrain extends SubsystemBase {
 					/* one-time action goes here */
 					m_shifter.set(LOW_GEAR);
 				});
+	}
+
+	public CommandBase reset_dt_setpoint() {
+		return runOnce(
+			() -> {
+				reset_setpoint();
+			}
+		);
 	}
 }

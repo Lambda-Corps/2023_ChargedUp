@@ -14,7 +14,7 @@ public class DriveMotionMagicTest extends CommandBase {
   int m_target_in_ticks;
   boolean m_done;
   int m_count;
-  NetworkTableEntry m_target_distance, m_time_to_velo, m_target_velocity, m_left_result, m_right_result, m_kp;
+  NetworkTableEntry m_target_distance, m_time_to_velo, m_target_velocity, m_left_result, m_right_result, m_kp, m_setpoint_in_ticks;
 
   /** Creates a new DriveMotionMagic. */
   public DriveMotionMagicTest( DriveTrain dt) {
@@ -29,15 +29,19 @@ public class DriveMotionMagicTest extends CommandBase {
     m_left_result = driveTab.getEntry("Left Encoder Result");
     m_right_result = driveTab.getEntry("Right Encoder Result");
     m_kp = driveTab.getEntry("MM kP");
-
+    m_setpoint_in_ticks = driveTab.getEntry("Target in Ticks");
   }
 
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {
+    m_dt.reset_setpoint();
+    m_dt.reset_encoders();
     m_done = false;
     m_count = 0;
     m_target_in_ticks = (int)(m_target_distance.getDouble(0)* DriveTrain.kEncoderTicksPerInch);
+
+    m_setpoint_in_ticks.setDouble(m_target_in_ticks);
 
     m_dt.configure_motion_magic_test( m_target_velocity.getDouble(0), m_time_to_velo.getDouble(0), m_kp.getDouble(0));
     m_dt.configure_motion_magic(m_target_in_ticks);
@@ -47,7 +51,7 @@ public class DriveMotionMagicTest extends CommandBase {
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-    m_done = m_dt.is_drive_mm_done(m_target_in_ticks);
+    m_done = m_dt.is_drive_mm_done();
     if(m_done){
       m_count++;
     }

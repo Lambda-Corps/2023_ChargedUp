@@ -20,8 +20,8 @@ public final class Constants {
     public final static int RIGHT_TALON_FOLLOWER = 4; 
     public final static int ARM_MOTOR = 5; 
     public final static int WRIST_MOTOR = 6;
-    public final static int CAN_ID_SEVEN = 7;
-    public final static int CAN_ID_EIGHT = 8;
+    public final static int GRIPPER_LEFT_MOTOR = 8;
+    public final static int GRIPPER_RIGHT_MOTOR = 7;
     public final static int CAN_ID_NINE = 9;
     public final static int CAN_ID_TEN = 10;
     public final static int CAN_ID_ELEVEN = 11;
