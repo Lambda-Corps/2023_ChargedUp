@@ -80,6 +80,9 @@ public class DriveTrain extends SubsystemBase {
 
 	private final double MAX_TELEOP_DRIVE_SPEED = 1.0;
 	private final double arbFF = 0.075;
+	// Fine grained driving will square the inputs, so .6 will really end up being .36 max driving when 
+	// the fine grained control is being applied.
+	private final double FINE_GRAINED_MAX = .6; 
 
 	private final DoubleSolenoid.Value HIGH_GEAR = DoubleSolenoid.Value.kForward;
 	private final DoubleSolenoid.Value LOW_GEAR = DoubleSolenoid.Value.kReverse;
@@ -280,6 +283,40 @@ public class DriveTrain extends SubsystemBase {
 		m_left_leader.set(ControlMode.PercentOutput, speeds.left);
 	}
 
+	public void fine_grained_drive(double forward, double turn) {
+		forward = MathUtil.applyDeadband(forward, kControllerDeadband);
+		turn = MathUtil.applyDeadband(turn, kControllerDeadband);
+
+		forward = MathUtil.clamp(forward, -FINE_GRAINED_MAX, FINE_GRAINED_MAX);
+		turn = MathUtil.clamp(turn, -FINE_GRAINED_MAX, FINE_GRAINED_MAX);
+
+		// forward = -m_forward_limiter.calculate(forward) * m_drive_absMax;
+		if (forward != 0 || turn != 0) {
+			forward = m_forward_limiter.calculate(forward) * m_drive_absMax;
+			turn = m_rotation_limiter.calculate(turn) * m_drive_absMax;
+		} else {
+			if (forward != 0){
+				m_forward_limiter.reset(FORWARD_SLEW_RATE);
+			}
+			if( turn != 0 ){
+				m_rotation_limiter.reset(TURN_SLEW_RATE);
+				
+			}
+		}
+
+		var speeds = DifferentialDrive.arcadeDriveIK(forward, turn, true);
+
+		if (Robot.isSimulation()) {
+			// Just set the motors
+			m_right_leader.set(ControlMode.PercentOutput, speeds.right);
+			m_left_leader.set(ControlMode.PercentOutput, speeds.left);
+			return;
+		}
+		// Just set the motors
+		m_right_leader.set(ControlMode.PercentOutput, speeds.right);
+		m_left_leader.set(ControlMode.PercentOutput, speeds.left);
+	}
+
 	public void turn_ccw_positive(double turn){
 		turn = MathUtil.applyDeadband(turn, kControllerDeadband);
 
@@ -305,7 +342,6 @@ public class DriveTrain extends SubsystemBase {
 
 		// Set the motors, CCW means that the left side will go backward
 		// and the right will go forward if we are turning positive
-		SmartDashboard.putNumber("Turn Output", turn);
 		m_right_leader.set(ControlMode.PercentOutput, turn);
 		m_left_leader.set(ControlMode.PercentOutput, -turn);
 	}
@@ -461,7 +497,6 @@ public class DriveTrain extends SubsystemBase {
 		// Calculate the error between our setpoint and current angle
 		// The Navx is reversed, so used CCWPositiveHeading which negates the output
 		double turn_output = m_turn_pid_controller.calculate(getCCWPositiveHeading(), m_turn_setpoint);
-		SmartDashboard.putNumber("P Error", m_turn_pid_controller.getPositionError());
 
 		// Use this custom drive method to turn CCW positive
 		turn_ccw_positive(turn_output);
