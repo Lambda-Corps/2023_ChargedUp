@@ -5,11 +5,23 @@
 package frc.robot.autoCommands;
 
 import edu.wpi.first.wpilibj2.command.CommandBase;
+import frc.robot.subsystems.Arm.Arm;
+import frc.robot.subsystems.DriveTrain.DriveTrain;
+import frc.robot.subsystems.Gripper.Gripper;
 
 public class PosTwoPreloadMobiityBalance extends CommandBase {
   /** Creates a new PosTwoPreloadMobiityBalance. */
-  public PosTwoPreloadMobiityBalance() {
+  DriveTrain m_dt;
+  Arm m_arm;
+  Gripper m_gripper;
+
+  public PosTwoPreloadMobiityBalance(DriveTrain driveTrain, Arm arm, Gripper gripper) {
+    m_dt = driveTrain;
+    m_arm = arm;
+    m_gripper = gripper;
+
     // Use addRequirements() here to declare subsystem dependencies.
+    addRequirements(m_dt, m_arm, m_gripper);
   }
 
   // Called when the command is initially scheduled.
