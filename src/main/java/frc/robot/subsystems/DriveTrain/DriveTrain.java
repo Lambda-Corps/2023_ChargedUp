@@ -83,6 +83,7 @@ public class DriveTrain extends SubsystemBase {
 	// Fine grained driving will square the inputs, so .6 will really end up being .36 max driving when 
 	// the fine grained control is being applied.
 	private final double FINE_GRAINED_MAX = .6; 
+	private final double TURN_WITH_GYRO_KP = .015;
 
 	private final DoubleSolenoid.Value HIGH_GEAR = DoubleSolenoid.Value.kForward;
 	private final DoubleSolenoid.Value LOW_GEAR = DoubleSolenoid.Value.kReverse;
@@ -232,7 +233,7 @@ public class DriveTrain extends SubsystemBase {
 		m_shifter = new DoubleSolenoid(PneumaticsModuleType.CTREPCM, 0, 1);
 		m_shifter.set(LOW_GEAR);
 
-		m_turn_pid_controller = new PIDController(0, 0, 0);
+		m_turn_pid_controller = new PIDController(TURN_WITH_GYRO_KP, 0, 0);
 	}
 
 	@Override
@@ -318,11 +319,11 @@ public class DriveTrain extends SubsystemBase {
 	}
 
 	public void turn_ccw_positive(double turn){
-		turn = MathUtil.applyDeadband(turn, kControllerDeadband);
+		// turn = MathUtil.applyDeadband(turn, kControllerDeadband);
 
 		if( Robot.isReal() ){
 			// Make sure we don't have output that is too high
-			turn = MathUtil.clamp(turn, -m_drive_absMax, m_drive_absMax);
+			turn = MathUtil.clamp(turn, -.3, .3);
 
 			// If we're too low, add the FF to make sure the robot keeps spinning
 			if( turn > 0 ){
@@ -337,7 +338,7 @@ public class DriveTrain extends SubsystemBase {
 		} else {
 			// Simulation doesn't have real physics, just limit the turn speed to 
 			// 20% arbitrarily
-			turn = MathUtil.clamp(turn, -.07, .07);
+			turn = MathUtil.clamp(turn, -.01, .01);
 		}
 
 		// Set the motors, CCW means that the left side will go backward
@@ -624,6 +625,10 @@ public class DriveTrain extends SubsystemBase {
 		// return Math.abs(m_left_leader.getClosedLoopError()) < MM_TOLERANCE ||
 		// Math.abs(m_right_leader.getClosedLoopError()) < MM_TOLERANCE;
 		return done;
+	}
+
+	public boolean at_pid_setpoint(){
+		return m_turn_pid_controller.atSetpoint();
 	}
 
 	public CommandBase shiftToHighGear() {
