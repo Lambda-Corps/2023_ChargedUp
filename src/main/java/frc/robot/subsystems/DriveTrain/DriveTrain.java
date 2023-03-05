@@ -10,11 +10,13 @@ import static frc.robot.Constants.RIGHT_TALON_FOLLOWER;
 import static frc.robot.Constants.RIGHT_TALON_LEADER;
 
 import com.ctre.phoenix.motorcontrol.ControlMode;
-import com.ctre.phoenix.motorcontrol.DemandType;
 import com.ctre.phoenix.motorcontrol.InvertType;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
+import com.ctre.phoenix.motorcontrol.StatusFrame;
+import com.ctre.phoenix.motorcontrol.TalonFXFeedbackDevice;
 import com.ctre.phoenix.motorcontrol.TalonFXInvertType;
 import com.ctre.phoenix.motorcontrol.TalonFXSimCollection;
+import com.ctre.phoenix.motorcontrol.can.TalonFXConfiguration;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 import com.kauailabs.navx.frc.AHRS;
 
@@ -72,11 +74,12 @@ public class DriveTrain extends SubsystemBase {
 	// * 24.75) * kEncoderTicksPerInch ) );
 	public final static int kEncoderUnitsPerRotation = 35000;
 	public final static double kEncoderTicksPerDegree = kEncoderUnitsPerRotation / 360;
-	// private final double kNeutralDeadband = 0.002;
+	private final double kNeutralDeadband = 0.005;
 	private final double kControllerDeadband = 0.1;
 	private final double kTrackWidthMeters = .546;
 	// private final double kTrackWidthInches = 24.75;
 	private final double kRobotMass = 55.3;
+	private final int kTimeoutMs = 10;
 
 	private final double MAX_TELEOP_DRIVE_SPEED = 1.0;
 	private final double arbFF = 0.075;
@@ -128,6 +131,9 @@ public class DriveTrain extends SubsystemBase {
 	private final DoubleEntry m_left_encoder_entry, m_right_encoder_entry, m_left_speed_entry, m_right_speed_entry,
 			m_max_speed_entry;
 
+	double MM_DRIVE_KP = 0.495;
+	final int MM_SLOT = 0;
+	final int PID_PRIMARY = 0;
 	final int MM_TOLERANCE = 200;
 	final int FORWARD_SLEW_RATE = 3;
 	final int TURN_SLEW_RATE = 3;
@@ -153,6 +159,22 @@ public class DriveTrain extends SubsystemBase {
 		m_right_leader.configFactoryDefault();
 		m_right_follower.configFactoryDefault();
 
+		// Configure Motion Magic constants
+		TalonFXConfiguration talon_config = new TalonFXConfiguration();
+		talon_config.slot0.kP = MM_DRIVE_KP;
+		talon_config.slot0.kD = 10*MM_DRIVE_KP;
+		talon_config.slot0.allowableClosedloopError = 25;
+		talon_config.slot0.closedLoopPeriod = 1;
+		talon_config.primaryPID.selectedFeedbackSensor = TalonFXFeedbackDevice.IntegratedSensor.toFeedbackDevice();
+		talon_config.neutralDeadband = kNeutralDeadband;
+
+		m_left_leader.configAllSettings(talon_config);
+		m_right_leader.configAllSettings(talon_config);
+
+		// Default the controllers to use the primary slots for MotionMagic
+		m_left_leader.selectProfileSlot(MM_SLOT, PID_PRIMARY);
+		m_right_leader.selectProfileSlot(MM_SLOT, PID_PRIMARY);
+
 		/** Invert Directions for Left and Right */
 		m_left_leader.setInverted(TalonFXInvertType.Clockwise); // Same invert as = "true"
 		m_right_leader.setInverted(TalonFXInvertType.CounterClockwise); // Same invert as = "false"
@@ -171,9 +193,14 @@ public class DriveTrain extends SubsystemBase {
 		// TalonFXConfiguration _leftConfig = new TalonFXConfiguration();
 		// TalonFXConfiguration _rightConfig = new TalonFXConfiguration();
 
+		m_left_leader.configSelectedFeedbackSensor(TalonFXFeedbackDevice.IntegratedSensor, PID_PRIMARY, kTimeoutMs);
+		m_right_leader.configSelectedFeedbackSensor(TalonFXFeedbackDevice.IntegratedSensor, PID_PRIMARY, kTimeoutMs);
+
 		// setEncodersToZero();
 		m_right_leader.setSelectedSensorPosition(0);
 		m_left_leader.setSelectedSensorPosition(0);
+
+
 
 		/// Odometry Tracker objects
 		m_2dField = new Field2d();
@@ -235,6 +262,18 @@ public class DriveTrain extends SubsystemBase {
 		m_shifter.set(LOW_GEAR);
 
 		m_turn_pid_controller = new PIDController(TURN_WITH_GYRO_KP, 0, 0);
+
+		/* Set status frame periods */
+		// Leader Talons need faster updates 
+		m_right_leader.setStatusFramePeriod(StatusFrame.Status_12_Feedback1, 20, kTimeoutMs);
+		m_right_leader.setStatusFramePeriod(StatusFrame.Status_14_Turn_PIDF1, 20, kTimeoutMs);
+		m_left_leader.setStatusFramePeriod(StatusFrame.Status_2_Feedback0, 5, kTimeoutMs);		//Used remotely by right Talon, speed up
+		// Followers can slow down certain status messages to reduce the can bus usage, per CTRE:
+		// "Motor controllers that are followers can set Status 1 and Status 2 to 255ms(max) using setStatusFramePeriod."
+		m_right_follower.setStatusFramePeriod(StatusFrame.Status_1_General, 255);
+		m_right_follower.setStatusFramePeriod(StatusFrame.Status_2_Feedback0, 255);
+		m_left_follower.setStatusFramePeriod(StatusFrame.Status_2_Feedback0, 255);
+		m_left_follower.setStatusFramePeriod(StatusFrame.Status_1_General, 255);
 	}
 
 	@Override
@@ -586,23 +625,22 @@ public class DriveTrain extends SubsystemBase {
 		}
 		double acceleration = velocity / time_to_velo;
 
+		m_left_leader.selectProfileSlot(MM_SLOT, PID_PRIMARY);
+		m_right_leader.selectProfileSlot(MM_SLOT, PID_PRIMARY);
+
+		m_left_leader.config_kP(MM_SLOT, kp);
+		m_right_leader.config_kP(MM_SLOT, kp);
 		m_left_leader.configMotionCruiseVelocity(velocity);
 		m_right_leader.configMotionCruiseVelocity(velocity);
 		m_left_leader.configMotionAcceleration(acceleration);
 		m_right_leader.configMotionAcceleration(acceleration);
 
-		m_left_leader.selectProfileSlot(0, 0);
-		m_left_leader.config_kP(0, kp);
-		m_right_leader.selectProfileSlot(0, 0);
-		m_right_leader.config_kP(0, kp);
-
-		m_left_leader.configAllowableClosedloopError(0, 10);
-		// m_right_leader.configAllowableClosedloopError(0, MM_TOLERANCE);
+		m_left_leader.configAllowableClosedloopError(MM_SLOT, 10);
+		m_right_leader.configAllowableClosedloopError(MM_SLOT, 10);
 	}
 
 	public void configure_motion_magic(int setpoint) {
-		int current_pos = (int) m_left_leader.getSelectedSensorPosition();
-		m_setpoint = current_pos + setpoint;
+		m_setpoint = (int)(m_left_leader.getSelectedSensorPosition() + setpoint);
 	}
 
 	public void reset_setpoint() {
@@ -619,15 +657,16 @@ public class DriveTrain extends SubsystemBase {
 		m_right_leader.set(ControlMode.MotionMagic, m_setpoint);
 		// m_right_leader.set(ControlMode.MotionMagic, m_setpoint, DemandType.ArbitraryFeedForward, arbFF);
 
-		double currentPos_L = m_left_leader.getSelectedSensorPosition();
-		double currentPos_R = m_right_leader.getSelectedSensorPosition();
+		// double currentPos_L = m_left_leader.getSelectedSensorPosition();
+		// double currentPos_R = m_right_leader.getSelectedSensorPosition();
 
-		// boolean left_done = m_left_leader.getClosedLoopError() < MM_TOLERANCE;
-		// boolean right_done = m_right_leader.getClosedLoopError() < MM_TOLERANCE;
-		boolean left_done = Math.abs((m_setpoint - currentPos_L)) < MM_TOLERANCE;
-		boolean right_done = Math.abs((m_setpoint - currentPos_R)) < MM_TOLERANCE;
+		// // boolean left_done = m_left_leader.getClosedLoopError() < MM_TOLERANCE;
+		// // boolean right_done = m_right_leader.getClosedLoopError() < MM_TOLERANCE;
+		// boolean left_done = Math.abs((m_setpoint - currentPos_L)) < MM_TOLERANCE;
+		// boolean right_done = Math.abs((m_setpoint - currentPos_R)) < MM_TOLERANCE;
 
-		return left_done && right_done;
+		// return left_done && right_done;
+		return false;
 	}
 
 	public boolean is_drive_mm_done() {
