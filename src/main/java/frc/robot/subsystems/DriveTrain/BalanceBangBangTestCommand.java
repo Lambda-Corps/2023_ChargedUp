@@ -53,7 +53,7 @@ public class BalanceBangBangTestCommand extends CommandBase {
 
     // double m_output = (m_fwd_speed * m_dt.test_fwd_bang_bang(m_pitch) + (m_reverse_speed * m_dt.test_rev_bang_bang(m_pitch)));
 
-    double out = m_dt.drive_bang_bang(m_fwd_speed, m_reverse_speed);
+    double out = m_dt.drive_bang_bang();
     m_fwd_out.setDouble(out);
     if( out == 0){
       m_count++;
