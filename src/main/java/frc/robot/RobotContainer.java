@@ -29,6 +29,7 @@ import frc.robot.subsystems.Gripper.Gripper;
 import frc.robot.subsystems.Gripper.RunMotorsBackward;
 import frc.robot.subsystems.Gripper.RunMotorsForward;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.ConditionalCommand;
 import edu.wpi.first.wpilibj2.command.PrintCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -71,8 +72,8 @@ public class RobotContainer {
   private void configureButtonBindings() {
     m_partner_controller.rightBumper().whileTrue(new DriveArmManually(m_arm, m_partner_controller));
     m_partner_controller.start().onTrue(m_arm.stopArmAndWristCommand());
-    m_partner_controller.leftStick().onTrue(m_gripper.contractGripperCommand());
-    m_partner_controller.rightStick().onTrue(m_gripper.expandGripperCommand());
+    m_partner_controller.leftStick().onTrue( Commands.run( () -> m_gripper.close_gripper() ));
+    m_partner_controller.rightStick().onTrue(Commands.run( () -> m_gripper.open_gripper()  ));
     m_partner_controller.rightTrigger().whileTrue(new RunMotorsForward(m_gripper));
     m_partner_controller.leftTrigger().whileTrue(new RunMotorsBackward(m_gripper));
     m_partner_controller.x().onTrue(new ConditionalCommand(new ArmThenWristSequenceCommand(m_arm, SuperStructurePosition.ScoreCubeMid),
