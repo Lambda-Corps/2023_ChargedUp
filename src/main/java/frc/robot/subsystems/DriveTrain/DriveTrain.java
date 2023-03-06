@@ -23,6 +23,7 @@ import com.kauailabs.navx.frc.AHRS;
 import edu.wpi.first.hal.SimDouble;
 import edu.wpi.first.hal.simulation.SimDeviceDataJNI;
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.controller.BangBangController;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.kinematics.DifferentialDriveOdometry;
@@ -82,7 +83,7 @@ public class DriveTrain extends SubsystemBase {
 	private final int kTimeoutMs = 10;
 
 	private final double MAX_TELEOP_DRIVE_SPEED = 1.0;
-	private final double arbFF = 0.075;
+	// private final double arbFF = 0.075;
 	// Fine grained driving will square the inputs, so .6 will really end up being .36 max driving when 
 	// the fine grained control is being applied.
 	private final double FINE_GRAINED_MAX = .6; 
@@ -131,20 +132,26 @@ public class DriveTrain extends SubsystemBase {
 	private final DoubleEntry m_left_encoder_entry, m_right_encoder_entry, m_left_speed_entry, m_right_speed_entry,
 			m_max_speed_entry;
 
-	double MM_DRIVE_KP = 0.495;
+	final double MM_DRIVE_KP = 0.495;
 	final int MM_SLOT = 0;
 	final int PID_PRIMARY = 0;
 	final int MM_TOLERANCE = 200;
 	final int FORWARD_SLEW_RATE = 3;
-	final int TURN_SLEW_RATE = 3;
+	final int TURN_SLEW_RATE = 5;
 	double TURN_DRIVE_FF = .1;
+	final double DRIVE_BANG_BANG_FWD = .3;
+	final double DRIVE_BANG_BANG_BACK = -.2;
+	final int DRIVE_BANG_BANG_SP = 10;
 	double DRIVE_STRAIGHT_FF = .2;
-	int m_setpoint = 0;
+	int m_setpoint_left = 0;
+	int m_setpoint_right = 0;
 	double m_turn_setpoint = 0;
 
 	DoubleSolenoid m_shifter;
 
 	PIDController m_turn_pid_controller, m_drive_pid_controller;
+
+	BangBangController m_forward_bang_bang, m_reverse_bang_bang;
 
 	/** Creates a new DriveTrain. */
 	public DriveTrain() {
@@ -233,6 +240,7 @@ public class DriveTrain extends SubsystemBase {
 			// Setup the Simulation input classes
 			m_leftDriveSim = m_left_leader.getSimCollection();
 			m_rightDriveSim = m_right_leader.getSimCollection();
+
 		} // end of constructor code for the simulation
 
 		// Setup the drive train limiting test variables
@@ -274,6 +282,11 @@ public class DriveTrain extends SubsystemBase {
 		m_right_follower.setStatusFramePeriod(StatusFrame.Status_2_Feedback0, 255);
 		m_left_follower.setStatusFramePeriod(StatusFrame.Status_2_Feedback0, 255);
 		m_left_follower.setStatusFramePeriod(StatusFrame.Status_1_General, 255);
+
+		m_forward_bang_bang = new BangBangController();
+		m_forward_bang_bang.setSetpoint(DRIVE_BANG_BANG_SP);
+		m_reverse_bang_bang = new BangBangController();
+		m_reverse_bang_bang.setSetpoint(-DRIVE_BANG_BANG_SP);
 	}
 
 	@Override
@@ -535,7 +548,7 @@ public class DriveTrain extends SubsystemBase {
 		m_drive_pid_controller.setTolerance(100);
 		// m_turn_pid_controller.enableContinuousInput(-180, 180);
 		m_drive_pid_controller.setSetpoint(setpoint);
-		m_setpoint = (int)setpoint;
+		m_setpoint_left = (int)setpoint;
 		SmartDashboard.putData(m_drive_pid_controller);
 	}
 
@@ -558,7 +571,7 @@ public class DriveTrain extends SubsystemBase {
 	public boolean drive_straight_with_pid() {
 		// Calculate the error between our setpoint and current angle
 		// The Navx is reversed, so used CCWPositiveHeading which negates the output
-		double forward_output = m_drive_pid_controller.calculate(m_left_leader.getSelectedSensorPosition(), m_setpoint);
+		double forward_output = m_drive_pid_controller.calculate(m_left_leader.getSelectedSensorPosition(), m_setpoint_left);
 		if( forward_output > 0 ){
 			if( forward_output < DRIVE_STRAIGHT_FF){
 				forward_output = DRIVE_STRAIGHT_FF;
@@ -640,21 +653,23 @@ public class DriveTrain extends SubsystemBase {
 	}
 
 	public void configure_motion_magic(int setpoint) {
-		m_setpoint = (int)(m_left_leader.getSelectedSensorPosition() + setpoint);
+		m_setpoint_left = (int)(m_left_leader.getSelectedSensorPosition() + setpoint);
+		m_setpoint_right = (int)(m_right_leader.getSelectedSensorPosition() + setpoint);
 	}
 
-	public void reset_setpoint() {
-		m_setpoint = 0;
+	public void reset_setpoints() {
+		m_setpoint_left = 0;
+		m_setpoint_right = 0;
 	}
 
 	public double get_setpoint() {
-		return m_setpoint;
+		return m_setpoint_left;
 	}
 
 	public boolean drive_motion_magic() {
 		// boolean done;
-		m_left_leader.set(ControlMode.MotionMagic, m_setpoint);
-		m_right_leader.set(ControlMode.MotionMagic, m_setpoint);
+		m_left_leader.set(ControlMode.MotionMagic, m_setpoint_left);
+		m_right_leader.set(ControlMode.MotionMagic, m_setpoint_right);
 		// m_right_leader.set(ControlMode.MotionMagic, m_setpoint, DemandType.ArbitraryFeedForward, arbFF);
 
 		// double currentPos_L = m_left_leader.getSelectedSensorPosition();
@@ -677,8 +692,8 @@ public class DriveTrain extends SubsystemBase {
 
 		// boolean left_done = m_left_leader.getClosedLoopError() < MM_TOLERANCE;
 		// boolean right_done = m_right_leader.getClosedLoopError() < MM_TOLERANCE;
-		boolean left_done = Math.abs((m_setpoint - currentPos_L)) < MM_TOLERANCE;
-		boolean right_done = Math.abs(m_setpoint - currentPos_R) < MM_TOLERANCE;
+		boolean left_done = Math.abs((m_setpoint_left - currentPos_L)) < MM_TOLERANCE;
+		boolean right_done = Math.abs(m_setpoint_left - currentPos_R) < MM_TOLERANCE;
 
 		done = left_done && right_done;
 
@@ -699,8 +714,8 @@ public class DriveTrain extends SubsystemBase {
 
 		// boolean left_done = m_left_leader.getClosedLoopError() < MM_TOLERANCE;
 		// boolean right_done = m_right_leader.getClosedLoopError() < MM_TOLERANCE;
-		boolean left_done = Math.abs((m_setpoint - currentPos_L)) < MM_TOLERANCE;
-		boolean right_done = Math.abs(m_setpoint - currentPos_R) < MM_TOLERANCE;
+		boolean left_done = Math.abs((m_setpoint_left - currentPos_L)) < MM_TOLERANCE;
+		boolean right_done = Math.abs(m_setpoint_left - currentPos_R) < MM_TOLERANCE;
 
 		boolean done = left_done && right_done;
 		// return Math.abs(m_left_leader.getClosedLoopError()) < MM_TOLERANCE ||
@@ -717,6 +732,58 @@ public class DriveTrain extends SubsystemBase {
 		return m_turn_pid_controller.atSetpoint();
 	}
 
+	public void configure_forward_bangbang_controller(double setpoint) {
+		m_forward_bang_bang.setSetpoint(setpoint);
+	}
+
+	public void configure_reverse_bangbang_controller(double setpoint) {
+		m_reverse_bang_bang.setSetpoint(setpoint);
+	}
+
+	public boolean is_fwd_bangbang_at_setpoint() {
+		return m_forward_bang_bang.atSetpoint();
+	}
+
+	public boolean is_rev_bangbang_at_setpoint() {
+		return m_reverse_bang_bang.atSetpoint();
+	}
+
+	public double calc_fwd_bangbang() {
+		return m_forward_bang_bang.calculate(m_gyro.getRoll());
+	}
+
+	public double calc_rev_bangbang() {
+		return m_reverse_bang_bang.calculate(m_gyro.getRoll());
+	}
+
+	public double get_fwd_bang_bang(double measurement) {
+		double ret = 0;
+
+		// 1 if > setpoint
+		if( m_forward_bang_bang.calculate(measurement) == 0) {
+			ret = 1;
+		}
+
+		return ret;
+	}
+	
+	public double get_rev_bang_bang(double measurement) {
+		return m_reverse_bang_bang.calculate(measurement);
+	}
+
+	public double drive_bang_bang() {
+		double roll = m_gyro.getRoll();
+		
+		double speed = (DRIVE_BANG_BANG_FWD * get_fwd_bang_bang(roll)) + 
+					   (DRIVE_BANG_BANG_BACK * get_rev_bang_bang(roll));
+		// teleop_drive(speed, 0);
+		
+		teleop_drive(speed, 0);
+
+		return speed;
+	}
+
+	// INLINE COMMANDS
 	public CommandBase shiftToHighGear() {
 		return runOnce(
 				() -> {
@@ -737,8 +804,17 @@ public class DriveTrain extends SubsystemBase {
 	public CommandBase reset_dt_setpoint() {
 		return runOnce(
 			() -> {
-				reset_setpoint();
+				reset_setpoints();
 			}
 		);
+	}
+
+	public CommandBase driveSlowlyUntil(){
+		return run(
+			() -> {
+				double speed = NetworkTableInstance.getDefault().getTable("Shuffleboard").getSubTable("Drive Test").getEntry("Max Speed").getDouble(0);
+				System.out.println("Speed: " + speed);
+				teleop_drive(speed, 0);
+			});
 	}
 }

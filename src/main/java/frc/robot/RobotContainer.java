@@ -16,12 +16,16 @@ import frc.robot.subsystems.Arm.Arm.SuperStructurePosition;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
+import edu.wpi.first.wpilibj.shuffleboard.WidgetType;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import frc.robot.subsystems.DriveTrain.BalanceBangBangTestCommand;
 import frc.robot.subsystems.DriveTrain.DefaultDriveTrainCommand;
 import frc.robot.subsystems.DriveTrain.DriveMMSequenceTest;
 import frc.robot.subsystems.DriveTrain.DriveMotionMagicTest;
 import frc.robot.subsystems.DriveTrain.DriveTrain;
 import frc.robot.subsystems.DriveTrain.FineGrainedDrivingControl;
 import frc.robot.subsystems.DriveTrain.SetMaxSpeedCommand;
+import frc.robot.subsystems.DriveTrain.TurnToAngleWithGyroPID;
 import frc.robot.subsystems.DriveTrain.DriveDistanceInInchesTest;
 import frc.robot.subsystems.Gripper.Gripper;
 import frc.robot.subsystems.Gripper.RunMotorsBackward;
@@ -44,15 +48,17 @@ public class RobotContainer {
 
   // The robot's subsystems and commands are defined here...
   private final DriveTrain m_drivetrain = new DriveTrain();
-  private final Arm m_arm = new  Arm();
+ 
+  // private final Arm m_arm = new  Arm();
   private final Gripper m_gripper = new  Gripper();
 
   //private final ExampleCommand m_autoCommand = new ExampleCommand(m_exampleSubsystem);
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
+    SmartDashboard.putData(m_drivetrain);
     buildDriveTestTab();
-    buildArmTestTab();
+    // buildArmTestTab();
     // Set subsystem default commands
     m_drivetrain.setDefaultCommand(new DefaultDriveTrainCommand(m_drivetrain, m_driver_controller));    
     // Configure the button bindings
@@ -66,12 +72,12 @@ public class RobotContainer {
    * edu.wpi.first.wpilibj2.command.button.JoystickButton}.
    */
   private void configureButtonBindings() {
-    m_partner_controller.rightBumper().whileTrue(new DriveArmManually(m_arm, m_partner_controller));
-    m_partner_controller.start().onTrue(m_arm.stopArmAndWristCommand());
-    m_partner_controller.leftStick().onTrue(m_gripper.contractGripperCommand());
-    m_partner_controller.rightStick().onTrue(m_gripper.expandGripperCommand());
-    m_partner_controller.rightTrigger().whileTrue(new RunMotorsForward(m_gripper));
-    m_partner_controller.leftTrigger().whileTrue(new RunMotorsBackward(m_gripper));
+    // m_partner_controller.rightBumper().whileTrue(new DriveArmManually(m_arm, m_partner_controller));
+    // m_partner_controller.start().onTrue(m_arm.stopArmAndWristCommand());
+    // m_partner_controller.leftStick().onTrue(m_gripper.contractGripperCommand());
+    // m_partner_controller.rightStick().onTrue(m_gripper.expandGripperCommand());
+    // m_partner_controller.rightTrigger().whileTrue(new RunMotorsForward(m_gripper));
+    // m_partner_controller.leftTrigger().whileTrue(new RunMotorsBackward(m_gripper));
     // m_partner_controller.x().onTrue(new ConditionalCommand(new ArmThenWristSequenceCommand(m_arm, SuperStructurePosition.ScoreCubeMid),
     //                                                        new WristThenArmSequenceCommand(m_arm, SuperStructurePosition.ScoreCubeMid),
     //                                                        ()->m_arm.isBackwardMovement(SuperStructurePosition.ScoreCubeMid)));
@@ -150,41 +156,49 @@ public class RobotContainer {
     driveTestTab.addNumber("DriveTrain Setpoint", m_drivetrain::get_setpoint).withPosition(7, 2).withSize(1, 1);
     driveTestTab.add("Reset Drivetrain setpoint", m_drivetrain.reset_dt_setpoint()).withPosition(8, 2).withSize(2, 1);
 
+    driveTestTab.add("Bang Bang Forward Speed", 0).withPosition(0, 5).withSize(1, 1);
+    driveTestTab.add("Bang Bang Reverse Speed", 0).withPosition(1, 5).withSize(1, 1);
+    driveTestTab.add("Bang Bang Target Pitch", 0).withPosition(2, 5).withSize(1, 1);
+    driveTestTab.add("Fwd Out", 0).withPosition(3, 4).withSize(1, 1);
+    driveTestTab.add("Rev Out", 0).withPosition(3, 5).withSize(1, 1);
+    driveTestTab.add("Bang Bang Test Pitch Value", 0).withPosition(4, 5).withSize(2, 1).withWidget(BuiltInWidgets.kNumberSlider);
+
     // PID Tuning
     driveTestTab.add("Turn PID", m_drivetrain.get_dt_turn_pidcontroller()).withPosition(5, 0);
     driveTestTab.add("Turn with PID", new DriveDistanceInInchesTest(m_drivetrain)).withPosition(6, 0).withSize(2, 1);
     driveTestTab.add("Drive Fine Grained", new FineGrainedDrivingControl(m_drivetrain, m_driver_controller)).withPosition(8, 1).withSize(2, 1);
-    
+    driveTestTab.add("BangBang Command", new BalanceBangBangTestCommand(m_drivetrain).andThen(new TurnToAngleWithGyroPID(m_drivetrain, 90))).withPosition(6, 5 ).withSize(2, 1);    
+    driveTestTab.add("DriveSlowly Command", m_drivetrain.driveSlowlyUntil().withTimeout(2).andThen(m_drivetrain.stopMotorsCommand()));
   }
 
   private void buildArmTestTab() {
     ShuffleboardTab armTestTab = Shuffleboard.getTab("Arm Test");
 
-    armTestTab.add("ArmEncoder", 0).withPosition(0, 0).withSize(1, 1);
-    armTestTab.addBoolean("ArmForward", m_arm::getArmForwardLimit).withPosition(1, 0).withSize(1,1);
-    armTestTab.addBoolean("ArmReverse", m_arm::getArmReverseLimit).withPosition(2, 0).withSize(1,1);
-    armTestTab.add("Arm Rev", 0).withPosition(3, 0).withSize(1, 1);
+    // armTestTab.add("ArmEncoder", 0).withPosition(0, 0).withSize(1, 1);
+    // armTestTab.addBoolean("ArmForward", m_arm::getArmForwardLimit).withPosition(1, 0).withSize(1,1);
+    // armTestTab.addBoolean("ArmReverse", m_arm::getArmReverseLimit).withPosition(2, 0).withSize(1,1);
+    // armTestTab.add("Arm Rev", 0).withPosition(3, 0).withSize(1, 1);
     
   
-    armTestTab.add("WristEncoder", 0).withPosition(0, 1).withSize(1, 1);
+    // armTestTab.add("WristEncoder", 0).withPosition(0, 1).withSize(1, 1);
 
-    armTestTab.addBoolean("WristForward", m_arm::getWristForwardLimit).withPosition(1, 1).withSize(1,1);
-    armTestTab.addBoolean("WristReverse", m_arm::getWristReverseLimit).withPosition(2, 1).withSize(1,1);
-    armTestTab.add("Wrist Rev", 0).withPosition(3, 1).withSize(1, 1);
-    armTestTab.add("Arm", m_arm).withPosition(8, 0).withSize(2, 1);
-    armTestTab.add("Gripper", m_gripper).withPosition(8, 1).withSize(2, 1);
-    armTestTab.add("Drivetrain", m_drivetrain).withPosition(8, 2).withSize(2, 1);
+    // armTestTab.addBoolean("WristForward", m_arm::getWristForwardLimit).withPosition(1, 1).withSize(1,1);
+    // armTestTab.addBoolean("WristReverse", m_arm::getWristReverseLimit).withPosition(2, 1).withSize(1,1);
+    // armTestTab.add("Wrist Rev", 0).withPosition(3, 1).withSize(1, 1);
+    // armTestTab.add("Arm", m_arm).withPosition(8, 0).withSize(2, 1);
+    // armTestTab.add("Gripper", m_gripper).withPosition(8, 1).withSize(2, 1);
+    // armTestTab.add("Drivetrain", m_drivetrain).withPosition(8, 2).withSize(2, 1);
     
-    // PIDF Values
-    armTestTab.add("Arm kP", 0).withPosition(4, 0).withSize(1, 1);
-    armTestTab.add("Arm kI", 0).withPosition(5, 0).withSize(1, 1);
-    armTestTab.add("Arm kD", 0).withPosition(6, 0).withSize(1, 1);
-    armTestTab.add("Arm kF", 0).withPosition(7, 0).withSize(1, 1);
+    // // PIDF Values
+    // armTestTab.add("Arm kP", 0).withPosition(4, 0).withSize(1, 1);
+    // armTestTab.add("Arm kI", 0).withPosition(5, 0).withSize(1, 1);
+    // armTestTab.add("Arm kD", 0).withPosition(6, 0).withSize(1, 1);
+    // armTestTab.add("Arm kF", 0).withPosition(7, 0).withSize(1, 1);
 
-    armTestTab.add("Wrist kP", 0).withPosition(4, 1).withSize(1, 1);
-    armTestTab.add("Wrist kI", 0).withPosition(5, 1).withSize(1, 1);
-    armTestTab.add("Wrist kD", 0).withPosition(6, 1).withSize(1, 1);
-    armTestTab.add("Wrist kF", 0).withPosition(7, 1).withSize(1, 1);
+    // armTestTab.add("Wrist kP", 0).withPosition(4, 1).withSize(1, 1);
+    // armTestTab.add("Wrist kI", 0).withPosition(5, 1).withSize(1, 1);
+    // armTestTab.add("Wrist kD", 0).withPosition(6, 1).withSize(1, 1);
+    // armTestTab.add("Wrist kF", 0).withPosition(7, 1).withSize(1, 1);
 
     // armTestTab.add("Wrist Max", 0).withPosition(4, 2).withSize(1, 1);
     // armTestTab.add("Wrist Stator", 0).withPosition(5, 2).withSize(1, 1);
@@ -202,12 +216,12 @@ public class RobotContainer {
     // armTestTab.add("Arm Rev Lim", 10000).withPosition(7, 2).withSize(1, 1);
 
     // Add the commands to the page
-    armTestTab.add("Zero Wrist Encoder", m_arm.setWristEncoderToZero()).withPosition(0, 2).withSize(2, 1);
-    armTestTab.add("Zero Arm Encoder", m_arm.setArmEncoderToZero()).withPosition(2, 2).withSize(2, 1);
-    armTestTab.add("Time to Velo", 1).withPosition(4, 2).withSize(1, 1);
-    armTestTab.add("Target Velocity", 1000).withPosition(5, 2).withSize(1, 1);
-    armTestTab.add("Arm MM Error", 0).withPosition(6, 2).withSize(1, 1);
-    armTestTab.add("Wrist MM Error", 0).withPosition(7, 2).withSize(1, 1);
+    // armTestTab.add("Zero Wrist Encoder", m_arm.setWristEncoderToZero()).withPosition(0, 2).withSize(2, 1);
+    // armTestTab.add("Zero Arm Encoder", m_arm.setArmEncoderToZero()).withPosition(2, 2).withSize(2, 1);
+    // armTestTab.add("Time to Velo", 1).withPosition(4, 2).withSize(1, 1);
+    // armTestTab.add("Target Velocity", 1000).withPosition(5, 2).withSize(1, 1);
+    // armTestTab.add("Arm MM Error", 0).withPosition(6, 2).withSize(1, 1);
+    // armTestTab.add("Wrist MM Error", 0).withPosition(7, 2).withSize(1, 1);
 
     // armTestTab.add("Set Arm Max Speed", m_arm.setArmMaxSpeed()).withPosition(0, 3).withSize(2, 1);
     // armTestTab.add("Set Wrist Max Speed", m_arm.setWristMaxSpeed()).withPosition(2, 3).withSize(2, 1);
@@ -222,23 +236,23 @@ public class RobotContainer {
     // armTestTab.add("Score Cone Mid", m_arm.requestMoveArmCommand(SuperStructurePosition.ScoreConeMid).unless(()->m_arm.isTransitionInvalid(SuperStructurePosition.ScoreConeMid))).withPosition(2, 5).withSize(2, 1);
     // armTestTab.add("Score Low", m_arm.requestMoveArmCommand(SuperStructurePosition.ScoreLow).unless(()->m_arm.isTransitionInvalid(SuperStructurePosition.ScoreLow))).withPosition(4, 5).withSize(2, 1);
     // armTestTab.add("Manual", m_arm.requestMoveArmCommand(SuperStructurePosition.Manual).unless(()->m_arm.isTransitionInvalid(SuperStructurePosition.Manual))).withPosition(6, 5).withSize(2, 1);
-    armTestTab.add("Super Position", "None yet").withPosition(8, 5).withSize(2, 1);
+    // armTestTab.add("Super Position", "None yet").withPosition(8, 5).withSize(2, 1);
     
-    armTestTab.add("Arm Stow MM Test", new ArmDriveToPositionPIDTest(m_arm, SuperStructurePosition.Stowed).unless(()->m_arm.isTransitionInvalid(SuperStructurePosition.Stowed)))                   .withPosition(0, 3).withSize(2, 1);
-    armTestTab.add("Arm Ground MM Test", new ArmDriveToPositionPIDTest(m_arm, SuperStructurePosition.GroundPickup).unless(()->m_arm.isTransitionInvalid(SuperStructurePosition.GroundPickup)))     .withPosition(2, 3).withSize(2, 1);
-    armTestTab.add("Arm Sub MM Test", new ArmDriveToPositionPIDTest(m_arm, SuperStructurePosition.SubstationPickup).unless(()->m_arm.isTransitionInvalid(SuperStructurePosition.SubstationPickup))).withPosition(4, 3).withSize(2, 1);
-    armTestTab.add("Arm Cube H MM Test", new ArmDriveToPositionPIDTest(m_arm, SuperStructurePosition.ScoreCubeHigh).unless(()->m_arm.isTransitionInvalid(SuperStructurePosition.ScoreCubeHigh)))   .withPosition(6, 3).withSize(2, 1);
-    armTestTab.add("Arm Cube M MM Test", new ArmDriveToPositionPIDTest(m_arm, SuperStructurePosition.ScoreCubeMid).unless(()->m_arm.isTransitionInvalid(SuperStructurePosition.ScoreCubeMid)))     .withPosition(0, 4).withSize(2, 1);
-    armTestTab.add("Arm Cone H MM Test", new ArmDriveToPositionPIDTest(m_arm, SuperStructurePosition.ScoreConeHigh).unless(()->m_arm.isTransitionInvalid(SuperStructurePosition.ScoreConeHigh)))   .withPosition(2, 4).withSize(2, 1);
-    armTestTab.add("Arm Cone M MM Test", new ArmDriveToPositionPIDTest(m_arm, SuperStructurePosition.ScoreConeMid).unless(()->m_arm.isTransitionInvalid(SuperStructurePosition.ScoreConeMid)))     .withPosition(4, 4).withSize(2, 1);
+    // armTestTab.add("Arm Stow MM Test", new ArmDriveToPositionPIDTest(m_arm, SuperStructurePosition.Stowed).unless(()->m_arm.isTransitionInvalid(SuperStructurePosition.Stowed)))                   .withPosition(0, 3).withSize(2, 1);
+    // armTestTab.add("Arm Ground MM Test", new ArmDriveToPositionPIDTest(m_arm, SuperStructurePosition.GroundPickup).unless(()->m_arm.isTransitionInvalid(SuperStructurePosition.GroundPickup)))     .withPosition(2, 3).withSize(2, 1);
+    // armTestTab.add("Arm Sub MM Test", new ArmDriveToPositionPIDTest(m_arm, SuperStructurePosition.SubstationPickup).unless(()->m_arm.isTransitionInvalid(SuperStructurePosition.SubstationPickup))).withPosition(4, 3).withSize(2, 1);
+    // armTestTab.add("Arm Cube H MM Test", new ArmDriveToPositionPIDTest(m_arm, SuperStructurePosition.ScoreCubeHigh).unless(()->m_arm.isTransitionInvalid(SuperStructurePosition.ScoreCubeHigh)))   .withPosition(6, 3).withSize(2, 1);
+    // armTestTab.add("Arm Cube M MM Test", new ArmDriveToPositionPIDTest(m_arm, SuperStructurePosition.ScoreCubeMid).unless(()->m_arm.isTransitionInvalid(SuperStructurePosition.ScoreCubeMid)))     .withPosition(0, 4).withSize(2, 1);
+    // armTestTab.add("Arm Cone H MM Test", new ArmDriveToPositionPIDTest(m_arm, SuperStructurePosition.ScoreConeHigh).unless(()->m_arm.isTransitionInvalid(SuperStructurePosition.ScoreConeHigh)))   .withPosition(2, 4).withSize(2, 1);
+    // armTestTab.add("Arm Cone M MM Test", new ArmDriveToPositionPIDTest(m_arm, SuperStructurePosition.ScoreConeMid).unless(()->m_arm.isTransitionInvalid(SuperStructurePosition.ScoreConeMid)))     .withPosition(4, 4).withSize(2, 1);
     
-    armTestTab.add("Wrist Stow MM Test", new WristDriveToPositionPIDTest(m_arm, SuperStructurePosition.Stowed).unless(()->m_arm.isTransitionInvalid(SuperStructurePosition.Stowed)))                   .withPosition(0, 5).withSize(2, 1);
-    armTestTab.add("Wrist Ground MM Test", new WristDriveToPositionPIDTest(m_arm, SuperStructurePosition.GroundPickup).unless(()->m_arm.isTransitionInvalid(SuperStructurePosition.GroundPickup)))     .withPosition(2, 5).withSize(2, 1);
-    armTestTab.add("Wrist Sub MM Test", new WristDriveToPositionPIDTest(m_arm, SuperStructurePosition.SubstationPickup).unless(()->m_arm.isTransitionInvalid(SuperStructurePosition.SubstationPickup))).withPosition(4, 5).withSize(2, 1);
-    armTestTab.add("Wrist Cube H MM Test", new WristDriveToPositionPIDTest(m_arm, SuperStructurePosition.ScoreCubeHigh).unless(()->m_arm.isTransitionInvalid(SuperStructurePosition.ScoreCubeHigh)))   .withPosition(6, 5).withSize(2, 1);
-    armTestTab.add("Wrist Cube M MM Test", new WristDriveToPositionPIDTest(m_arm, SuperStructurePosition.ScoreCubeMid).unless(()->m_arm.isTransitionInvalid(SuperStructurePosition.ScoreCubeMid)))     .withPosition(0, 6).withSize(2, 1);
-    armTestTab.add("Wrist Cone H MM Test", new WristDriveToPositionPIDTest(m_arm, SuperStructurePosition.ScoreConeHigh).unless(()->m_arm.isTransitionInvalid(SuperStructurePosition.ScoreConeHigh)))   .withPosition(2, 6).withSize(2, 1);
-    armTestTab.add("Wrist Cone M MM Test", new WristDriveToPositionPIDTest(m_arm, SuperStructurePosition.ScoreConeMid).unless(()->m_arm.isTransitionInvalid(SuperStructurePosition.ScoreConeMid)))     .withPosition(4, 6).withSize(2, 1);
+    // armTestTab.add("Wrist Stow MM Test", new WristDriveToPositionPIDTest(m_arm, SuperStructurePosition.Stowed).unless(()->m_arm.isTransitionInvalid(SuperStructurePosition.Stowed)))                   .withPosition(0, 5).withSize(2, 1);
+    // armTestTab.add("Wrist Ground MM Test", new WristDriveToPositionPIDTest(m_arm, SuperStructurePosition.GroundPickup).unless(()->m_arm.isTransitionInvalid(SuperStructurePosition.GroundPickup)))     .withPosition(2, 5).withSize(2, 1);
+    // armTestTab.add("Wrist Sub MM Test", new WristDriveToPositionPIDTest(m_arm, SuperStructurePosition.SubstationPickup).unless(()->m_arm.isTransitionInvalid(SuperStructurePosition.SubstationPickup))).withPosition(4, 5).withSize(2, 1);
+    // armTestTab.add("Wrist Cube H MM Test", new WristDriveToPositionPIDTest(m_arm, SuperStructurePosition.ScoreCubeHigh).unless(()->m_arm.isTransitionInvalid(SuperStructurePosition.ScoreCubeHigh)))   .withPosition(6, 5).withSize(2, 1);
+    // armTestTab.add("Wrist Cube M MM Test", new WristDriveToPositionPIDTest(m_arm, SuperStructurePosition.ScoreCubeMid).unless(()->m_arm.isTransitionInvalid(SuperStructurePosition.ScoreCubeMid)))     .withPosition(0, 6).withSize(2, 1);
+    // armTestTab.add("Wrist Cone H MM Test", new WristDriveToPositionPIDTest(m_arm, SuperStructurePosition.ScoreConeHigh).unless(()->m_arm.isTransitionInvalid(SuperStructurePosition.ScoreConeHigh)))   .withPosition(2, 6).withSize(2, 1);
+    // armTestTab.add("Wrist Cone M MM Test", new WristDriveToPositionPIDTest(m_arm, SuperStructurePosition.ScoreConeMid).unless(()->m_arm.isTransitionInvalid(SuperStructurePosition.ScoreConeMid)))     .withPosition(4, 6).withSize(2, 1);
 
     // armTestTab.add("Stow Arm Test", new SetArmRequestedPosition(m_arm, SuperStructurePosition.Stowed)).withPosition(0, 4).withSize(2, 1);
     // armTestTab.add("Ground_Pickup Arm Test", new SetArmRequestedPosition(m_arm, SuperStructurePosition.GroundPickup)).withPosition(2, 4).withSize(2, 1);
