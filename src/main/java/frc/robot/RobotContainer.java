@@ -20,7 +20,6 @@ import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.subsystems.DriveTrain.BalanceBangBangTestCommand;
 import frc.robot.subsystems.DriveTrain.DefaultDriveTrainCommand;
-import frc.robot.subsystems.DriveTrain.DriveMMSequenceTest;
 import frc.robot.subsystems.DriveTrain.DriveMotionMagic;
 import frc.robot.subsystems.DriveTrain.DriveMotionMagicTest;
 import frc.robot.subsystems.DriveTrain.DriveTrain;
@@ -151,7 +150,6 @@ public class RobotContainer {
     driveTestTab.add("Drive PID", new DriveDistanceInInchesTest(m_drivetrain)).withPosition(6,3).withSize(2, 1);
     driveTestTab.addDouble("Left Error", m_drivetrain::getLeftError).withPosition(0,4).withSize(1,1);
     driveTestTab.addDouble("Right Error", m_drivetrain::getRightError).withPosition(1,4).withSize(1,1);
-    driveTestTab.add("DriveMM Sequence", new DriveMMSequenceTest(m_drivetrain)).withPosition(2, 4).withSize(1, 1);
     driveTestTab.add("Target Degrees", 0).withPosition(6, 1).withSize(1, 1);
     driveTestTab.addNumber("Curr Heading", m_drivetrain::getScaledHeading).withPosition(4,0).withSize(1,1);
     driveTestTab.add("Gyro", m_drivetrain.getGyro()).withPosition(3, 1).withSize(2, 2).withWidget(BuiltInWidgets.kGyro);
