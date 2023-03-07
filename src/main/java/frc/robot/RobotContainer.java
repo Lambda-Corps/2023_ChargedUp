@@ -78,41 +78,90 @@ public class RobotContainer {
    * edu.wpi.first.wpilibj2.command.button.JoystickButton}.
    */
   private void configureButtonBindings() {
-    m_partner_controller.rightBumper().whileTrue(new DriveArmManually(m_arm, m_partner_controller));
-    m_partner_controller.start().onTrue(m_arm.stopArmAndWristCommand());
-    m_partner_controller.leftStick().onTrue( Commands.run( () -> m_gripper.close_gripper() ));
-    m_partner_controller.rightStick().onTrue(Commands.run( () -> m_gripper.open_gripper()  ));
-    m_partner_controller.rightTrigger().whileTrue(new RunMotorsForward(m_gripper));
-    m_partner_controller.leftTrigger().whileTrue(new RunMotorsBackward(m_gripper));
-    m_partner_controller.x().onTrue(new ConditionalCommand(new ArmThenWristSequenceCommand(m_arm, SuperStructurePosition.ScoreCubeMid),
-                                                           new WristThenArmSequenceCommand(m_arm, SuperStructurePosition.ScoreCubeMid),
-                                                           ()->m_arm.isBackwardMovement(SuperStructurePosition.ScoreCubeMid)));
-    m_partner_controller.y().onTrue(new ConditionalCommand(new ArmThenWristSequenceCommand(m_arm, SuperStructurePosition.ScoreCubeHigh),
-                                                           new WristThenArmSequenceCommand(m_arm, SuperStructurePosition.ScoreCubeHigh),
-                                                           ()->m_arm.isBackwardMovement(SuperStructurePosition.ScoreCubeHigh)));
-    m_partner_controller.a().onTrue(new ConditionalCommand(new ArmThenWristSequenceCommand(m_arm, SuperStructurePosition.ScoreConeMid),
-                                                           new WristThenArmSequenceCommand(m_arm, SuperStructurePosition.ScoreConeMid),
-                                                           ()->m_arm.isBackwardMovement(SuperStructurePosition.ScoreConeMid)));
-    m_partner_controller.b().onTrue(new ConditionalCommand(new ArmThenWristSequenceCommand(m_arm, SuperStructurePosition.ScoreConeHigh),
-                                                           new WristThenArmSequenceCommand(m_arm, SuperStructurePosition.ScoreConeHigh),
-                                                           ()->m_arm.isBackwardMovement(SuperStructurePosition.ScoreConeHigh)));
-    m_partner_controller.povDown().onTrue(new ConditionalCommand(new ArmThenWristSequenceCommand(m_arm, SuperStructurePosition.GroundPickup),
-                                                           new WristThenArmSequenceCommand(m_arm, SuperStructurePosition.GroundPickup),
-                                                           ()->m_arm.isBackwardMovement(SuperStructurePosition.GroundPickup)));
-    m_partner_controller.povUp().onTrue(new ConditionalCommand(new ArmThenWristSequenceCommand(m_arm, SuperStructurePosition.SubstationPickup),
-                                                           new WristThenArmSequenceCommand(m_arm, SuperStructurePosition.SubstationPickup),
-                                                           ()->m_arm.isBackwardMovement(SuperStructurePosition.SubstationPickup)));
-    m_partner_controller.povLeft().onTrue(new ConditionalCommand(new ArmThenWristSequenceCommand(m_arm, SuperStructurePosition.ScoreLow),
-                                                           new WristThenArmSequenceCommand(m_arm, SuperStructurePosition.ScoreLow),
-                                                           ()->m_arm.isBackwardMovement(SuperStructurePosition.ScoreLow)));
-    m_partner_controller.povRight().onTrue(new ConditionalCommand(new ArmThenWristSequenceCommand(m_arm, SuperStructurePosition.Stowed),
-                                                           new WristThenArmSequenceCommand(m_arm, SuperStructurePosition.Stowed),
-                                                           ()->m_arm.isBackwardMovement(SuperStructurePosition.Stowed)));
-
-    m_driver_controller.leftBumper().onTrue(m_drivetrain.shiftToHighGear());
-    m_driver_controller.leftBumper().onFalse(m_drivetrain.shiftToLowGear());
-    m_driver_controller.rightTrigger().whileTrue(new FineGrainedDrivingControl(m_drivetrain, m_driver_controller));
-  }
+    // Right bumper
+    m_partner_controller.rightBumper().whileTrue(
+        new DriveArmManually(m_arm, m_partner_controller)
+    );
+    // Start button
+    m_partner_controller.start().onTrue(
+        m_arm.stopArmAndWristCommand()
+    );
+    // Left stick
+    m_partner_controller.leftStick().onTrue(
+        Commands.run(() -> m_gripper.close_gripper())
+    );
+    // Right stick
+    m_partner_controller.rightStick().onTrue(
+        Commands.run(() -> m_gripper.open_gripper())
+    );
+    // Right trigger
+    m_partner_controller.rightTrigger().whileTrue(
+        new RunMotorsForward(m_gripper)
+    );
+    // Left trigger
+    m_partner_controller.leftTrigger().whileTrue(
+        new RunMotorsBackward(m_gripper)
+    );
+    // X button
+    m_partner_controller.x().onTrue(
+        new ConditionalCommand(
+            new ArmThenWristSequenceCommand(m_arm, SuperStructurePosition.ScoreCubeMid),
+            new WristThenArmSequenceCommand(m_arm, SuperStructurePosition.ScoreCubeMid),
+            () -> m_arm.isBackwardMovement(SuperStructurePosition.ScoreCubeMid)
+        )
+    );
+    // Y button
+    m_partner_controller.y().onTrue(
+        new ConditionalCommand(
+            new ArmThenWristSequenceCommand(m_arm, SuperStructurePosition.ScoreCubeHigh),
+            new WristThenArmSequenceCommand(m_arm, SuperStructurePosition.ScoreCubeHigh),
+            () -> m_arm.isBackwardMovement(SuperStructurePosition.ScoreCubeHigh)
+        )
+    );
+    // A button
+    m_partner_controller.a().onTrue(
+        new ConditionalCommand(
+            new ArmThenWristSequenceCommand(m_arm, SuperStructurePosition.ScoreConeMid),
+            new WristThenArmSequenceCommand(m_arm, SuperStructurePosition.ScoreConeMid),
+            () -> m_arm.isBackwardMovement(SuperStructurePosition.ScoreConeMid)
+        )
+    );
+    // B button
+    m_partner_controller.b().onTrue(
+        new ConditionalCommand(
+            new ArmThenWristSequenceCommand(m_arm, SuperStructurePosition.ScoreConeHigh),
+            new WristThenArmSequenceCommand(m_arm, SuperStructurePosition.ScoreConeHigh),
+            () -> m_arm.isBackwardMovement(SuperStructurePosition.ScoreConeHigh)
+        )
+    );
+    // D-pad down
+    m_partner_controller.povDown().onTrue(
+        new ConditionalCommand(
+            new ArmThenWristSequenceCommand(m_arm, SuperStructurePosition.GroundPickup),
+            new WristThenArmSequenceCommand(m_arm, SuperStructurePosition.GroundPickup),
+            () -> m_arm.isBackwardMovement(SuperStructurePosition.GroundPickup)
+        )
+    );
+    // D-pad up
+    m_partner_controller.povUp().onTrue(
+        new ConditionalCommand(
+            new ArmThenWristSequenceCommand(m_arm, SuperStructurePosition.SubstationPickup),
+            new WristThenArmSequenceCommand(m_arm, SuperStructurePosition.SubstationPickup),
+            () -> m_arm.isBackwardMovement(SuperStructurePosition.SubstationPickup)
+        )
+    );
+    // D-pad left
+    m_partner_controller.povLeft().onTrue(
+        new ConditionalCommand(
+            new ArmThenWristSequenceCommand(m_arm, SuperStructurePosition.ScoreLow),
+            new WristThenArmSequenceCommand(m_arm, SuperStructurePosition.ScoreLow),
+            () -> m_arm.isBackwardMovement(SuperStructurePosition.ScoreLow)
+        )
+    );
+      m_driver_controller.leftBumper().onTrue(m_drivetrain.shiftToHighGear());
+      m_driver_controller.leftBumper().onFalse(m_drivetrain.shiftToLowGear());
+      m_driver_controller.rightTrigger().whileTrue(new FineGrainedDrivingControl(m_drivetrain, m_driver_controller));
+    }
 
   /**
    * Use this to pass the autonomous command to the main {@link Robot} class.
