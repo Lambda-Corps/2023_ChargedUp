@@ -40,6 +40,5 @@ public class LED extends SubsystemBase{
             byteList.remove(0);
             i = 0;
         }
-        i++;
     }
 }

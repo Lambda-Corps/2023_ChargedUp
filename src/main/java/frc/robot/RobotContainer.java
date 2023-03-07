@@ -142,6 +142,7 @@ public class RobotContainer {
             () -> m_arm.isBackwardMovement(SuperStructurePosition.GroundPickup)
         )
     );
+  
     // D-pad up
     m_partner_controller.povUp().onTrue(
         new ConditionalCommand(
@@ -150,6 +151,7 @@ public class RobotContainer {
             () -> m_arm.isBackwardMovement(SuperStructurePosition.SubstationPickup)
         )
     );
+  
     // D-pad left
     m_partner_controller.povLeft().onTrue(
         new ConditionalCommand(
