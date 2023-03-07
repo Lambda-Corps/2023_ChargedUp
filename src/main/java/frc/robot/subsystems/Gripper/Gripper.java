@@ -77,23 +77,23 @@ public class Gripper extends SubsystemBase {
     request_gripper_position(GRIPPER_EXPAND);
   }
   /////////////////////////////////////// Inline Commands Go below here ////////////////////
-  // public CommandBase expandGripperCommand() {
-  //   // Inline construction of command goes here.
-  //   // Subsystem::RunOnce implicitly requires `this` subsystem.
-  //   return runOnce(
-  //       () -> {
-  //         m_gripper.set(GRIPPER_EXPAND);
-  //       });
-  // }
+  public CommandBase expandGripperCommand() {
+    // Inline construction of command goes here.
+    // Subsystem::RunOnce implicitly requires `this` subsystem.
+    return runOnce(
+        () -> {
+          m_gripper.set(GRIPPER_EXPAND);
+        });
+  }
 
-  // public CommandBase contractGripperCommand() {
-  //   // Inline construction of command goes here.
-  //   // Subsystem::RunOnce implicitly requires `this` subsystem.
-  //   return runOnce(
-  //       () -> {
-  //         m_gripper.set(GRIPPER_CONTRACT);
-  //       });
-  // }
+  public CommandBase contractGripperCommand() {
+    // Inline construction of command goes here.
+    // Subsystem::RunOnce implicitly requires `this` subsystem.
+    return runOnce(
+        () -> {
+          m_gripper.set(GRIPPER_CONTRACT);
+        });
+  }
 
   public CommandBase intakeGamePieceCommand() {
     return runOnce(
