@@ -26,6 +26,8 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.BangBangController;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.filter.SlewRateLimiter;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.DifferentialDriveOdometry;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.util.Units;
@@ -43,6 +45,7 @@ import edu.wpi.first.wpilibj.simulation.DifferentialDrivetrainSim;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.CommandBase;
+import edu.wpi.first.wpilibj2.command.PrintCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Robot;
 
@@ -133,9 +136,12 @@ public class DriveTrain extends SubsystemBase {
 			m_max_speed_entry;
 
 	final double MM_DRIVE_KP = 0.495;
+	final double MM_DRIVE_KD = 4.9;
 	final int MM_SLOT = 0;
 	final int PID_PRIMARY = 0;
 	final int MM_TOLERANCE = 200;
+	final int MM_VELOCITY = 8000;
+	final int MM_ACCELERATION = 8000;
 	final int FORWARD_SLEW_RATE = 3;
 	final int TURN_SLEW_RATE = 5;
 	double TURN_DRIVE_FF = .1;
@@ -169,11 +175,21 @@ public class DriveTrain extends SubsystemBase {
 		// Configure Motion Magic constants
 		TalonFXConfiguration talon_config = new TalonFXConfiguration();
 		talon_config.slot0.kP = MM_DRIVE_KP;
-		talon_config.slot0.kD = 10*MM_DRIVE_KP;
+		talon_config.slot0.kD = MM_DRIVE_KD;
 		talon_config.slot0.allowableClosedloopError = 25;
 		talon_config.slot0.closedLoopPeriod = 1;
 		talon_config.primaryPID.selectedFeedbackSensor = TalonFXFeedbackDevice.IntegratedSensor.toFeedbackDevice();
 		talon_config.neutralDeadband = kNeutralDeadband;
+		talon_config.motionCruiseVelocity = MM_VELOCITY;
+		talon_config.motionAcceleration = MM_ACCELERATION;
+
+		if( Robot.isSimulation() ){
+			// The simulator needs much smaller motion magic values due to not 
+			// being real physics
+			talon_config.slot0.kP = 0.1;
+			talon_config.motionCruiseVelocity = 5000;
+			talon_config.motionAcceleration = 5000;
+		}
 
 		m_left_leader.configAllSettings(talon_config);
 		m_right_leader.configAllSettings(talon_config);
@@ -220,7 +236,7 @@ public class DriveTrain extends SubsystemBase {
 			/* Simulation model of the drivetrain */
 			m_drivetrainSimulator = new DifferentialDrivetrainSim(
 					DCMotor.getFalcon500(2), // 2 Falcon 500s on each side of the drivetrain.
-					kHighGearRatio, // Standard AndyMark Gearing reduction.
+					kLowGearRatio, // Standard AndyMark Gearing reduction.
 					2.1, // MOI of 2.1 kg m^2 (from CAD model).
 					kRobotMass, // Mass of the robot is 26.5 kg.
 					Units.inchesToMeters(kWheelRadiusInches), // Robot uses 3" radius (6" diameter) wheels.
@@ -391,7 +407,7 @@ public class DriveTrain extends SubsystemBase {
 		} else {
 			// Simulation doesn't have real physics, just limit the turn speed to 
 			// 20% arbitrarily
-			turn = MathUtil.clamp(turn, -.01, .01);
+			turn = MathUtil.clamp(turn, -.1, .1);
 		}
 
 		// Set the motors, CCW means that the left side will go backward
@@ -458,7 +474,7 @@ public class DriveTrain extends SubsystemBase {
 
 	private int distanceToNativeUnits(double positionMeters) {
 		double wheelRotations = positionMeters / (2 * Math.PI * Units.inchesToMeters(kWheelRadiusInches));
-		double motorRotations = wheelRotations * kHighGearRatio;
+		double motorRotations = wheelRotations * kLowGearRatio;
 		int sensorCounts = (int) (motorRotations * kCountsPerRev);
 		return sensorCounts;
 	}
@@ -466,7 +482,7 @@ public class DriveTrain extends SubsystemBase {
 	private int velocityToNativeUnits(double velocityMetersPerSecond) {
 		double wheelRotationsPerSecond = velocityMetersPerSecond
 				/ (2 * Math.PI * Units.inchesToMeters(kWheelRadiusInches));
-		double motorRotationsPerSecond = wheelRotationsPerSecond * kHighGearRatio;
+		double motorRotationsPerSecond = wheelRotationsPerSecond * kLowGearRatio;
 		double motorRotationsPer100ms = motorRotationsPerSecond / k100msPerSecond;
 		int sensorCountsPer100ms = (int) (motorRotationsPer100ms * kCountsPerRev);
 		return sensorCountsPer100ms;
@@ -474,7 +490,7 @@ public class DriveTrain extends SubsystemBase {
 
 	private double nativeUnitsToDistanceMeters(double sensorCounts) {
 		double motorRotations = (double) sensorCounts / kCountsPerRev;
-		double wheelRotations = motorRotations / kHighGearRatio;
+		double wheelRotations = motorRotations / kLowGearRatio;
 		double positionMeters = wheelRotations * (2 * Math.PI * Units.inchesToMeters(kWheelRadiusInches));
 		return positionMeters;
 	}
@@ -653,6 +669,9 @@ public class DriveTrain extends SubsystemBase {
 	}
 
 	public void configure_motion_magic(int setpoint) {
+		m_left_leader.selectProfileSlot(MM_SLOT, PID_PRIMARY);
+		m_right_leader.selectProfileSlot(MM_SLOT, PID_PRIMARY);
+
 		m_setpoint_left = (int)(m_left_leader.getSelectedSensorPosition() + setpoint);
 		m_setpoint_right = (int)(m_right_leader.getSelectedSensorPosition() + setpoint);
 	}
@@ -685,15 +704,15 @@ public class DriveTrain extends SubsystemBase {
 	}
 
 	public boolean is_drive_mm_done() {
-		boolean done;
+		boolean done = false;
 
 		double currentPos_L = m_left_leader.getSelectedSensorPosition();
 		double currentPos_R = m_right_leader.getSelectedSensorPosition();
 
 		// boolean left_done = m_left_leader.getClosedLoopError() < MM_TOLERANCE;
 		// boolean right_done = m_right_leader.getClosedLoopError() < MM_TOLERANCE;
-		boolean left_done = Math.abs((m_setpoint_left - currentPos_L)) < MM_TOLERANCE;
-		boolean right_done = Math.abs(m_setpoint_left - currentPos_R) < MM_TOLERANCE;
+		boolean left_done = Math.abs((m_setpoint_left - currentPos_L)) <  MM_TOLERANCE;
+		boolean right_done = Math.abs(m_setpoint_right - currentPos_R) < MM_TOLERANCE;
 
 		done = left_done && right_done;
 
@@ -706,21 +725,6 @@ public class DriveTrain extends SubsystemBase {
 
 	public double getRightError() {
 		return m_right_leader.getClosedLoopError();
-	}
-
-	public boolean is_motion_magic_done() {
-		double currentPos_L = m_left_leader.getSelectedSensorPosition();
-		double currentPos_R = m_right_leader.getSelectedSensorPosition();
-
-		// boolean left_done = m_left_leader.getClosedLoopError() < MM_TOLERANCE;
-		// boolean right_done = m_right_leader.getClosedLoopError() < MM_TOLERANCE;
-		boolean left_done = Math.abs((m_setpoint_left - currentPos_L)) < MM_TOLERANCE;
-		boolean right_done = Math.abs(m_setpoint_left - currentPos_R) < MM_TOLERANCE;
-
-		boolean done = left_done && right_done;
-		// return Math.abs(m_left_leader.getClosedLoopError()) < MM_TOLERANCE ||
-		// Math.abs(m_right_leader.getClosedLoopError()) < MM_TOLERANCE;
-		return done;
 	}
 
 	public void reset_encoders() {
@@ -815,6 +819,43 @@ public class DriveTrain extends SubsystemBase {
 				double speed = NetworkTableInstance.getDefault().getTable("Shuffleboard").getSubTable("Drive Test").getEntry("Max Speed").getDouble(0);
 				System.out.println("Speed: " + speed);
 				teleop_drive(speed, 0);
+			});
+	}
+
+	public CommandBase driveMotionMagic(double target_in_inches){
+		return runOnce(
+			() -> {
+				// Configure the target in encoder ticks, set the motor controllers up
+				// and have them go until the setpoint
+				int target_in_ticks = (int)(target_in_inches * kEncoderTicksPerInch);
+
+				configure_motion_magic(target_in_ticks);
+
+				drive_motion_magic();
+			});
+	}
+
+	// This command takes in an (x,y) coordinate pair and sets the robot odometry to match
+	// that value.  It will set the integrated encoders to that value in the Talons and 
+	// set the gyro angle as well
+	//
+	// The robot is going to be set on the field up against the scoring elements, so use that
+	// as the initial starting assumption.  The field map assumes that the bottom left is the
+	// origin in 2d space, but that includes the grid where we can't drive.  So our initial 
+	// encoder values are going to be non-zero.
+	public CommandBase setRobotStartingPose(double x, double y, double heading){
+		return runOnce(
+			() -> {
+				double encoder_val = distanceToNativeUnits(x);
+				m_left_leader.setSelectedSensorPosition(encoder_val);
+				m_right_leader.setSelectedSensorPosition(encoder_val);
+
+				m_gyro.setAngleAdjustment(heading);
+
+				Rotation2d rot2d = m_gyro.getRotation2d();
+				Pose2d pose = new Pose2d(x, y, rot2d);
+
+				m_odometry.resetPosition(m_gyro.getRotation2d(), x, y,pose);
 			});
 	}
 }
