@@ -6,6 +6,7 @@ package frc.robot;
 
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
+import frc.robot.autoCommands.Pos1ScoreMoveBalance;
 import frc.robot.autoCommands.Pos3ScoreMoveBalance;
 import frc.robot.subsystems.Arm.Arm;
 import frc.robot.subsystems.Arm.ArmDriveToPositionPIDTest;
@@ -168,10 +169,15 @@ public class RobotContainer {
    *
    * @return the command to run in autonomous
    */
-  public Command getAutonomousCommand() {
+  public Command getAutonomousCommand3() {
     // An ExampleCommand will run in autonomous
     return new Pos3ScoreMoveBalance(m_drivetrain, m_arm, m_gripper);
   }
+  public Command getAutonomousCommand1() {
+    // An ExampleCommand will run in autonomous
+    return new Pos1ScoreMoveBalance(m_drivetrain, m_arm, m_gripper);
+  }
+  
 
   private void buildDriveTestTab() {
     ShuffleboardTab driveTestTab = Shuffleboard.getTab("Drive Test");
