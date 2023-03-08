@@ -6,6 +6,8 @@ package frc.robot;
 
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
+import frc.robot.autoCommands.Pos1ScoreMoveBalance;
+import frc.robot.autoCommands.Pos3ScoreMoveBalance;
 import frc.robot.subsystems.Arm.Arm;
 import frc.robot.subsystems.Arm.ArmDriveToPositionPIDTest;
 import frc.robot.subsystems.Arm.ArmThenWristSequenceCommand;
@@ -16,19 +18,20 @@ import frc.robot.subsystems.Arm.Arm.SuperStructurePosition;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
+import frc.robot.subsystems.DriveTrain.BalanceBangBangTestCommand;
 import frc.robot.subsystems.DriveTrain.DefaultDriveTrainCommand;
-import frc.robot.subsystems.DriveTrain.DriveMMSequenceTest;
 import frc.robot.subsystems.DriveTrain.DriveMotionMagicTest;
 import frc.robot.subsystems.DriveTrain.DriveTrain;
 import frc.robot.subsystems.DriveTrain.FineGrainedDrivingControl;
 import frc.robot.subsystems.DriveTrain.SetMaxSpeedCommand;
+import frc.robot.subsystems.DriveTrain.TurnToAngleWithGyroPID;
 import frc.robot.subsystems.DriveTrain.DriveDistanceInInchesTest;
 import frc.robot.subsystems.Gripper.Gripper;
 import frc.robot.subsystems.Gripper.RunMotorsBackward;
 import frc.robot.subsystems.Gripper.RunMotorsForward;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.ConditionalCommand;
-import edu.wpi.first.wpilibj2.command.PrintCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 
 /**
@@ -44,6 +47,7 @@ public class RobotContainer {
 
   // The robot's subsystems and commands are defined here...
   private final DriveTrain m_drivetrain = new DriveTrain();
+ 
   private final Arm m_arm = new  Arm();
   private final Gripper m_gripper = new  Gripper();
 
@@ -67,43 +71,6 @@ public class RobotContainer {
    * edu.wpi.first.wpilibj2.command.button.JoystickButton}.
    */
   private void configureButtonBindings() {
-<<<<<<< Updated upstream
-    m_partner_controller.rightBumper().whileTrue(new DriveArmManually(m_arm, m_partner_controller));
-    m_partner_controller.start().onTrue(m_arm.stopArmAndWristCommand());
-    m_partner_controller.leftStick().onTrue(m_gripper.contractGripperCommand());
-    m_partner_controller.rightStick().onTrue(m_gripper.expandGripperCommand());
-    m_partner_controller.rightTrigger().whileTrue(new RunMotorsForward(m_gripper));
-    m_partner_controller.leftTrigger().whileTrue(new RunMotorsBackward(m_gripper));
-    // m_partner_controller.x().onTrue(new ConditionalCommand(new ArmThenWristSequenceCommand(m_arm, SuperStructurePosition.ScoreCubeMid),
-    //                                                        new WristThenArmSequenceCommand(m_arm, SuperStructurePosition.ScoreCubeMid),
-    //                                                        ()->m_arm.isBackwardMovement(SuperStructurePosition.ScoreCubeMid)));
-    // m_partner_controller.y().onTrue(new ConditionalCommand(new ArmThenWristSequenceCommand(m_arm, SuperStructurePosition.ScoreCubeHigh),
-    //                                                        new WristThenArmSequenceCommand(m_arm, SuperStructurePosition.ScoreCubeHigh),
-    //                                                        ()->m_arm.isBackwardMovement(SuperStructurePosition.ScoreCubeHigh)));
-    // m_partner_controller.a().onTrue(new ConditionalCommand(new ArmThenWristSequenceCommand(m_arm, SuperStructurePosition.ScoreConeMid),
-    //                                                        new WristThenArmSequenceCommand(m_arm, SuperStructurePosition.ScoreConeMid),
-    //                                                        ()->m_arm.isBackwardMovement(SuperStructurePosition.ScoreConeMid)));
-    // m_partner_controller.b().onTrue(new ConditionalCommand(new ArmThenWristSequenceCommand(m_arm, SuperStructurePosition.ScoreConeHigh),
-    //                                                        new WristThenArmSequenceCommand(m_arm, SuperStructurePosition.ScoreConeHigh),
-    //                                                        ()->m_arm.isBackwardMovement(SuperStructurePosition.ScoreConeHigh)));
-    // m_partner_controller.povDown().onTrue(new ConditionalCommand(new ArmThenWristSequenceCommand(m_arm, SuperStructurePosition.GroundPickup),
-    //                                                        new WristThenArmSequenceCommand(m_arm, SuperStructurePosition.GroundPickup),
-    //                                                        ()->m_arm.isBackwardMovement(SuperStructurePosition.GroundPickup)));
-    // m_partner_controller.povUp().onTrue(new ConditionalCommand(new ArmThenWristSequenceCommand(m_arm, SuperStructurePosition.SubstationPickup),
-    //                                                        new WristThenArmSequenceCommand(m_arm, SuperStructurePosition.SubstationPickup),
-    //                                                        ()->m_arm.isBackwardMovement(SuperStructurePosition.SubstationPickup)));
-    // m_partner_controller.povLeft().onTrue(new ConditionalCommand(new ArmThenWristSequenceCommand(m_arm, SuperStructurePosition.ScoreLow),
-    //                                                        new WristThenArmSequenceCommand(m_arm, SuperStructurePosition.ScoreLow),
-    //                                                        ()->m_arm.isBackwardMovement(SuperStructurePosition.ScoreLow)));
-    // m_partner_controller.povRight().onTrue(new ConditionalCommand(new ArmThenWristSequenceCommand(m_arm, SuperStructurePosition.Stowed),
-    //                                                        new WristThenArmSequenceCommand(m_arm, SuperStructurePosition.Stowed),
-    //                                                        ()->m_arm.isBackwardMovement(SuperStructurePosition.Stowed)));
-
-    m_driver_controller.leftBumper().onTrue(m_drivetrain.shiftToHighGear());
-    m_driver_controller.leftBumper().onFalse(m_drivetrain.shiftToLowGear());
-    m_driver_controller.rightTrigger().whileTrue(new FineGrainedDrivingControl(m_drivetrain, m_driver_controller));
-  }
-=======
     // Right bumper
     // m_partner_controller.rightBumper().whileTrue(
     //     new DriveArmManually(m_arm, m_partner_controller)
@@ -114,11 +81,11 @@ public class RobotContainer {
     );
     // Left stick
     m_partner_controller.leftStick().onTrue(
-        Commands.runOnce(() -> m_gripper.close_gripper())
+        Commands.run(() -> m_gripper.close_gripper())
     );
     // Right stick
     m_partner_controller.rightStick().onTrue(
-        Commands.runOnce(() -> m_gripper.open_gripper())
+        Commands.run(() -> m_gripper.open_gripper())
     );
     // Right trigger
     m_partner_controller.rightTrigger().whileTrue(
@@ -188,17 +155,25 @@ public class RobotContainer {
       m_driver_controller.leftBumper().onFalse(m_drivetrain.shiftToLowGear());
       m_driver_controller.rightTrigger().whileTrue(new FineGrainedDrivingControl(m_drivetrain, m_driver_controller));
     }
->>>>>>> Stashed changes
 
   /**
    * Use this to pass the autonomous command to the main {@link Robot} class.
    *
    * @return the command to run in autonomous
    */
-  public Command getAutonomousCommand() {
+  public Command getAutonomousCommand1() {
     // An ExampleCommand will run in autonomous
-    return new PrintCommand("Auto Needs to be Fixed");
+    return new Pos3ScoreMoveBalance(m_drivetrain, m_arm, m_gripper);
   }
+  public Command getAutonomousCommand2() {
+    // An ExampleCommand will run in autonomous
+    return new Pos1ScoreMoveBalance(m_drivetrain, m_arm, m_gripper);
+  }
+  public Command getAutonomousCommand3() {
+    // An ExampleCommand will run in autonomous
+    return new Pos1ScoreMoveBalance(m_drivetrain, m_arm, m_gripper);
+  }
+  
 
   private void buildDriveTestTab() {
     ShuffleboardTab driveTestTab = Shuffleboard.getTab("Drive Test");
@@ -226,7 +201,6 @@ public class RobotContainer {
     driveTestTab.add("Drive PID", new DriveDistanceInInchesTest(m_drivetrain)).withPosition(6,3).withSize(2, 1);
     driveTestTab.addDouble("Left Error", m_drivetrain::getLeftError).withPosition(0,4).withSize(1,1);
     driveTestTab.addDouble("Right Error", m_drivetrain::getRightError).withPosition(1,4).withSize(1,1);
-    driveTestTab.add("DriveMM Sequence", new DriveMMSequenceTest(m_drivetrain)).withPosition(2, 4).withSize(1, 1);
     driveTestTab.add("Target Degrees", 0).withPosition(6, 1).withSize(1, 1);
     driveTestTab.addNumber("Curr Heading", m_drivetrain::getScaledHeading).withPosition(4,0).withSize(1,1);
     driveTestTab.add("Gyro", m_drivetrain.getGyro()).withPosition(3, 1).withSize(2, 2).withWidget(BuiltInWidgets.kGyro);
@@ -238,11 +212,19 @@ public class RobotContainer {
     driveTestTab.addNumber("DriveTrain Setpoint", m_drivetrain::get_setpoint).withPosition(7, 2).withSize(1, 1);
     driveTestTab.add("Reset Drivetrain setpoint", m_drivetrain.reset_dt_setpoint()).withPosition(8, 2).withSize(2, 1);
 
+    driveTestTab.add("Bang Bang Forward Speed", 0).withPosition(0, 5).withSize(1, 1);
+    driveTestTab.add("Bang Bang Reverse Speed", 0).withPosition(1, 5).withSize(1, 1);
+    driveTestTab.add("Bang Bang Target Pitch", 0).withPosition(2, 5).withSize(1, 1);
+    driveTestTab.add("Fwd Out", 0).withPosition(3, 4).withSize(1, 1);
+    driveTestTab.add("Rev Out", 0).withPosition(3, 5).withSize(1, 1);
+    driveTestTab.add("Bang Bang Test Pitch Value", 0).withPosition(4, 5).withSize(2, 1).withWidget(BuiltInWidgets.kNumberSlider);
+
     // PID Tuning
     driveTestTab.add("Turn PID", m_drivetrain.get_dt_turn_pidcontroller()).withPosition(5, 0);
     driveTestTab.add("Turn with PID", new DriveDistanceInInchesTest(m_drivetrain)).withPosition(6, 0).withSize(2, 1);
     driveTestTab.add("Drive Fine Grained", new FineGrainedDrivingControl(m_drivetrain, m_driver_controller)).withPosition(8, 1).withSize(2, 1);
-    
+    driveTestTab.add("BangBang Command", new BalanceBangBangTestCommand(m_drivetrain).andThen(new TurnToAngleWithGyroPID(m_drivetrain, 90))).withPosition(6, 5 ).withSize(2, 1);    
+    driveTestTab.add("DriveSlowly Command", m_drivetrain.driveSlowlyUntil().withTimeout(2).andThen(m_drivetrain.stopMotorsCommand()));
   }
 
   private void buildArmTestTab() {
@@ -332,14 +314,6 @@ public class RobotContainer {
     // armTestTab.add("Ground_Pickup Arm Test", new SetArmRequestedPosition(m_arm, SuperStructurePosition.GroundPickup)).withPosition(2, 4).withSize(2, 1);
     // armTestTab.add("Substation Arm Test", new SetArmRequestedPosition(m_arm, SuperStructurePosition.SubstationPickup)).withPosition(4, 4).withSize(2, 1);
     // armTestTab.add("Cube Score High Arm Test", new SetArmRequestedPosition(m_arm, SuperStructurePosition.ScoreCubeHigh)).withPosition(6, 4).withSize(2, 1);
-    // armTestTab.add("Set Current Pos to Req Pos", new SetCurrentPosToRequestedPosTest(m_arm)).withPosition(8, 4).withSize(2, 1);
-    // armTestTab.add("Max Speed", 0).withPosition(0, 2).withSize(1,1);
-    // armTestTab.add("Reset Max Speed", m_drivetrain.setMaxValue()).withPosition(1, 2).withSize(2, 1);
-    // // Set the max speed variables
-    // armTestTab.addDouble("Current Speed", m_drivetrain::get_max_speed).withPosition(0, 3).withSize(1,1);
-    // armTestTab.add("Set_Max Speed", new SetMaxSpeedCommand(m_drivetrain)).withPosition(1, 3).withSize(2, 1);
-
-    // armTestTab.add("Robot Heading", 0).withPosition(0, 0).withSize(2, 2).withWidget(BuiltInWidgets.kGyro);
-    
+    // armTestTab.add("Set Current Pos to Req Pos", new SetCurrentPosToRequestedPosTest(m_arm)).withPosition(8, 4).withSize(2, 1);    
   }
 }

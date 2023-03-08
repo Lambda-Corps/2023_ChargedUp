@@ -33,7 +33,7 @@ public class DriveDistanceInInchesTest extends CommandBase {
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {
-    m_dt.reset_setpoint();
+    m_dt.reset_setpoints();
     m_dt.reset_encoders();
     m_done = false;
     m_count_done = 0;

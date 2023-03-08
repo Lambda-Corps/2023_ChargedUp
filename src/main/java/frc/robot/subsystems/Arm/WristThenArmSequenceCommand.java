@@ -4,7 +4,6 @@
 
 package frc.robot.subsystems.Arm;
 
-import edu.wpi.first.wpilibj2.command.ParallelDeadlineGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 
 // NOTE:  Consider using this command inline, rather than writing a subclass.  For more
@@ -16,16 +15,8 @@ public class WristThenArmSequenceCommand extends SequentialCommandGroup {
     // Add your commands in the addCommands() call, e.g.
     // addCommands(new FooCommand(), new BarCommand());
     addCommands(
-<<<<<<< Updated upstream
-      // Set the direction for motion magic constants
-      arm.configureWristMM( ()->(arm.getSuperStructureWristPosition() < position_req.getWristPosition()) ),
-      // Move the wrist to it's spot
-      // We want to finish in either 2 seconds, or when we get to the spot.  Whichever hits first
-      arm.moveWristToPositionMM(position_req, ()->(arm.getSuperStructureWristPosition() < position_req.getWristPosition()) ).unless(()->arm.isTransitionInvalid(position_req))
-=======
-      new MoveWristToPositionMM(arm, position_req).withTimeout(2),
-      new MoveArmToPositionMM(arm, position_req).withTimeout(2)
->>>>>>> Stashed changes
+      new MoveArmToPositionMM(arm, position_req).withTimeout(2),
+      new MoveWristToPositionMM(arm, position_req).withTimeout(2)
     );
   }
 }

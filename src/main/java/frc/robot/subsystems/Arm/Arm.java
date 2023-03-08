@@ -412,36 +412,36 @@ public class Arm extends SubsystemBase {
 
   @Override
   public void periodic() {
-    m_arm_position.set(m_arm_motor.getSelectedSensorPosition());
-    m_wrist_position.set(m_wrist_motor.getSelectedSensorPosition());
+    // m_arm_position.set(m_arm_motor.getSelectedSensorPosition());
+    // m_wrist_position.set(m_wrist_motor.getSelectedSensorPosition());
 
-    switch(m_arm_state){
-      case Inactive:
-        // If the arm isn't do anything, zero both.
-        if(m_wrist_motor.isRevLimitSwitchClosed() > 0){
-          m_wrist_motor.setSelectedSensorPosition(0);
-        }
-        if(m_arm_motor.isRevLimitSwitchClosed() > 0){
-          m_arm_motor.setSelectedSensorPosition(0);
-        }
-        break;
-      case Holding:
-        // We may not be able to trust the arm's motion after a command
-        // so only deal with the wrist on hold.
-        if(m_wrist_motor.isRevLimitSwitchClosed() > 0){
-          m_wrist_motor.setSelectedSensorPosition(0);
-        }
-        break;
-      case Moving:
-        // Don't do anything
-        break;
-      default:
-        // Reset the wrist only by default
-        if(m_wrist_motor.isRevLimitSwitchClosed() > 0){
-          m_wrist_motor.setSelectedSensorPosition(0);
-        }
-        break;
-    }
+    // switch(m_arm_state){
+    //   case Inactive:
+    //     // If the arm isn't do anything, zero both.
+    //     if(m_wrist_motor.isRevLimitSwitchClosed() > 0){
+    //       m_wrist_motor.setSelectedSensorPosition(0);
+    //     }
+    //     if(m_arm_motor.isRevLimitSwitchClosed() > 0){
+    //       m_arm_motor.setSelectedSensorPosition(0);
+    //     }
+    //     break;
+    //   case Holding:
+    //     // We may not be able to trust the arm's motion after a command
+    //     // so only deal with the wrist on hold.
+    //     if(m_wrist_motor.isRevLimitSwitchClosed() > 0){
+    //       m_wrist_motor.setSelectedSensorPosition(0);
+    //     }
+    //     break;
+    //   case Moving:
+    //     // Don't do anything
+    //     break;
+    //   default:
+    //     // Reset the wrist only by default
+    //     if(m_wrist_motor.isRevLimitSwitchClosed() > 0){
+    //       m_wrist_motor.setSelectedSensorPosition(0);
+    //     }
+    //     break;
+    // }
 
 
     // if(m_arm_motor.isRevLimitSwitchClosed() > 0){
