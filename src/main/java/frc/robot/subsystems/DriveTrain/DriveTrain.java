@@ -163,6 +163,9 @@ public class DriveTrain extends SubsystemBase {
 	final int DRIVE_PEAK_CURRENT_LIMIT = 60;
 	final double DRIVE_PEAK_DURATION = .1; // limit current after 100 ms of peak,
 
+	final double DRIVE_OPEN_LOOP_RAMP = .25;
+	final double DRIVE_CLOSED_LOOP_RAMP = .25;
+
 	/** Creates a new DriveTrain. */
 	public DriveTrain() {
 		m_gyro = new AHRS(SPI.Port.kMXP);
@@ -200,6 +203,10 @@ public class DriveTrain extends SubsystemBase {
 		talon_config.supplyCurrLimit.enable = true;
 		talon_config.supplyCurrLimit.triggerThresholdCurrent = DRIVE_PEAK_CURRENT_LIMIT;
 		talon_config.supplyCurrLimit.triggerThresholdTime = DRIVE_PEAK_DURATION;
+
+		// Set open loop ramp to 1/4 second from 0->Full output
+		talon_config.openloopRamp = DRIVE_OPEN_LOOP_RAMP;
+		talon_config.closedloopRamp = DRIVE_CLOSED_LOOP_RAMP;
 		
 		m_left_leader.configAllSettings(talon_config);
 		m_left_follower.configAllSettings(talon_config);
@@ -331,18 +338,18 @@ public class DriveTrain extends SubsystemBase {
 		turn = MathUtil.clamp(turn, -m_drive_absMax, m_drive_absMax);
 
 		// forward = -m_forward_limiter.calculate(forward) * m_drive_absMax;
-		if (forward != 0 || turn != 0) {
-			forward = m_forward_limiter.calculate(forward) * m_drive_absMax;
-			turn = m_rotation_limiter.calculate(turn) * m_drive_absMax;
-		} else {
-			if (forward != 0){
-				m_forward_limiter.reset(FORWARD_SLEW_RATE);
-			}
-			if( turn != 0 ){
-				m_rotation_limiter.reset(TURN_SLEW_RATE);
+		// if (forward != 0 || turn != 0) {
+		// 	forward = m_forward_limiter.calculate(forward) * m_drive_absMax;
+		// 	turn = m_rotation_limiter.calculate(turn) * m_drive_absMax;
+		// } else {
+		// 	if (forward != 0){
+		// 		m_forward_limiter.reset(FORWARD_SLEW_RATE);
+		// 	}
+		// 	if( turn != 0 ){
+		// 		m_rotation_limiter.reset(TURN_SLEW_RATE);
 				
-			}
-		}
+		// 	}
+		// }
 
 		var speeds = DifferentialDrive.curvatureDriveIK(forward, turn, true);
 
@@ -365,18 +372,18 @@ public class DriveTrain extends SubsystemBase {
 		turn = MathUtil.clamp(turn, -FINE_GRAINED_MAX, FINE_GRAINED_MAX);
 
 		// forward = -m_forward_limiter.calculate(forward) * m_drive_absMax;
-		if (forward != 0 || turn != 0) {
-			forward = m_forward_limiter.calculate(forward) * m_drive_absMax;
-			turn = m_rotation_limiter.calculate(turn) * m_drive_absMax;
-		} else {
-			if (forward != 0){
-				m_forward_limiter.reset(FORWARD_SLEW_RATE);
-			}
-			if( turn != 0 ){
-				m_rotation_limiter.reset(TURN_SLEW_RATE);
+		// if (forward != 0 || turn != 0) {
+		// 	forward = m_forward_limiter.calculate(forward) * m_drive_absMax;
+		// 	turn = m_rotation_limiter.calculate(turn) * m_drive_absMax;
+		// } else {
+		// 	if (forward != 0){
+		// 		m_forward_limiter.reset(FORWARD_SLEW_RATE);
+		// 	}
+		// 	if( turn != 0 ){
+		// 		m_rotation_limiter.reset(TURN_SLEW_RATE);
 				
-			}
-		}
+		// 	}
+		// }
 
 		var speeds = DifferentialDrive.arcadeDriveIK(forward, turn, true);
 
@@ -610,7 +617,7 @@ public class DriveTrain extends SubsystemBase {
 		forward_output = MathUtil.clamp(forward_output, -.7, .7);
 		forward_output = Math.copySign(forward_output * forward_output, forward_output);
 
-		forward_output = m_forward_limiter.calculate(forward_output);
+		// forward_output = m_forward_limiter.calculate(forward_output);
 		// Use this custom drive method to turn CCW positive
 		teleop_drive(forward_output,0);
 
