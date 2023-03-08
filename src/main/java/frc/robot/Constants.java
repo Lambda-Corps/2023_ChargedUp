@@ -47,6 +47,10 @@ public final class Constants {
     public static final int GRIPPER_SOLENOID_CHANNEL_A = 2;
     public static final int GRIPPER_SOLENOID_CHANNEL_B = 3;
 
-
-
+    /////////////////// Vision Pipelines ////////////////////
+    public static final int LIFECAM_CUBE_PIPE = 0;
+    public static final int LIFECAM_CONE_PIPE = 1;
+    public static final int LIFECAM_APRILTAG_PIPE = 2;
+    public static final int LIMELIGHT_REFLECTIVE_TAPE_PIPE = 0;
+    public static final int LIMELIGHT_APRILTAG_PIPE = 1;
 }

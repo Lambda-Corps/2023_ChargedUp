@@ -102,6 +102,7 @@ public class Gripper extends SubsystemBase {
       }
     );
   }
+
   public CommandBase scoreGamePieceCommand() {
     return runOnce(
       () -> { 
@@ -109,6 +110,7 @@ public class Gripper extends SubsystemBase {
       }
     );
   }
+  
   public CommandBase stopIntakeMotorsCommand() {
     return runOnce(
       () -> { 
@@ -116,7 +118,4 @@ public class Gripper extends SubsystemBase {
       }
     );
   }
-
-  
-
 }

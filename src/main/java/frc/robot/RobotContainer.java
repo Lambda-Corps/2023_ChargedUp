@@ -10,7 +10,6 @@ import frc.robot.autoCommands.Pos3ScoreMoveBalance;
 import frc.robot.subsystems.Arm.Arm;
 import frc.robot.subsystems.Arm.ArmDriveToPositionPIDTest;
 import frc.robot.subsystems.Arm.ArmThenWristSequenceCommand;
-import frc.robot.subsystems.Arm.DriveArmManually;
 import frc.robot.subsystems.Arm.WristDriveToPositionPIDTest;
 import frc.robot.subsystems.Arm.WristThenArmSequenceCommand;
 import frc.robot.subsystems.Arm.Arm.SuperStructurePosition;
@@ -28,12 +27,12 @@ import frc.robot.subsystems.DriveTrain.SetMaxSpeedCommand;
 import frc.robot.subsystems.DriveTrain.TurnToAngleWithGyroPID;
 import frc.robot.subsystems.DriveTrain.DriveDistanceInInchesTest;
 import frc.robot.subsystems.Gripper.Gripper;
-import frc.robot.subsystems.Gripper.RunMotorsBackward;
-import frc.robot.subsystems.Gripper.RunMotorsForward;
+import frc.robot.subsystems.Gripper.RunGripperMotorsForSpecificTime;
+import frc.robot.subsystems.Vision.AlignToConeReflectiveTape;
+import frc.robot.subsystems.Vision.Vision;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.ConditionalCommand;
-import edu.wpi.first.wpilibj2.command.PrintCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 
 /**
@@ -49,9 +48,9 @@ public class RobotContainer {
 
   // The robot's subsystems and commands are defined here...
   private final DriveTrain m_drivetrain = new DriveTrain();
- 
   private final Arm m_arm = new  Arm();
   private final Gripper m_gripper = new  Gripper();
+  private final Vision m_vision = new Vision();
 
   //private final ExampleCommand m_autoCommand = new ExampleCommand(m_exampleSubsystem);
 
@@ -79,8 +78,11 @@ public class RobotContainer {
    */
   private void configureButtonBindings() {
     // Right bumper
-    m_partner_controller.rightBumper().whileTrue(
-        new DriveArmManually(m_arm, m_partner_controller)
+    m_partner_controller.rightBumper().onTrue(
+        m_gripper.expandGripperCommand()
+    );
+    m_partner_controller.rightBumper().onFalse(
+        m_gripper.contractGripperCommand()
     );
     // Start button
     m_partner_controller.start().onTrue(
@@ -95,12 +97,23 @@ public class RobotContainer {
         Commands.run(() -> m_gripper.open_gripper())
     );
     // Right trigger
-    m_partner_controller.rightTrigger().whileTrue(
-        new RunMotorsForward(m_gripper)
+    m_partner_controller.rightTrigger().onTrue(
+        m_gripper.expandGripperCommand()
+    );
+    m_partner_controller.rightTrigger().onFalse(
+        m_gripper.contractGripperCommand()
+    );
+    // Left bumper
+    m_partner_controller.leftBumper().onTrue(
+        m_gripper.expandGripperCommand()
+    );
+    m_partner_controller.leftBumper().onFalse(
+        m_gripper.contractGripperCommand().andThen(
+        new RunGripperMotorsForSpecificTime(m_gripper, 1))
     );
     // Left trigger
     m_partner_controller.leftTrigger().whileTrue(
-        new RunMotorsBackward(m_gripper)
+        m_gripper.intakeGamePieceCommand()
     );
     // X button
     m_partner_controller.x().onTrue(
@@ -161,6 +174,8 @@ public class RobotContainer {
       m_driver_controller.leftBumper().onTrue(m_drivetrain.shiftToHighGear());
       m_driver_controller.leftBumper().onFalse(m_drivetrain.shiftToLowGear());
       m_driver_controller.rightTrigger().whileTrue(new FineGrainedDrivingControl(m_drivetrain, m_driver_controller));
+
+      m_driver_controller.a().whileTrue(new AlignToConeReflectiveTape(m_drivetrain, m_vision, m_driver_controller));
     }
 
   /**

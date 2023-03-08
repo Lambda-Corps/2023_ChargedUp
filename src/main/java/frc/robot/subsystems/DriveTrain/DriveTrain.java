@@ -45,7 +45,6 @@ import edu.wpi.first.wpilibj.simulation.DifferentialDrivetrainSim;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.CommandBase;
-import edu.wpi.first.wpilibj2.command.PrintCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Robot;
 
@@ -857,5 +856,11 @@ public class DriveTrain extends SubsystemBase {
 
 				m_odometry.resetPosition(m_gyro.getRotation2d(), x, y,pose);
 			});
+	}
+
+	public void align_with_vision(double forward, double target_yaw) {
+		double turn_speed = -m_turn_pid_controller.calculate(target_yaw, 0);
+
+		teleop_drive(forward, turn_speed);
 	}
 }
