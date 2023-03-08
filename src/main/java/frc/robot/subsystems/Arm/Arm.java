@@ -23,6 +23,7 @@ import com.ctre.phoenix.motorcontrol.can.SlotConfiguration;
 import com.ctre.phoenix.motorcontrol.can.TalonFXConfiguration;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
@@ -152,7 +153,11 @@ public class Arm extends SubsystemBase {
   final double ARM_REVERSE_SPEED = -.4;
   final double WRIST_FORWARD_SPEED = .3;
   final double WRIST_REVERSE_SPEED = -.25;
-  final double WRIST_FORWARD_COSINE_FF = .09; // When arm is horizontal, calculation should be 1 * .07
+  final double WRIST_FORWARD_COSINE_FF = .155; // When arm is horizontal, calculation should be 1 * .07
+  // We're trying to calculate a feed forward based on the cosine of the wrist angle (when wrist is horizontal,
+  // at 90 degrees, the cosine should return 1.  Our wrist starts offset at 21 degrees relative to vertical, so
+  // we want the resulting calculation to be cos(69) = 1
+  final double WRIST_COSINE_STARTING_OFFSET = 21;
   final double ARM_GEAR_RATIO = 10 * 4 * 4 * (2/1);
   final double WRIST_GEAR_RATIO = 7 * 4 * (64/24);
   final int WRIST_REVERSE_SOFT_LIMIT = -1000;
@@ -629,6 +634,12 @@ public class Arm extends SubsystemBase {
   }
 
   public void drive_manually(double arm_speed, double wrist_speed) {
+    wrist_speed = MathUtil.applyDeadband(wrist_speed, .01);
+    arm_speed = MathUtil.applyDeadband(arm_speed, .01);
+
+    wrist_speed = MathUtil.clamp(wrist_speed, WRIST_REVERSE_SPEED, WRIST_FORWARD_SPEED);
+    arm_speed = MathUtil.clamp(arm_speed, ARM_REVERSE_SPEED, ARM_FORWARD_SPEED);
+
     m_arm_motor.set(ControlMode.PercentOutput, arm_speed);
     m_wrist_motor.set(ControlMode.PercentOutput, wrist_speed);
   }
@@ -711,7 +722,8 @@ public class Arm extends SubsystemBase {
   }
   
   private double getWristArbFF(){
-    return WRIST_FORWARD_COSINE_FF * Math.cos(wristToDegrees(m_wrist_motor.getSelectedSensorPosition()));
+    double curr_degrees = wristToDegrees(m_wrist_motor.getSelectedSensorPosition();
+    return WRIST_FORWARD_COSINE_FF * (Math.cos(curr_degrees + WRIST_COSINE_STARTING_OFFSET));
   }
 
   public boolean is_wrist_mm_done(int target_ticks){
