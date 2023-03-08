@@ -143,7 +143,6 @@ public class RobotContainer {
             () -> m_arm.isBackwardMovement(SuperStructurePosition.GroundPickup)
         )
     );
-  
     // D-pad up
     m_partner_controller.povUp().onTrue(
         new ConditionalCommand(
@@ -152,7 +151,6 @@ public class RobotContainer {
             () -> m_arm.isBackwardMovement(SuperStructurePosition.SubstationPickup)
         )
     );
-  
     // D-pad left
     m_partner_controller.povLeft().onTrue(
         new ConditionalCommand(
@@ -171,11 +169,15 @@ public class RobotContainer {
    *
    * @return the command to run in autonomous
    */
-  public Command getAutonomousCommand3() {
+  public Command getAutonomousCommand1() {
     // An ExampleCommand will run in autonomous
     return new Pos3ScoreMoveBalance(m_drivetrain, m_arm, m_gripper);
   }
-  public Command getAutonomousCommand1() {
+  public Command getAutonomousCommand2() {
+    // An ExampleCommand will run in autonomous
+    return new Pos1ScoreMoveBalance(m_drivetrain, m_arm, m_gripper);
+  }
+  public Command getAutonomousCommand3() {
     // An ExampleCommand will run in autonomous
     return new Pos1ScoreMoveBalance(m_drivetrain, m_arm, m_gripper);
   }

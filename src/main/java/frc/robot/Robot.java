@@ -19,6 +19,8 @@ public class Robot extends TimedRobot {
 
   private RobotContainer m_robotContainer;
 
+  private double Auto = 1;
+
   /**
    * This function is run when the robot is first started up and should be used for any
    * initialization code.
@@ -56,7 +58,15 @@ public class Robot extends TimedRobot {
   /** This autonomous runs the autonomous command selected by your {@link RobotContainer} class. */
   @Override
   public void autonomousInit() {
-    m_autonomousCommand = m_robotContainer.getAutonomousCommand();
+    if (Auto == 1){
+      m_autonomousCommand = m_robotContainer.getAutonomousCommand1();
+    }
+    else if(Auto == 2){
+      m_autonomousCommand = m_robotContainer.getAutonomousCommand2();
+    }
+    else if(Auto == 3){
+      m_autonomousCommand = m_robotContainer.getAutonomousCommand3();
+    }
 
     // schedule the autonomous command (example)
     if (m_autonomousCommand != null) {
