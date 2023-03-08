@@ -18,10 +18,8 @@ import frc.robot.subsystems.Arm.Arm.SuperStructurePosition;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.subsystems.DriveTrain.BalanceBangBangTestCommand;
 import frc.robot.subsystems.DriveTrain.DefaultDriveTrainCommand;
-import frc.robot.subsystems.DriveTrain.DriveMotionMagic;
 import frc.robot.subsystems.DriveTrain.DriveMotionMagicTest;
 import frc.robot.subsystems.DriveTrain.DriveTrain;
 import frc.robot.subsystems.DriveTrain.FineGrainedDrivingControl;
@@ -34,7 +32,6 @@ import frc.robot.subsystems.Gripper.RunMotorsForward;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.ConditionalCommand;
-import edu.wpi.first.wpilibj2.command.PrintCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 
 /**
@@ -64,12 +61,6 @@ public class RobotContainer {
     m_drivetrain.setDefaultCommand(new DefaultDriveTrainCommand(m_drivetrain, m_driver_controller));    
     // Configure the button bindings
     configureButtonBindings();
-
-    SmartDashboard.putData(new Pos3ScoreMoveBalance(m_drivetrain, m_arm, m_gripper));
-    SmartDashboard.putData("Forward 100", m_drivetrain.driveMotionMagic(100).until(m_drivetrain::is_drive_mm_done));
-    SmartDashboard.putData("Backward 100", new DriveMotionMagic(m_drivetrain, -100) );
-    SmartDashboard.putData("Drive MM Test", new DriveMotionMagicTest(m_drivetrain));
-    SmartDashboard.putData("Lambda Test", m_drivetrain.driveMotionMagic(-100).until(()-> m_drivetrain.is_drive_mm_done()));
   }
 
   /**
