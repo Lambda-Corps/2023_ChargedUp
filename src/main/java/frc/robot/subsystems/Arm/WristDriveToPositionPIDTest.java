@@ -18,7 +18,7 @@ public class WristDriveToPositionPIDTest extends CommandBase {
   boolean m_done, m_is_forward_movement;
   int m_count;
 
-  NetworkTableEntry m_kPEntry, m_time_to_velo, m_target_velocity, m_target;
+  NetworkTableEntry m_kPEntry, m_kFEntry, m_time_to_velo, m_target_velocity, m_target;
   /** Creates a new DriveToPosition. */
   public WristDriveToPositionPIDTest(Arm arm, SuperStructurePosition position) {
     m_arm = arm;
@@ -28,6 +28,7 @@ public class WristDriveToPositionPIDTest extends CommandBase {
     // Use addRequirements() here to declare subsystem dependencies.
     NetworkTable armTab = NetworkTableInstance.getDefault().getTable("Shuffleboard").getSubTable("Arm Test");
     m_kPEntry = armTab.getEntry("Wrist kP");
+    m_kFEntry = armTab.getEntry("Wrist kF");
     m_time_to_velo = armTab.getEntry("Time to Velo");
     m_target_velocity = armTab.getEntry("Target Velocity");
     m_target = armTab.getEntry("Target Ticks");
@@ -43,7 +44,11 @@ public class WristDriveToPositionPIDTest extends CommandBase {
     m_is_forward_movement = m_arm.getSuperStructureWristPosition() < m_position.getWristPosition();
     // m_target_ticks = (int)(m_target.getDouble(SuperStructurePosition.Stowed.getArmPosition()));
     m_target_ticks = m_position.getWristPosition();
-    m_arm.configure_wrist_motion_magic_test(m_target_velocity.getDouble(0), m_time_to_velo.getDouble(1), m_kPEntry.getDouble(0), m_is_forward_movement);
+    m_arm.configure_wrist_motion_magic_test(m_target_velocity.getDouble(0), 
+                                            m_time_to_velo.getDouble(1), 
+                                            m_kPEntry.getDouble(0), 
+                                            m_kFEntry.getDouble(0),
+                                            m_is_forward_movement);
 
     m_arm.move_wrist_motion_magic(m_target_ticks, m_is_forward_movement);
   }

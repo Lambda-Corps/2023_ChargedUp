@@ -150,11 +150,11 @@ public class Arm extends SubsystemBase {
   // Constant values for ARM movement, must be researched and tuned via tuner
   final double ARM_FORWARD_SPEED = .4;
   final double ARM_REVERSE_SPEED = -.4;
-  final double WRIST_FORWARD_SPEED = .7;
+  final double WRIST_FORWARD_SPEED = .3;
   final double WRIST_REVERSE_SPEED = -.25;
   final double WRIST_FORWARD_COSINE_FF = .09; // When arm is horizontal, calculation should be 1 * .07
-  final double ARM_GEAR_RATIO = 10 * 4 * 4;
-  final double WRIST_GEAR_RATIO = 7 * 5 * 4;
+  final double ARM_GEAR_RATIO = 10 * 4 * 4 * (2/1);
+  final double WRIST_GEAR_RATIO = 7 * 4 * (64/24);
   final int WRIST_REVERSE_SOFT_LIMIT = -1000;
   final int WRIST_FORWARD_SOFT_LIMIT = 58000;
   final int ARM_REVERSE_SOFT_LIMIT = 0;
@@ -162,8 +162,8 @@ public class Arm extends SubsystemBase {
   final int SAFE__MOVE_WRIST_POSITION = 10000; // Puts the wrist up at 11 degrees
   // final int ARM_FORWARD_SOFT_LIMIT = (int)(2048 * ARM_GEAR_RATIO * 1/6); // 60
   // degrees rotation
-  final double WRIST_MAX_STATOR_CURRENT = 30;
-  final double ARM_MAX_STATOR_CURRENT = 30;
+  final double WRIST_MAX_STATOR_CURRENT = 10;
+  final double ARM_MAX_STATOR_CURRENT = 10;
   final int ARM_MM_SLOT = 0;
   final int ARM_HOLD_POSITION_SLOT = 2;
   final int WRIST_MM_FORWARD_SLOT = 0;
@@ -675,7 +675,7 @@ public class Arm extends SubsystemBase {
       return degrees / (360.0 / (WRIST_GEAR_RATIO * 2048.0));
   }
 
-  public void configure_wrist_motion_magic_test(double velocity, double time_to_velo, double kP, boolean isForward){
+  public void configure_wrist_motion_magic_test(double velocity, double time_to_velo, double kP, double kF, boolean isForward){
      // Dividing by zero is very bad, will crash most systems. 
 		if( time_to_velo == 0 ){
 			time_to_velo = 1;
@@ -685,13 +685,13 @@ public class Arm extends SubsystemBase {
     if (isForward ){
       m_wrist_motor.selectProfileSlot(WRIST_MM_FORWARD_SLOT, 0);
       m_wrist_motor.config_kP(WRIST_MM_FORWARD_SLOT, kP);
-      m_arm_motor.config_kF(WRIST_MM_FORWARD_SLOT, (WRIST_FORWARD_SPEED * 1023)/velocity);
+      m_arm_motor.config_kF(WRIST_MM_FORWARD_SLOT, kF);
       m_wrist_motor.configMotionCruiseVelocity(velocity);
       m_wrist_motor.configMotionAcceleration(acceleration);
     } else {
       m_wrist_motor.selectProfileSlot(WRIST_MM_REVERSE_SLOT, 0);
       m_wrist_motor.config_kP(WRIST_MM_REVERSE_SLOT, kP);
-      m_arm_motor.config_kF(WRIST_MM_REVERSE_SLOT, (WRIST_REVERSE_SPEED * 1023)/velocity);
+      m_arm_motor.config_kF(WRIST_MM_REVERSE_SLOT, kF);
       m_wrist_motor.configMotionCruiseVelocity(velocity);
       m_wrist_motor.configMotionAcceleration(acceleration);
     }
@@ -721,7 +721,7 @@ public class Arm extends SubsystemBase {
     return Math.abs((target_ticks - wrist_pos)) < WRIST_POSITION_TOLERANCE;
   }
 
-  public void configure_arm_motion_magic_test(double velocity, double time_to_velo, double kP){
+  public void configure_arm_motion_magic_test(double velocity, double time_to_velo, double kP, double kF){
     // Dividing by zero is very bad, will crash most systems. 
 		if( time_to_velo == 0 ){
 			time_to_velo = 1;
@@ -730,7 +730,7 @@ public class Arm extends SubsystemBase {
 
     m_arm_motor.selectProfileSlot(ARM_MM_SLOT, 0);
     m_arm_motor.config_kP(ARM_MM_SLOT, kP);
-    m_arm_motor.config_kF(ARM_MM_SLOT, (ARM_FORWARD_SPEED * 1023)/velocity);
+    m_arm_motor.config_kF(ARM_MM_SLOT, kF);
     m_arm_motor.configMotionCruiseVelocity(velocity);
     m_arm_motor.configMotionAcceleration(acceleration);
     // If we're within 10 ticks we feel good
