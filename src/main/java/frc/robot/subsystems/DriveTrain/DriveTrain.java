@@ -158,6 +158,11 @@ public class DriveTrain extends SubsystemBase {
 
 	BangBangController m_forward_bang_bang, m_reverse_bang_bang;
 
+	// Constants for Drive Current limits
+	final int DRIVE_CONTINUOUS_CURRENT_LIMIT = 35;
+	final int DRIVE_PEAK_CURRENT_LIMIT = 60;
+	final double DRIVE_PEAK_DURATION = .1; // limit current after 100 ms of peak,
+
 	/** Creates a new DriveTrain. */
 	public DriveTrain() {
 		m_gyro = new AHRS(SPI.Port.kMXP);
@@ -190,8 +195,16 @@ public class DriveTrain extends SubsystemBase {
 			talon_config.motionAcceleration = 5000;
 		}
 
+		// Setup the current limits for the drive motors
+		talon_config.supplyCurrLimit.currentLimit = DRIVE_CONTINUOUS_CURRENT_LIMIT;
+		talon_config.supplyCurrLimit.enable = true;
+		talon_config.supplyCurrLimit.triggerThresholdCurrent = DRIVE_PEAK_CURRENT_LIMIT;
+		talon_config.supplyCurrLimit.triggerThresholdTime = DRIVE_PEAK_DURATION;
+		
 		m_left_leader.configAllSettings(talon_config);
+		m_left_follower.configAllSettings(talon_config);
 		m_right_leader.configAllSettings(talon_config);
+		m_right_follower.configAllSettings(talon_config);
 
 		// Default the controllers to use the primary slots for MotionMagic
 		m_left_leader.selectProfileSlot(MM_SLOT, PID_PRIMARY);
@@ -211,10 +224,6 @@ public class DriveTrain extends SubsystemBase {
 		m_left_leader.setNeutralMode(NeutralMode.Brake);
 		m_right_leader.setNeutralMode(NeutralMode.Brake);
 
-		/** Config Objects for motor controllers */
-		// TalonFXConfiguration _leftConfig = new TalonFXConfiguration();
-		// TalonFXConfiguration _rightConfig = new TalonFXConfiguration();
-
 		m_left_leader.configSelectedFeedbackSensor(TalonFXFeedbackDevice.IntegratedSensor, PID_PRIMARY, kTimeoutMs);
 		m_right_leader.configSelectedFeedbackSensor(TalonFXFeedbackDevice.IntegratedSensor, PID_PRIMARY, kTimeoutMs);
 
@@ -226,7 +235,6 @@ public class DriveTrain extends SubsystemBase {
 
 		/// Odometry Tracker objects
 		m_2dField = new Field2d();
-		SmartDashboard.putData(m_2dField);
 		m_odometry = new DifferentialDriveOdometry(m_gyro.getRotation2d(), 0, 0);
 
 		// Code for simulation within the DriveTrain Constructor
@@ -255,6 +263,8 @@ public class DriveTrain extends SubsystemBase {
 			// Setup the Simulation input classes
 			m_leftDriveSim = m_left_leader.getSimCollection();
 			m_rightDriveSim = m_right_leader.getSimCollection();
+
+			SmartDashboard.putData(m_2dField);
 
 		} // end of constructor code for the simulation
 
@@ -306,11 +316,6 @@ public class DriveTrain extends SubsystemBase {
 
 	@Override
 	public void periodic() {
-		m_odometry.update(m_gyro.getRotation2d(),
-				nativeUnitsToDistanceMeters(m_left_leader.getSelectedSensorPosition()),
-				nativeUnitsToDistanceMeters(m_right_leader.getSelectedSensorPosition()));
-		m_2dField.setRobotPose(m_odometry.getPoseMeters());
-
 		// Update the encoder topics with timestamps
 		m_left_encoder_entry.set(m_left_leader.getSelectedSensorPosition(), 0);
 		m_right_encoder_entry.set(m_right_leader.getSelectedSensorPosition(), 0);
@@ -469,6 +474,11 @@ public class DriveTrain extends SubsystemBase {
 		int dev = SimDeviceDataJNI.getSimDeviceHandle("navX-Sensor[0]");
 		SimDouble angle = new SimDouble(SimDeviceDataJNI.getSimValueHandle(dev, "Yaw"));
 		angle.set(-m_drivetrainSimulator.getHeading().getDegrees());
+
+		m_odometry.update(m_gyro.getRotation2d(),
+				nativeUnitsToDistanceMeters(m_left_leader.getSelectedSensorPosition()),
+				nativeUnitsToDistanceMeters(m_right_leader.getSelectedSensorPosition()));
+		m_2dField.setRobotPose(m_odometry.getPoseMeters());
 	}
 
 	private int distanceToNativeUnits(double positionMeters) {
