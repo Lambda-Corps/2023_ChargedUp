@@ -21,36 +21,32 @@ import frc.robot.subsystems.Gripper.Gripper;
 // NOTE:  Consider using this command inline, rather than writing a subclass.  For more
 // information, see:
 // https://docs.wpilib.org/en/stable/docs/software/commandbased/convenience-features.html
-public class Pos3ScoreMoveBalance extends SequentialCommandGroup {
-  /** Creates a new Pos1ScoreMoveBalance. */
-  public Pos3ScoreMoveBalance(DriveTrain dt, Arm arm, Gripper gripper) {
+public class Pos1ScoreMoveBalance extends SequentialCommandGroup {
+  /** Creates a new ReplaceMeSequentialCommandGroup. */
+  public Pos1ScoreMoveBalance(DriveTrain dt, Arm arm, Gripper gripper) {
     // Add your commands in the addCommands() call, e.g.
     // addCommands(new FooCommand(), new BarCommand());
     addCommands(
-      // Set our odometry to the starting position
-      //dt.setRobotStartingPose(1.89, 4.97, 180),
-      // Set the superstructure to the scoring position
-     // new WristThenArmSequenceCommand(arm, SuperStructurePosition.ScoreConeMid).raceWith(new WaitCommand(3)),
+      /* new WristThenArmSequenceCommand(arm, SuperStructurePosition.ScoreConeMid).raceWith(new WaitCommand(3)), */
+      new WaitCommand(3),
       // TODO test these new commands and remove the prints
-
       new PrintCommand("Wrist the arm done"),
       // Drop the cone on the peg
-      //gripper.expandGripperCommand(),
+      /*gripper.expandGripperCommand(),*/
+      new WaitCommand(1),
       new PrintCommand("Expand Gripper done"),
       // Stow the arm back in the robot
-      //new ArmThenWristSequenceCommand(arm, SuperStructurePosition.Stowed).raceWith(new WaitCommand(3)),
+      /*new ArmThenWristSequenceCommand(arm, SuperStructurePosition.Stowed).raceWith(new WaitCommand(3)), */
+      new WaitCommand(3),
       new PrintCommand("ArmThenWrist Done"),
-      // Drive backward 100 inches
-      new DriveMotionMagic(dt, -140),
-      new TurnToAngleWithGyroPID(dt, -90),
-      new DriveMotionMagic(dt, 65), 
+      //Drive Back 100 inches 
+      new DriveMotionMagic(dt, -140), 
       new TurnToAngleWithGyroPID(dt, 90),
-      // This IS the drive and Bang Bang
-    
-      new DriveSlowlyUntilRamp(dt).raceWith(new WaitCommand(1.5)), 
-      new PrintCommand("Drive Slowly Done"),
+      new DriveMotionMagic(dt, 65),
+      new TurnToAngleWithGyroPID(dt, -90),
+      // This needs to be drive and Bang Bang
+      new DriveSlowlyUntilRamp(dt).raceWith(new WaitCommand(1.25)), 
       new BalanceBangBangCommand(dt)
     );
-      // dt.driveMotionMagic(-100).until(dt::is_drive_mm_done).andThen(dt.stopMotorsCommand())      );
   }
 }
