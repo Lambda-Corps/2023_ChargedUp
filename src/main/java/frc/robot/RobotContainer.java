@@ -6,6 +6,7 @@ package frc.robot;
 
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
+import frc.robot.autoCommands.PosTwoPreloadMobilBalance;
 import frc.robot.subsystems.Arm.Arm;
 import frc.robot.subsystems.Arm.ArmDriveToPositionPIDTest;
 import frc.robot.subsystems.Arm.ArmThenWristSequenceCommand;
@@ -16,6 +17,7 @@ import frc.robot.subsystems.Arm.Arm.SuperStructurePosition;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
+import frc.robot.subsystems.DriveTrain.BalanceBangBangCommandTest;
 import frc.robot.subsystems.DriveTrain.DefaultDriveTrainCommand;
 import frc.robot.subsystems.DriveTrain.DriveMMSequenceTest;
 import frc.robot.subsystems.DriveTrain.DriveMotionMagicTest;
@@ -130,8 +132,8 @@ public class RobotContainer {
     driveTestTab.add("Right Encoder Result", 0).withPosition(4, 3).withSize(1,1);
     driveTestTab.add("MM kP", 0).withPosition(5, 3).withSize(1,1);
     driveTestTab.add("Drive MM", new DriveMotionMagicTest(m_drivetrain)).withPosition(6,3).withSize(2, 1);
-    // driveTestTab.addDouble("Left Error", m_drivetrain::getLeftError).withPosition(0,4).withSize(1,1);
-    // driveTestTab.addDouble("Right Error", m_drivetrain::getRightError).withPosition(1,4).withSize(1,1);
+    driveTestTab.addDouble("Left Error", m_drivetrain::getLeftError).withPosition(0,4).withSize(1,1);
+    driveTestTab.addDouble("Right Error", m_drivetrain::getRightError).withPosition(1,4).withSize(1,1);
     driveTestTab.add("DriveMM Sequence", new DriveMMSequenceTest(m_drivetrain)).withPosition(2, 4).withSize(1, 1);
     driveTestTab.add("Target Degrees", 0).withPosition(6, 1).withSize(1, 1);
     driveTestTab.addNumber("Curr Heading", m_drivetrain::getScaledHeading).withPosition(4,0).withSize(1,1);
@@ -140,6 +142,9 @@ public class RobotContainer {
     driveTestTab.addNumber("Pitch", m_drivetrain::getPitch).withPosition(1, 2).withSize(1, 1);
     driveTestTab.addNumber("Roll", m_drivetrain::getRoll).withPosition(2, 2).withSize(1, 1);
     driveTestTab.addNumber("Angle", m_drivetrain::getAngle).withPosition(5, 2).withSize(1, 1);
+
+    // test auto secquence
+    driveTestTab.add("Pos 2 auto sequence", new PosTwoPreloadMobilBalance(m_drivetrain, m_arm, m_gripper));
 
 
     // PID Tuning
@@ -245,5 +250,14 @@ public class RobotContainer {
 
     // armTestTab.add("Robot Heading", 0).withPosition(0, 0).withSize(2, 2).withWidget(BuiltInWidgets.kGyro);
     
+  }
+
+  private void buildBangBangControlTab() {
+    ShuffleboardTab bangbangtesttab = Shuffleboard.getTab("Bang Bang Control Test");
+
+    bangbangtesttab.add("Setpoint", 0).withPosition(0, 0).withSize(1, 1);
+    bangbangtesttab.add("Output %", 0).withPosition(1, 0).withSize(1, 1);
+    bangbangtesttab.add("Test Pitch", 0).withPosition(0, 1).withSize(2, 1).withWidget(BuiltInWidgets.kNumberSlider);
+    bangbangtesttab.add(new BalanceBangBangCommandTest(m_drivetrain)).withPosition(0, 2).withSize(1, 1);
   }
 }

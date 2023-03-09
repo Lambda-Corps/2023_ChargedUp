@@ -21,6 +21,7 @@ import com.kauailabs.navx.frc.AHRS;
 import edu.wpi.first.hal.SimDouble;
 import edu.wpi.first.hal.simulation.SimDeviceDataJNI;
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.controller.BangBangController;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.kinematics.DifferentialDriveOdometry;
@@ -138,6 +139,10 @@ public class DriveTrain extends SubsystemBase {
 
 	PIDController m_turn_pid_controller;
 
+	// bang bang controller and associated values
+	BangBangController m_bang_bang_controller;
+	double m_bangbang_setpoint, m_bangbang_output, m_bangbang_test_pitch;
+
 	/** Creates a new DriveTrain. */
 	public DriveTrain() {
 		m_gyro = new AHRS(SPI.Port.kMXP);
@@ -232,7 +237,12 @@ public class DriveTrain extends SubsystemBase {
 		m_shifter = new DoubleSolenoid(PneumaticsModuleType.CTREPCM, 0, 1);
 		m_shifter.set(LOW_GEAR);
 
+		NetworkTableInstance bangbang_inst = NetworkTableInstance.getDefault();
+		NetworkTable bangbang_table = bangbang_inst.getTable("Shuffleboard/Bang Bang Control Test");
+
 		m_turn_pid_controller = new PIDController(0, 0, 0);
+
+		m_bang_bang_controller = new BangBangController();
 	}
 
 	@Override
@@ -243,10 +253,10 @@ public class DriveTrain extends SubsystemBase {
 		m_2dField.setRobotPose(m_odometry.getPoseMeters());
 
 		// Update the encoder topics with timestamps
-		// m_left_encoder_entry.set(m_left_leader.getSelectedSensorPosition(), 0);
-		// m_right_encoder_entry.set(m_right_leader.getSelectedSensorPosition(), 0);
-		// m_right_speed_entry.set(getRightSpeed(), 0);
-		// m_left_speed_entry.set(getLeftSpeed(), 0);
+		m_left_encoder_entry.set(m_left_leader.getSelectedSensorPosition(), 0);
+		m_right_encoder_entry.set(m_right_leader.getSelectedSensorPosition(), 0);
+		m_right_speed_entry.set(getRightSpeed(), 0);
+		m_left_speed_entry.set(getLeftSpeed(), 0);
 	}
 
 	public void teleop_drive(double forward, double turn) {
@@ -601,6 +611,10 @@ public class DriveTrain extends SubsystemBase {
 		done = left_done && right_done;
 
 		return done;
+	}
+
+	public void balance_with_bang_bang_controller(double setpoint) {
+		m_bangbang_setpoint = setpoint;
 	}
 
 	public double getLeftError() {
