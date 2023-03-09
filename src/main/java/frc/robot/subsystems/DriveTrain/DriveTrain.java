@@ -163,8 +163,8 @@ public class DriveTrain extends SubsystemBase {
 	final int DRIVE_PEAK_CURRENT_LIMIT = 60;
 	final double DRIVE_PEAK_DURATION = .1; // limit current after 100 ms of peak,
 
-	final double DRIVE_OPEN_LOOP_RAMP = .25;
-	final double DRIVE_CLOSED_LOOP_RAMP = .25;
+	final double DRIVE_OPEN_LOOP_RAMP = .18;
+	final double DRIVE_CLOSED_LOOP_RAMP = .18;
 
 	/** Creates a new DriveTrain. */
 	public DriveTrain() {
