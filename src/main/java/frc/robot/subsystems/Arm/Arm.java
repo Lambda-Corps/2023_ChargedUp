@@ -722,7 +722,7 @@ public class Arm extends SubsystemBase {
   }
   
   private double getWristArbFF(){
-    double curr_degrees = wristToDegrees(m_wrist_motor.getSelectedSensorPosition();
+    double curr_degrees = wristToDegrees(m_wrist_motor.getSelectedSensorPosition());
     return WRIST_FORWARD_COSINE_FF * (Math.cos(curr_degrees + WRIST_COSINE_STARTING_OFFSET));
   }
 
