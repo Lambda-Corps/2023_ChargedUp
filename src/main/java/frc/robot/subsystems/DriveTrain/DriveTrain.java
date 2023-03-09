@@ -802,7 +802,9 @@ public class DriveTrain extends SubsystemBase {
 
 		return speed;
 	}
-
+	public boolean isRollGreaterThan3(){
+		return m_gyro.getRoll() > 3.0;
+	}
 	// INLINE COMMANDS
 	public CommandBase shiftToHighGear() {
 		return runOnce(

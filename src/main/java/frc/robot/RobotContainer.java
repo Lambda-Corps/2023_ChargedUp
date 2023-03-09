@@ -7,6 +7,7 @@ package frc.robot;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import frc.robot.autoCommands.Pos1ScoreMoveBalance;
+import frc.robot.autoCommands.Pos2ScoreMoveBalance;
 import frc.robot.autoCommands.Pos3ScoreMoveBalance;
 import frc.robot.subsystems.Arm.Arm;
 import frc.robot.subsystems.Arm.ArmDriveToPositionPIDTest;
@@ -18,6 +19,7 @@ import frc.robot.subsystems.Arm.Arm.SuperStructurePosition;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import frc.robot.subsystems.DriveTrain.BalanceBangBangTestCommand;
 import frc.robot.subsystems.DriveTrain.DefaultDriveTrainCommand;
 import frc.robot.subsystems.DriveTrain.DriveMotionMagicTest;
@@ -26,6 +28,7 @@ import frc.robot.subsystems.DriveTrain.FineGrainedDrivingControl;
 import frc.robot.subsystems.DriveTrain.SetMaxSpeedCommand;
 import frc.robot.subsystems.DriveTrain.TurnToAngleWithGyroPID;
 import frc.robot.subsystems.DriveTrain.DriveDistanceInInchesTest;
+import frc.robot.subsystems.DriveTrain.DriveMotionMagic;
 import frc.robot.subsystems.Gripper.Gripper;
 import frc.robot.subsystems.Gripper.RunMotorsBackward;
 import frc.robot.subsystems.Gripper.RunMotorsForward;
@@ -54,7 +57,10 @@ public class RobotContainer {
   //private final ExampleCommand m_autoCommand = new ExampleCommand(m_exampleSubsystem);
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
+
+  private SendableChooser<Command> m_auto_chooser;
   public RobotContainer() {
+    buildDriveTab();
     buildDriveTestTab();
     buildArmTestTab();
     // Set subsystem default commands
@@ -62,6 +68,7 @@ public class RobotContainer {
     m_arm.setDefaultCommand(new DriveArmManually(m_arm, m_partner_controller));
     // Configure the button bindings
     configureButtonBindings();
+
   }
 
   /**
@@ -163,7 +170,30 @@ public class RobotContainer {
    */
   public Command getAutonomousCommand1() {
     // An ExampleCommand will run in autonomous
-    return new Pos3ScoreMoveBalance(m_drivetrain, m_arm, m_gripper);
+    return m_auto_chooser.getSelected();
+  }
+ 
+  private void buildDriveTab() {
+    ShuffleboardTab driveTab = Shuffleboard.getTab(("Drive Tab"));
+
+    driveTab.addNumber("Curr Heading", m_drivetrain::getScaledHeading).withPosition(7,0).withSize(1,1);
+   
+    driveTab.addBoolean("ArmForward", m_arm::getArmForwardLimit).withPosition(5, 1).withSize(1,1);
+    driveTab.addBoolean("ArmReverse", m_arm::getArmReverseLimit).withPosition(5, 1).withSize(1,1);
+    driveTab.add("Arm", m_arm).withPosition(8, 0).withSize(8, 0);
+    driveTab.add("Gripper", m_gripper).withPosition(8, 1).withSize(8, 1);
+
+
+    //Auto Options
+    m_auto_chooser = new SendableChooser<Command>();
+    driveTab.add("Autonomous Chooser", m_auto_chooser).withWidget(BuiltInWidgets.kComboBoxChooser).withPosition(5, 0).withSize(2, 1);
+    m_auto_chooser.addOption("Position 1", new Pos1ScoreMoveBalance(m_drivetrain, m_arm, m_gripper));
+    m_auto_chooser.addOption("Position 2", new Pos2ScoreMoveBalance(m_drivetrain, m_arm, m_gripper));
+    m_auto_chooser.addOption("Position 3", new Pos3ScoreMoveBalance(m_drivetrain, m_arm, m_gripper));
+    m_auto_chooser.setDefaultOption("Default Auto incase we forget", new DriveMotionMagic(m_drivetrain, -150));
+    m_auto_chooser.addOption("Drive Forward 10ft", new DriveMotionMagic(m_drivetrain, 120));
+    m_auto_chooser.addOption("Drive Backward 5ft", new DriveMotionMagic(m_drivetrain, -60));
+    
   }
   public Command getAutonomousCommand2() {
     // An ExampleCommand will run in autonomous
@@ -223,7 +253,8 @@ public class RobotContainer {
     driveTestTab.add("Turn PID", m_drivetrain.get_dt_turn_pidcontroller()).withPosition(5, 0);
     driveTestTab.add("Turn with PID", new DriveDistanceInInchesTest(m_drivetrain)).withPosition(6, 0).withSize(2, 1);
     driveTestTab.add("Drive Fine Grained", new FineGrainedDrivingControl(m_drivetrain, m_driver_controller)).withPosition(8, 1).withSize(2, 1);
-    driveTestTab.add("BangBang Command", new BalanceBangBangTestCommand(m_drivetrain).andThen(new TurnToAngleWithGyroPID(m_drivetrain, 90))).withPosition(6, 5 ).withSize(2, 1);    
+    driveTestTab.add("BangBang Command", new BalanceBangBangTestCommand(m_drivetrain).andThen(new TurnToAngleWithGyroPID(m_drivetrain, 90))).withPosition(6, 5 ).withSize(2, 1); 
+
     driveTestTab.add("DriveSlowly Command", m_drivetrain.driveSlowlyUntil().withTimeout(2).andThen(m_drivetrain.stopMotorsCommand()));
   }
 
