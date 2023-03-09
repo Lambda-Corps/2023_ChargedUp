@@ -22,6 +22,7 @@ public class LED extends SubsystemBase{
     
         // Writes bytes over I2C
         i2c.write(0, data);
+        ++i;
     }
 
     public void clearLED() {
@@ -37,8 +38,8 @@ public class LED extends SubsystemBase{
     public void periodic(){
         if (i == 10 & byteList.size() > 0) {
             writeByte(byteList.get(0));
-            byteList.remove(0);
             i = 0;
+
         }
     }
 }
