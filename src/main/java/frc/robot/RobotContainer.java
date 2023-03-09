@@ -4,7 +4,6 @@
 
 package frc.robot;
 
-import java.sql.Array;
 
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
@@ -23,7 +22,7 @@ import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import frc.robot.subsystems.DriveTrain.BalanceBangBangTestCommand;
+import frc.robot.subsystems.DriveTrain.BalanceBangBangCommandTest;
 import frc.robot.subsystems.DriveTrain.DefaultDriveTrainCommand;
 import frc.robot.subsystems.DriveTrain.DriveMotionMagic;
 import frc.robot.subsystems.DriveTrain.DriveMotionMagicTest;
@@ -38,7 +37,6 @@ import frc.robot.subsystems.Gripper.RunMotorsForward;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.ConditionalCommand;
-import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 
 /**
@@ -256,7 +254,7 @@ public class RobotContainer {
     driveTestTab.add("Turn PID", m_drivetrain.get_dt_turn_pidcontroller()).withPosition(5, 0);
     driveTestTab.add("Turn with PID", new DriveDistanceInInchesTest(m_drivetrain)).withPosition(6, 0).withSize(2, 1);
     driveTestTab.add("Drive Fine Grained", new FineGrainedDrivingControl(m_drivetrain, m_driver_controller)).withPosition(8, 1).withSize(2, 1);
-    driveTestTab.add("BangBang Command", new BalanceBangBangTestCommand(m_drivetrain).andThen(new TurnToAngleWithGyroPID(m_drivetrain, 90))).withPosition(6, 5 ).withSize(2, 1); 
+    driveTestTab.add("BangBang Command", new BalanceBangBangCommandTest(m_drivetrain).andThen(new TurnToAngleWithGyroPID(m_drivetrain, 90))).withPosition(6, 5 ).withSize(2, 1); 
 
     driveTestTab.add("DriveSlowly Command", m_drivetrain.driveSlowlyUntil().withTimeout(2).andThen(m_drivetrain.stopMotorsCommand()));
   }

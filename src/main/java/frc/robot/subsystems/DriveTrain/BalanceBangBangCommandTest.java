@@ -9,7 +9,7 @@ import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 
-public class BalanceBangBangTestCommand extends CommandBase {
+public class BalanceBangBangCommandTest extends CommandBase {
   /** Creates a new BalanceBangBangCommand. */
    NetworkTableEntry m_fwd_speed_entry, m_back_speed_entry, m_setpoint_entry, m_fwd_out, m_rev_out, m_pitch_entry;
    double m_fwd_speed, m_reverse_speed, m_setpoint, m_output, m_pitch;
@@ -17,7 +17,7 @@ public class BalanceBangBangTestCommand extends CommandBase {
    int m_count;
 
    DriveTrain m_dt;
-  public BalanceBangBangTestCommand(DriveTrain dt) {
+  public BalanceBangBangCommandTest(DriveTrain dt) {
     m_dt = dt;
 
     NetworkTable driveTab = NetworkTableInstance.getDefault().getTable("Shuffleboard").getSubTable("Drive Test");

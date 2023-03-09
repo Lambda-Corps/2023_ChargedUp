@@ -41,7 +41,6 @@ import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
-import edu.wpi.first.wpilibj.interfaces.Gyro;
 import edu.wpi.first.wpilibj.simulation.DifferentialDrivetrainSim;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -788,6 +787,22 @@ public class DriveTrain extends SubsystemBase {
 	}
 	public boolean isRollGreaterThan3(){
 		return m_gyro.getRoll() > 3.0;
+	}
+	public void visionDrive(double range,  double yaw, double goalInMeters) {
+		
+		double forwardspeed = 0;
+		double turnspeed = 0;
+		
+		if (range > 0) {
+			forwardspeed = -m_drive_pid_controller.calculate(range, goalInMeters);
+			turnspeed = -m_turn_pid_controller.calculate(yaw, 0);
+
+			NetworkTable visionTable = NetworkTableInstance.getDefault().getTable("Shuffleboard").getSubTable("Vision");
+			visionTable.getEntry("forward drive speed").setDouble(forwardspeed);
+			visionTable.getEntry("Turn speed").setDouble(turnspeed);
+		}
+
+		teleop_drive(forwardspeed, turnspeed);
 	}
 	// INLINE COMMANDS
 	public CommandBase shiftToHighGear() {

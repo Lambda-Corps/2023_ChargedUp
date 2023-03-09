@@ -47,7 +47,7 @@ public class Pos3ScoreMoveBalance extends SequentialCommandGroup {
       new TurnToAngleWithGyroPID(dt, 90),
       // This IS the drive and Bang Bang
     
-      new DriveSlowlyUntilRamp(dt).raceWith(new WaitCommand(1.5)), 
+      new DriveSlowlyUntilRamp(dt).raceWith(new WaitCommand(1.25)), 
       new PrintCommand("Drive Slowly Done"),
       new BalanceBangBangCommand(dt)
     );
