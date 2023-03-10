@@ -4,11 +4,10 @@
 
 package frc.robot.autoCommands;
 
-import edu.wpi.first.wpilibj2.command.PrintCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import frc.robot.subsystems.Arm.Arm;
-import frc.robot.subsystems.Arm.ArmThenWristSequenceCommand;
+import frc.robot.subsystems.Arm.StowSuperStructure;
 import frc.robot.subsystems.Arm.WristThenArmSequenceCommand;
 import frc.robot.subsystems.Arm.Arm.SuperStructurePosition;
 import frc.robot.subsystems.DriveTrain.BalanceBangBangCommand;
@@ -30,26 +29,23 @@ public class Pos3ScoreMoveBalance extends SequentialCommandGroup {
       // Set our odometry to the starting position
       //dt.setRobotStartingPose(1.89, 4.97, 180),
       // Set the superstructure to the scoring position
-     // new WristThenArmSequenceCommand(arm, SuperStructurePosition.ScoreConeMid).raceWith(new WaitCommand(3)),
-      // TODO test these new commands and remove the prints
-
-      new PrintCommand("Wrist the arm done"),
+      new WristThenArmSequenceCommand(arm, SuperStructurePosition.ScoreConeMid).raceWith(new WaitCommand(3)),
+      // new PrintCommand("Wrist the arm done"),
       // Drop the cone on the peg
-      //gripper.expandGripperCommand(),
-      new PrintCommand("Expand Gripper done"),
+      gripper.expandGripperCommand(),
+      // new PrintCommand("Expand Gripper done"),
       // Stow the arm back in the robot
-      //new ArmThenWristSequenceCommand(arm, SuperStructurePosition.Stowed).raceWith(new WaitCommand(3)),
-      new PrintCommand("ArmThenWrist Done"),
+      new StowSuperStructure(arm),
+      // new PrintCommand("ArmThenWrist Done"),
       // Drive backward 100 inches
       new DriveMotionMagic(dt, -140),
       new TurnToAngleWithGyroPID(dt, -90),
       new DriveMotionMagic(dt, 65), 
       new TurnToAngleWithGyroPID(dt, 90),
       // This IS the drive and Bang Bang
-    
       new DriveSlowlyUntilRamp(dt).raceWith(new WaitCommand(1.5)), 
-      new PrintCommand("Drive Slowly Done"),
-      new BalanceBangBangCommand(dt)
+      new BalanceBangBangCommand(dt),
+      new TurnToAngleWithGyroPID(dt, 90)
     );
       // dt.driveMotionMagic(-100).until(dt::is_drive_mm_done).andThen(dt.stopMotorsCommand())      );
   }

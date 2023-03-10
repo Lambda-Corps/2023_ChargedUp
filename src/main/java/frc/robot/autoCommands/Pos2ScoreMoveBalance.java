@@ -7,11 +7,10 @@ package frc.robot.autoCommands;
 import frc.robot.subsystems.DriveTrain.BalanceBangBangCommand;
 import frc.robot.subsystems.DriveTrain.DriveMotionMagic;
 import frc.robot.subsystems.DriveTrain.DriveSlowlyUntilRamp;
-import edu.wpi.first.wpilibj2.command.PrintCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import frc.robot.subsystems.Arm.Arm;
-import frc.robot.subsystems.Arm.ArmThenWristSequenceCommand;
+import frc.robot.subsystems.Arm.StowSuperStructure;
 import frc.robot.subsystems.Arm.WristThenArmSequenceCommand;
 import frc.robot.subsystems.Arm.Arm.SuperStructurePosition;
 import frc.robot.subsystems.DriveTrain.DriveTrain;
@@ -27,24 +26,18 @@ public class Pos2ScoreMoveBalance extends SequentialCommandGroup {
     // Add your commands in the addCommands() call, e.g.
     // addCommands(new FooCommand(), new BarCommand());
     addCommands(
-      /* new WristThenArmSequenceCommand(arm, SuperStructurePosition.ScoreConeMid).raceWith(new WaitCommand(3)), */
-      new WaitCommand(3),
-      // TODO test these new commands and remove the prints
-      new PrintCommand("Wrist the arm done"),
+      new WristThenArmSequenceCommand(arm, SuperStructurePosition.ScoreConeMid).raceWith(new WaitCommand(3)),
+      // new PrintCommand("Wrist the arm done"),
       // Drop the cone on the peg
-      /*gripper.expandGripperCommand(),*/
-      new WaitCommand(1),
-      new PrintCommand("Expand Gripper done"),
+      gripper.expandGripperCommand(),
       // Stow the arm back in the robot
-      /*new ArmThenWristSequenceCommand(arm, SuperStructurePosition.Stowed).raceWith(new WaitCommand(3)), */
-      new WaitCommand(3),
-      new PrintCommand("ArmThenWrist Done"),
+      new StowSuperStructure(arm),
       //Drive Back 100 inches 
-      new DriveMotionMagic(dt, -140), 
-     
+      new DriveMotionMagic(dt, -140),  
       // This needs to be drive and Bang Bang
-      new DriveSlowlyUntilRamp(dt), 
-      new BalanceBangBangCommand(dt)
+      new DriveSlowlyUntilRamp(dt).raceWith(new WaitCommand(1.5)), 
+      new BalanceBangBangCommand(dt),
+      new TurnToAngleWithGyroPID(dt, 90)
     );
   }
 }

@@ -36,7 +36,6 @@ import frc.robot.subsystems.Gripper.Gripper;
 import frc.robot.subsystems.Gripper.RunMotorsBackward;
 import frc.robot.subsystems.Gripper.RunMotorsForward;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.ConditionalCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 
