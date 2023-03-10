@@ -804,6 +804,13 @@ public class DriveTrain extends SubsystemBase {
 	public boolean isRollGreaterThan3(){
 		return m_gyro.getRoll() > 3.0;
 	}
+
+	public void align_with_vision(double forward, double target_yaw) {
+		double turn_speed = -m_turn_pid_controller.calculate(target_yaw, 0);
+
+		teleop_drive(forward, turn_speed);
+	}
+	
 	// INLINE COMMANDS
 	public CommandBase shiftToHighGear() {
 		return runOnce(
