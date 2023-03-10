@@ -162,11 +162,17 @@ public class RobotContainer {
             () -> m_arm.isBackwardMovement(SuperStructurePosition.ScoreLow)
         )
     );
-      m_driver_controller.leftBumper().onTrue(m_drivetrain.shiftToHighGear());
-      m_driver_controller.leftBumper().onFalse(m_drivetrain.shiftToLowGear());
-      m_driver_controller.rightTrigger().whileTrue(new FineGrainedDrivingControl(m_drivetrain, m_driver_controller));
     
     m_partner_controller.povRight().onTrue( new StowSuperStructure(m_arm) );
+
+    /////////////////////////////////// Driver Mappings
+    m_driver_controller.leftBumper().onTrue(m_drivetrain.shiftToHighGear());
+    m_driver_controller.leftBumper().onFalse(m_drivetrain.shiftToLowGear());
+    m_driver_controller.rightTrigger().whileTrue(new FineGrainedDrivingControl(m_drivetrain, m_driver_controller));
+   
+    m_driver_controller.rightStick().onTrue(m_arm.setArmEncoderToZero());
+    m_driver_controller.leftStick().onTrue(m_arm.setWristEncoderToZero());
+    
 
   }
   
