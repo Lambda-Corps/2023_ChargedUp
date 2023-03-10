@@ -38,7 +38,6 @@ public class Gripper extends SubsystemBase {
 
     // Left will be the leader, right will be inverted so that in each case forward ejects objects and 
     // reverse brings it in
-    // TODO: Figure out which is actually inverted and solve it in code, not reverse wiring
     m_rightside.setInverted(true);
     // m_rightside.follow(m_leftside);
 

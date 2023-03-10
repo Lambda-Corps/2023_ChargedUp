@@ -1,0 +1,35 @@
+{
+  "NetworkTables": {
+    "transitory": {
+      "SmartDashboard": {
+        "open": true
+      }
+    },
+    "types": {
+      "/FMSInfo": "FMSInfo",
+      "/Shuffleboard/Drive Test/BangBang Command": "Command",
+      "/Shuffleboard/Drive Test/Drive Fine Grained": "Command",
+      "/Shuffleboard/Drive Test/Drive MM": "Command",
+      "/Shuffleboard/Drive Test/Drive PID": "Command",
+      "/Shuffleboard/Drive Test/DriveMM Sequence": "Command",
+      "/Shuffleboard/Drive Test/Gyro": "Gyro",
+      "/Shuffleboard/Drive Test/Reset Drivetrain setpoint": "Command",
+      "/Shuffleboard/Drive Test/Set_Max Speed": "Command",
+      "/Shuffleboard/Drive Test/Turn PID": "PIDController",
+      "/Shuffleboard/Drive Test/Turn with PID": "Command",
+      "/SmartDashboard/DriveTrain": "Subsystem",
+      "/SmartDashboard/Field": "Field2d"
+    },
+    "windows": {
+      "/SmartDashboard/DriveTrain": {
+        "window": {
+          "visible": true
+        }
+      }
+    }
+  },
+  "NetworkTables Settings": {
+    "mode": "Client (NT4)",
+    "serverTeam": "10.18.95.2"
+  }
+}
