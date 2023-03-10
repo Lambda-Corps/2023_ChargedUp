@@ -26,20 +26,18 @@ public class RunMotorsForward extends CommandBase {
 
   // Called when the command is initially scheduled.
   @Override
-  public void initialize() {
-    m_speed = SmartDashboard.getNumber("MotorSpeed", 0);
-  }
+  public void initialize() {}
 
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-    m_subsystem.runMotors(m_speed);
+    m_subsystem.intake_piece();
   }
 
   // Called once the command ends or is interrupted.
   @Override
   public void end(boolean interrupted) {
-    m_subsystem.runMotors(0);
+    m_subsystem.stop_motors();
   }
 
   // Returns true when the command should end.

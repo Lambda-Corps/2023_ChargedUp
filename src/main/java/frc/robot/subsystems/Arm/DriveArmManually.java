@@ -42,6 +42,7 @@ public class DriveArmManually extends CommandBase {
   @Override
   public void end(boolean interrupted) {
     m_arm.drive_manually(0, 0);
+    m_arm.set_state_to_inactive();
   }
 
   // Returns true when the command should end.

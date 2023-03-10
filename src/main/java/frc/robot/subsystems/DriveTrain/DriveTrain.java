@@ -581,7 +581,6 @@ public class DriveTrain extends SubsystemBase {
 		// m_turn_pid_controller.enableContinuousInput(-180, 180);
 		m_drive_pid_controller.setSetpoint(setpoint);
 		m_setpoint_left = (int)setpoint;
-		SmartDashboard.putData(m_drive_pid_controller);
 	}
 
 	public void set_turn_target_setpoint(double angle_setpoint){

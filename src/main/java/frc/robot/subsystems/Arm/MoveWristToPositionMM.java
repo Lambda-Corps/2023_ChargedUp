@@ -29,11 +29,12 @@ public class MoveWristToPositionMM extends CommandBase {
   @Override
   public void initialize() {
     m_done = false;
-    m_half_second_limit_hit = 0;
     m_count = 0;
+    m_half_second_limit_hit = 0;
+
     // m_target_ticks = (int)(m_target.getDouble(SuperStructurePosition.Stowed.getArmPosition()));
-    m_target_ticks = m_position.getArmPosition();
     m_direction_is_forward = m_arm.getSuperStructureWristPosition() < m_position.getWristPosition();
+    m_target_ticks = m_position.getWristPosition();
     m_arm.configure_wrist_motion_magic(m_target_ticks, m_direction_is_forward);
 
     m_arm.move_wrist_motion_magic(m_target_ticks, m_direction_is_forward);

@@ -60,7 +60,7 @@ public class Gripper extends SubsystemBase {
     }
   }
 
-  public void runMotors(double speed){
+  private void runMotors(double speed){
     m_leftside.set(ControlMode.PercentOutput, speed);
     m_rightside.set(ControlMode.PercentOutput, speed);
   }
@@ -75,6 +75,23 @@ public class Gripper extends SubsystemBase {
 
   public void open_gripper() {
     request_gripper_position(GRIPPER_EXPAND);
+  }
+
+  private void hold_game_piece() {
+    m_leftside.set(ControlMode.PercentOutput, -INTAKE_HOLD_SPEED);
+    m_rightside.set(ControlMode.PercentOutput, -INTAKE_HOLD_SPEED);
+  }
+
+  public void eject_piece(){
+    runMotors(INTAKE_SCORE_SPEED);
+  }
+
+  public void intake_piece(){
+    runMotors(INTAKE_CONE_SPEED);
+  }
+
+  public void stop_motors(){
+    runMotors(0);
   }
   /////////////////////////////////////// Inline Commands Go below here ////////////////////
   public CommandBase expandGripperCommand() {
@@ -98,7 +115,14 @@ public class Gripper extends SubsystemBase {
   public CommandBase intakeGamePieceCommand() {
     return runOnce(
       () -> { 
-        runMotors(INTAKE_CONE_SPEED);
+        runMotors(-INTAKE_CONE_SPEED);
+      }
+    );
+  }
+  public CommandBase holdGamePieceCommand() {
+    return runOnce( 
+      ()-> {
+        hold_game_piece();
       }
     );
   }
@@ -116,7 +140,5 @@ public class Gripper extends SubsystemBase {
       }
     );
   }
-
-  
 
 }

@@ -46,10 +46,11 @@ public class Arm extends SubsystemBase {
   private ArrayList<SuperStructurePosition> stowed_illegal_transitions = new ArrayList<SuperStructurePosition>();
   private ArrayList<SuperStructurePosition> ground_pickup_illegal_transitions = new ArrayList<SuperStructurePosition>();
 
-  public enum ArmState {
+  public static enum ArmState {
     Moving,
     Holding,
     Inactive,
+    Stowed
   }
 
   public enum ArmControlMode { // Mostly for debugging information, could be used as an arm safety measure in
@@ -149,26 +150,28 @@ public class Arm extends SubsystemBase {
 
   ///////// Constants ///////////////
   // Constant values for ARM movement, must be researched and tuned via tuner
-  final double ARM_FORWARD_SPEED = .4;
-  final double ARM_REVERSE_SPEED = -.4;
+  final double ARM_FORWARD_SPEED = .35;
+  final double ARM_REVERSE_SPEED = -.35;
   final double WRIST_FORWARD_SPEED = .3;
-  final double WRIST_REVERSE_SPEED = -.25;
-  final double WRIST_FORWARD_COSINE_FF = .155; // When arm is horizontal, calculation should be 1 * .07
+  final double WRIST_REVERSE_SPEED = -.15;
+  final double WRIST_FORWARD_COSINE_FF = .24; // When arm is horizontal, calculation should be 1 * .07
   // We're trying to calculate a feed forward based on the cosine of the wrist angle (when wrist is horizontal,
   // at 90 degrees, the cosine should return 1.  Our wrist starts offset at 21 degrees relative to vertical, so
   // we want the resulting calculation to be cos(69) = 1
-  final double WRIST_COSINE_STARTING_OFFSET = 21;
+  final double WRIST_COSINE_STARTING_OFFSET = 0;
   final double ARM_GEAR_RATIO = 10 * 4 * 4 * (2/1);
   final double WRIST_GEAR_RATIO = 7 * 4 * (64/24);
   final int WRIST_REVERSE_SOFT_LIMIT = -1000;
-  final int WRIST_FORWARD_SOFT_LIMIT = 58000;
+  final int WRIST_FORWARD_SOFT_LIMIT = 43000;
   final int ARM_REVERSE_SOFT_LIMIT = 0;
-  final int ARM_FORWARD_SOFT_LIMIT = 50000;
-  final int SAFE__MOVE_WRIST_POSITION = 10000; // Puts the wrist up at 11 degrees
+  final int ARM_FORWARD_SOFT_LIMIT = 125000;
+  final int SAFE__MOVE_WRIST_POSITION = 3000; // Puts the wrist up at 11 degrees
   // final int ARM_FORWARD_SOFT_LIMIT = (int)(2048 * ARM_GEAR_RATIO * 1/6); // 60
   // degrees rotation
-  final double WRIST_MAX_STATOR_CURRENT = 10;
-  final double ARM_MAX_STATOR_CURRENT = 10;
+  final double WRIST_MAX_STATOR_CURRENT = 50;
+  final double WRIST_STATOR_CURRENT_TRIGGER = 100;
+  final double ARM_MAX_STATOR_CURRENT = 40;
+  final double ARM_STATOR_CURRENT_TRIGGER = 100;
   final int ARM_MM_SLOT = 0;
   final int ARM_HOLD_POSITION_SLOT = 2;
   final int WRIST_MM_FORWARD_SLOT = 0;
@@ -189,28 +192,28 @@ public class Arm extends SubsystemBase {
    * That means, we want to saturate the feedback (full recovery) with an error
    * value
    */
-  final double ARM_MM_KP = (ARM_FORWARD_SPEED * 1023) / 2048; // Tuned manually (ARM_FORWARD_SPEED * 1023) / 2048;
+  final double ARM_MM_KP = .4; // Tuned manually (ARM_FORWARD_SPEED * 1023) / 2048;
   final double ARM_MM_KI = 0;
   final double ARM_MM_KD = 0;
-  final double ARM_MM_KF = 0.051; // (.4 * 1023) / 8000
+  final double ARM_MM_KF = 0.1; // (.4 * 1023) / 8000
   final double ARM_MM_FF = 0;
-  final int ARM_MM_VELOCITY = 8000;
+  final int ARM_MM_VELOCITY = 6000;
   final int ARM_MM_ACCELERATION = (int)(ARM_MM_VELOCITY / 1); // 1 Second to full velocity
   final double ARM_HOLD_POSITION_KP = (ARM_FORWARD_SPEED * 1023) / 512; // Tuned manually (ARM_FORWARD_SPEED * 1023) / 2048;
   final double ARM_HOLD_POSITION_KI = 0;
   final double ARM_HOLD_POSITION_KD = 0;
   final double ARM_HOLD_POSITION_KF = 0;
-  final double WRIST_MM_FORWARD_KP = (WRIST_FORWARD_SPEED * 1023) / 2048;
+  final double WRIST_MM_FORWARD_KP = .8;
   final double WRIST_MM_FORWARD_KI = 0;
   final double WRIST_MM_FORWARD_KD = 0;
-  final double WRIST_MM_FORWARD_KF = .07; // (.7 * 1023) / 10000  
-  final int WRIST_MM_FORWARD_VELOCITY = 10000;
-  final int WRIST_MM_FORWARD_ACCELERATION = (int)(WRIST_MM_FORWARD_VELOCITY / 1); // 1 second to full velocity
+  final double WRIST_MM_FORWARD_KF = .8;// tuned manually
+  final int WRIST_MM_FORWARD_VELOCITY = 4000;
+  final int WRIST_MM_FORWARD_ACCELERATION = 4000; // 1 second to full velocity
   final double WRIST_MM_REVERSE_KP = (WRIST_REVERSE_SPEED * 1023) / 2048;
   final double WRIST_MM_REVERSE_KI = 0;
   final double WRIST_MM_REVERSE_KD = 0;
   final double WRIST_MM_REVERSE_KF = 0.058; // (-.4 * 1023) / -7000
-  final int WRIST_MM_REVERSE_VELOCITY = 7000;
+  final int WRIST_MM_REVERSE_VELOCITY = 6000;
   final int WRIST_MM_REVERSE_ACCELERATION = (int)(WRIST_MM_REVERSE_VELOCITY / 1); // 1 second to full velocity
   final double WRIST_HOLD_POSITION_KP = (WRIST_FORWARD_SPEED * 1023) / 512; // Tuned manually (ARM_FORWARD_SPEED * 1023) / 2048;
   final double WRIST_HOLD_POSITION_KI = 0;
@@ -219,22 +222,22 @@ public class Arm extends SubsystemBase {
   // Encoder Measurements for the relevant scoring positions
   final static int ARM_STOW = 0;
   final static int WRIST_STOW = 0;
-  final static int ARM_GROUND_PICKUP = 40000;
-  final static int WRIST_GROUND_PICKUP = 7500;
+  final static int ARM_GROUND_PICKUP = 70000;
+  final static int WRIST_GROUND_PICKUP = 2000;
   final static int ARM_SUBSTATION = 0;
-  final static int WRIST_SUBSTATION = 45000;
+  final static int WRIST_SUBSTATION = 40000;
   final static int ARM_SCORE_LOW = 0;
-  final static int WRIST_SCORE_LOW = 15000;
-  final static int ARM_CONE_MID = 36500;
-  final static int WRIST_CONE_MID = 49000;
-  final static int ARM_CONE_HIGH = 46300;
-  final static int WRIST_CONE_HIGH = 57000;
-  final static int ARM_CUBE_HIGH = 46300;
-  final static int WRIST_CUBE_HIGH = 52000;
-  final static int ARM_CUBE_MID = 35000;
+  final static int WRIST_SCORE_LOW = 10000;
+  final static int ARM_CONE_MID = 43000;
+  final static int WRIST_CONE_MID = 32000;
+  final static int ARM_CONE_HIGH = 75000;
+  final static int WRIST_CONE_HIGH = 43000;
+  final static int ARM_CUBE_HIGH = 62000;
+  final static int WRIST_CUBE_HIGH = 43000;
+  final static int ARM_CUBE_MID = 0;
   final static int WRIST_CUBE_MID = 30000;
   final static int ARM_POSITION_TOLERANCE = 100;
-  final static int WRIST_POSITION_TOLERANCE = 100;
+  final static int WRIST_POSITION_TOLERANCE = 250;
   final int PID_PRIMARY = 0;
 
   /** Creates a new Arm. */
@@ -255,7 +258,7 @@ public class Arm extends SubsystemBase {
     SlotConfiguration arm_mm = arm_config.slot0;
     arm_mm.allowableClosedloopError = 10;
     // arm_manual_forward.closedLoopPeakOutput = ARM_FORWARD_SPEED;
-    arm_mm.closedLoopPeakOutput = .4;
+    arm_mm.closedLoopPeakOutput = .35;
     arm_mm.closedLoopPeriod = 1;
     arm_mm.kP = ARM_MM_KP;
     arm_mm.kI = ARM_MM_KI;
@@ -275,7 +278,7 @@ public class Arm extends SubsystemBase {
 
     SlotConfiguration wrist_mm_forward = wrist_config.slot0;
     wrist_mm_forward.allowableClosedloopError = 10;
-    wrist_mm_forward.closedLoopPeakOutput = WRIST_FORWARD_SPEED;
+    wrist_mm_forward.closedLoopPeakOutput = 1;
     wrist_mm_forward.closedLoopPeriod = 1;
     wrist_mm_forward.kP = WRIST_MM_FORWARD_KP;
     wrist_mm_forward.kI = WRIST_MM_FORWARD_KI;
@@ -321,6 +324,7 @@ public class Arm extends SubsystemBase {
     stator_limit.currentLimit = ARM_MAX_STATOR_CURRENT;
     stator_limit.enable = true;
     stator_limit.triggerThresholdCurrent = ARM_MAX_STATOR_CURRENT + 5;
+    stator_limit.triggerThresholdTime = .1;
     arm_config.statorCurrLimit = stator_limit;
 
     // Set max speeds for output
@@ -356,12 +360,15 @@ public class Arm extends SubsystemBase {
     stator_limit = wrist_config.statorCurrLimit;
     stator_limit.currentLimit = WRIST_MAX_STATOR_CURRENT;
     stator_limit.enable = true;
-    stator_limit.triggerThresholdCurrent = WRIST_MAX_STATOR_CURRENT + 1;
+    stator_limit.triggerThresholdCurrent = WRIST_STATOR_CURRENT_TRIGGER;
+    stator_limit.triggerThresholdTime = .001;
     wrist_config.statorCurrLimit = stator_limit;
 
     // Set max speeds for output
-    wrist_config.peakOutputForward = WRIST_FORWARD_SPEED;
+    wrist_config.peakOutputForward = .5;
     wrist_config.peakOutputReverse = WRIST_REVERSE_SPEED;
+    wrist_config.openloopRamp = .3;
+    wrist_config.closedloopRamp = .3;
     // Configure the wrist
     m_wrist_motor.configAllSettings(wrist_config, 10);
     m_wrist_motor.setInverted(TalonFXInvertType.Clockwise);
@@ -393,11 +400,11 @@ public class Arm extends SubsystemBase {
 
     // puts the illegal transitions into an arraylist to use in our HashMap
     stowed_illegal_transitions.add(SuperStructurePosition.GroundPickup);
-    ground_pickup_illegal_transitions.add(SuperStructurePosition.Stowed);
+    // ground_pickup_illegal_transitions.add(SuperStructurePosition.Stowed);
 
     // The HashMap that associates specific illegal transitions per each position
     // (as needed)
-    illegal_transitions.put(SuperStructurePosition.Stowed, stowed_illegal_transitions);
+    // illegal_transitions.put(SuperStructurePosition.Stowed, stowed_illegal_transitions);
     illegal_transitions.put(SuperStructurePosition.GroundPickup, ground_pickup_illegal_transitions);
 
     // Set the motors to hold their initial positions stowed to try and minimize
@@ -417,36 +424,37 @@ public class Arm extends SubsystemBase {
 
   @Override
   public void periodic() {
-    // m_arm_position.set(m_arm_motor.getSelectedSensorPosition());
-    // m_wrist_position.set(m_wrist_motor.getSelectedSensorPosition());
+    m_arm_position.set(m_arm_motor.getSelectedSensorPosition());
+    m_wrist_position.set(m_wrist_motor.getSelectedSensorPosition());
 
-    // switch(m_arm_state){
-    //   case Inactive:
-    //     // If the arm isn't do anything, zero both.
-    //     if(m_wrist_motor.isRevLimitSwitchClosed() > 0){
-    //       m_wrist_motor.setSelectedSensorPosition(0);
-    //     }
-    //     if(m_arm_motor.isRevLimitSwitchClosed() > 0){
-    //       m_arm_motor.setSelectedSensorPosition(0);
-    //     }
-    //     break;
-    //   case Holding:
-    //     // We may not be able to trust the arm's motion after a command
-    //     // so only deal with the wrist on hold.
-    //     if(m_wrist_motor.isRevLimitSwitchClosed() > 0){
-    //       m_wrist_motor.setSelectedSensorPosition(0);
-    //     }
-    //     break;
-    //   case Moving:
-    //     // Don't do anything
-    //     break;
-    //   default:
-    //     // Reset the wrist only by default
-    //     if(m_wrist_motor.isRevLimitSwitchClosed() > 0){
-    //       m_wrist_motor.setSelectedSensorPosition(0);
-    //     }
-    //     break;
-    // }
+    switch(m_arm_state){
+      case Inactive:
+      case Stowed:
+        // If the arm isn't do anything, zero both.
+        if(m_wrist_motor.isRevLimitSwitchClosed() > 0){
+          m_wrist_motor.setSelectedSensorPosition(0);
+        }
+        if(m_arm_motor.isRevLimitSwitchClosed() > 0){
+          m_arm_motor.setSelectedSensorPosition(0);
+        }
+        break;
+      case Holding:
+        // We may not be able to trust the arm's motion after a command
+        // so only deal with the wrist on hold.
+        if(m_wrist_motor.isRevLimitSwitchClosed() > 0){
+          m_wrist_motor.setSelectedSensorPosition(0);
+        }
+        break;
+      case Moving:
+        // Don't do anything
+        break;
+      default:
+        // Reset the wrist only by default
+        if(m_wrist_motor.isRevLimitSwitchClosed() > 0){
+          m_wrist_motor.setSelectedSensorPosition(0);
+        }
+        break;
+    }
 
 
     // if(m_arm_motor.isRevLimitSwitchClosed() > 0){
@@ -464,7 +472,7 @@ public class Arm extends SubsystemBase {
   // ==================================== Arm State Machine Methods
   // =======================================
   public void checkArmSuperState() {
-    if( m_arm_motor.getSelectedSensorPosition() <= 0 && m_wrist_motor.getSelectedSensorPosition() <= 0){
+    if( m_arm_motor.getSelectedSensorPosition() <= 500 && m_wrist_motor.getSelectedSensorPosition() <= 500){
       m_current_position = SuperStructurePosition.Stowed;
     }
   }
@@ -634,6 +642,7 @@ public class Arm extends SubsystemBase {
   }
 
   public void drive_manually(double arm_speed, double wrist_speed) {
+    m_arm_state = ArmState.Moving;
     wrist_speed = MathUtil.applyDeadband(wrist_speed, .01);
     arm_speed = MathUtil.applyDeadband(arm_speed, .01);
 
@@ -799,9 +808,13 @@ public class Arm extends SubsystemBase {
   public void configure_wrist_motion_magic(int target_ticks, boolean isForward){
     if( isForward ){
       m_wrist_motor.selectProfileSlot(WRIST_MM_FORWARD_SLOT, PID_PRIMARY);
+      m_wrist_motor.configMotionCruiseVelocity(WRIST_MM_FORWARD_VELOCITY);
+      m_wrist_motor.configMotionAcceleration(WRIST_MM_FORWARD_ACCELERATION);
     }
     else {
       m_wrist_motor.selectProfileSlot(WRIST_MM_REVERSE_SLOT, PID_PRIMARY);
+      m_wrist_motor.configMotionCruiseVelocity(WRIST_MM_REVERSE_VELOCITY);
+      m_wrist_motor.configMotionAcceleration(WRIST_MM_REVERSE_ACCELERATION); 
     }
   }
 
@@ -814,7 +827,14 @@ public class Arm extends SubsystemBase {
 
   public void configure_arm_motion_magic(){
     m_arm_motor.selectProfileSlot(ARM_MM_SLOT, PID_PRIMARY);
+    m_arm_motor.configMotionCruiseVelocity(ARM_MM_VELOCITY);
+    m_arm_motor.configMotionAcceleration(ARM_MM_ACCELERATION);
   }
+
+  public void set_state_to_inactive(){
+    m_arm_state = ArmState.Inactive;
+  }
+
   ////////////////////// ARM INLINE COMMANDS /////////////////////
 
 
@@ -926,6 +946,13 @@ public class Arm extends SubsystemBase {
         } else {
           m_wrist_motor.set(ControlMode.MotionMagic, position.wrist_position);
         }
+      });
+  }
+
+  public CommandBase set_state(ArmState state){
+    return runOnce(
+      () -> {
+        m_arm_state = state;
       });
   }
 }
