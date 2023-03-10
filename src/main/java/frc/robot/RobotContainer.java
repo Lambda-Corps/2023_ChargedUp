@@ -35,6 +35,8 @@ import frc.robot.subsystems.DriveTrain.DriveMotionMagic;
 import frc.robot.subsystems.Gripper.Gripper;
 import frc.robot.subsystems.Gripper.RunMotorsBackward;
 import frc.robot.subsystems.Gripper.RunMotorsForward;
+import frc.robot.subsystems.Vision.AlignToConeReflectiveTape;
+import frc.robot.subsystems.Vision.Vision;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.ConditionalCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -55,6 +57,7 @@ public class RobotContainer {
  
   private final Arm m_arm = new  Arm();
   private final Gripper m_gripper = new  Gripper();
+  private final Vision m_vision = new Vision();
 
   //private final ExampleCommand m_autoCommand = new ExampleCommand(m_exampleSubsystem);
 
@@ -172,6 +175,7 @@ public class RobotContainer {
     m_driver_controller.rightStick().onTrue(m_arm.setArmEncoderToZero());
     m_driver_controller.leftStick().onTrue(m_arm.setWristEncoderToZero());
     
+    m_driver_controller.a().whileTrue(new AlignToConeReflectiveTape(m_drivetrain, m_vision, m_driver_controller));
 
   }
   
