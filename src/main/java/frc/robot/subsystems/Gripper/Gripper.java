@@ -20,8 +20,8 @@ public class Gripper extends SubsystemBase {
 
   DoubleSolenoid.Value m_requested_position, m_current_position;
   
-  final DoubleSolenoid.Value GRIPPER_CONTRACT = DoubleSolenoid.Value.kForward;
-  final DoubleSolenoid.Value GRIPPER_EXPAND = DoubleSolenoid.Value.kReverse;
+  final DoubleSolenoid.Value GRIPPER_EXPAND = DoubleSolenoid.Value.kForward;
+  final DoubleSolenoid.Value GRIPPER_CONTRACT = DoubleSolenoid.Value.kReverse;
 
   final double INTAKE_CONE_SPEED = .5;
   final double INTAKE_CUBE_SPEED = .5;
