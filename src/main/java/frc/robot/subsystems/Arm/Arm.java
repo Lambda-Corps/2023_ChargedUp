@@ -164,7 +164,7 @@ public class Arm extends SubsystemBase {
   final int WRIST_REVERSE_SOFT_LIMIT = -500;
   final int WRIST_FORWARD_SOFT_LIMIT = 43000;
   final int ARM_REVERSE_SOFT_LIMIT = 0;
-  final int ARM_FORWARD_SOFT_LIMIT = 125000;
+  final int ARM_FORWARD_SOFT_LIMIT = 93000;
   final int SAFE__MOVE_WRIST_POSITION = 3000; // Puts the wrist up at 11 degrees
   // final int ARM_FORWARD_SOFT_LIMIT = (int)(2048 * ARM_GEAR_RATIO * 1/6); // 60
   // degrees rotation
@@ -641,13 +641,14 @@ public class Arm extends SubsystemBase {
   }
 
   public void drive_manually(double arm_speed, double wrist_speed) {
-    m_arm_state = ArmState.Moving;
+    // m_arm_state = ArmState.Moving;
     wrist_speed = MathUtil.applyDeadband(wrist_speed, .01);
     arm_speed = MathUtil.applyDeadband(arm_speed, .01);
 
     wrist_speed = MathUtil.clamp(wrist_speed, WRIST_REVERSE_SPEED, WRIST_FORWARD_SPEED);
     arm_speed = MathUtil.clamp(arm_speed, ARM_REVERSE_SPEED, ARM_FORWARD_SPEED);
 
+    // System.out.println("Arm Speed: " + arm_speed);
     m_arm_motor.set(ControlMode.PercentOutput, arm_speed);
     m_wrist_motor.set(ControlMode.PercentOutput, wrist_speed);
   }

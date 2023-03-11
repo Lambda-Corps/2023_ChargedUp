@@ -38,8 +38,9 @@ public class Gripper extends SubsystemBase {
 
     // Left will be the leader, right will be inverted so that in each case forward ejects objects and 
     // reverse brings it in
-    m_rightside.setInverted(true);
+    // m_rightside.setInverted(true);
     // m_rightside.follow(m_leftside);
+    m_leftside.setInverted(true);
 
     m_gripper = new DoubleSolenoid(PneumaticsModuleType.CTREPCM, GRIPPER_SOLENOID_CHANNEL_A,
     GRIPPER_SOLENOID_CHANNEL_B);

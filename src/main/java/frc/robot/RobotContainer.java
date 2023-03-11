@@ -6,8 +6,10 @@ package frc.robot;
 
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
+import frc.robot.autoCommands.Pos1ScoreMove;
 import frc.robot.autoCommands.Pos1ScoreMoveBalance;
 import frc.robot.autoCommands.Pos2ScoreMoveBalance;
+import frc.robot.autoCommands.Pos3ScoreMove;
 import frc.robot.autoCommands.Pos3ScoreMoveBalance;
 import frc.robot.subsystems.Arm.Arm;
 import frc.robot.subsystems.Arm.ArmDriveToPositionPIDTest;
@@ -37,6 +39,7 @@ import frc.robot.subsystems.Gripper.RunMotorsBackward;
 import frc.robot.subsystems.Gripper.RunMotorsForward;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.ConditionalCommand;
+import edu.wpi.first.wpilibj2.command.PrintCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 
 /**
@@ -63,8 +66,8 @@ public class RobotContainer {
   private SendableChooser<Command> m_auto_chooser;
   public RobotContainer() {
     buildDriveTab();
-    buildDriveTestTab();
-    buildArmTestTab();
+    // buildDriveTestTab();
+    // buildArmTestTab();
     // Set subsystem default commands
     m_drivetrain.setDefaultCommand(new DefaultDriveTrainCommand(m_drivetrain, m_driver_controller));    
     // m_arm.setDefaultCommand(new DriveArmManually(m_arm, m_partner_controller));
@@ -107,66 +110,41 @@ public class RobotContainer {
     );
     // X button
     m_partner_controller.x().onTrue(
-        new ConditionalCommand(
-            new ArmThenWristSequenceCommand(m_arm, SuperStructurePosition.ScoreCubeMid),
-            new WristThenArmSequenceCommand(m_arm, SuperStructurePosition.ScoreCubeMid),
-            () -> m_arm.isBackwardMovement(SuperStructurePosition.ScoreCubeMid)
-        )
+        m_arm.moveWristToPositionMM(SuperStructurePosition.ScoreCubeMid, () -> !(m_arm.isBackwardMovement(SuperStructurePosition.ScoreCubeMid)))
     );
     // Y button
     m_partner_controller.y().onTrue(
-        new ConditionalCommand(
-            new ArmThenWristSequenceCommand(m_arm, SuperStructurePosition.ScoreCubeHigh),
-            new WristThenArmSequenceCommand(m_arm, SuperStructurePosition.ScoreCubeHigh),
-            () -> m_arm.isBackwardMovement(SuperStructurePosition.ScoreCubeHigh)
-        )
+      m_arm.moveWristToPositionMM(SuperStructurePosition.ScoreCubeHigh, () -> !(m_arm.isBackwardMovement(SuperStructurePosition.ScoreCubeHigh)))
+
     );
     // A button
     m_partner_controller.a().onTrue(
-        new ConditionalCommand(
-            new ArmThenWristSequenceCommand(m_arm, SuperStructurePosition.ScoreConeMid),
-            new WristThenArmSequenceCommand(m_arm, SuperStructurePosition.ScoreConeMid),
-            () -> m_arm.isBackwardMovement(SuperStructurePosition.ScoreConeMid)
-        )
+      m_arm.moveWristToPositionMM(SuperStructurePosition.ScoreConeMid, () -> !(m_arm.isBackwardMovement(SuperStructurePosition.ScoreConeMid)))
+
     );
     // B button
-    m_partner_controller.b().onTrue(
-        new ConditionalCommand(
-            new ArmThenWristSequenceCommand(m_arm, SuperStructurePosition.ScoreConeHigh),
-            new WristThenArmSequenceCommand(m_arm, SuperStructurePosition.ScoreConeHigh),
-            () -> m_arm.isBackwardMovement(SuperStructurePosition.ScoreConeHigh)
-        )
-    );
+    // m_partner_controller.b().onTrue(
+    //     new PrintCommand("Cone High")
+    // );
     // D-pad down
     m_partner_controller.povDown().onTrue(
-        new ConditionalCommand(
-            new ArmThenWristSequenceCommand(m_arm, SuperStructurePosition.GroundPickup),
-            new WristThenArmSequenceCommand(m_arm, SuperStructurePosition.GroundPickup),
-            () -> m_arm.isBackwardMovement(SuperStructurePosition.GroundPickup)
-        )
+      new StowSuperStructure(m_arm)
     );
     // D-pad up
     m_partner_controller.povUp().onTrue(
-        new ConditionalCommand(
-            new ArmThenWristSequenceCommand(m_arm, SuperStructurePosition.SubstationPickup),
-            new WristThenArmSequenceCommand(m_arm, SuperStructurePosition.SubstationPickup),
-            () -> m_arm.isBackwardMovement(SuperStructurePosition.SubstationPickup)
-        )
+      m_arm.moveWristToPositionMM(SuperStructurePosition.SubstationPickup, () -> !(m_arm.isBackwardMovement(SuperStructurePosition.SubstationPickup)))
+
     );
     // D-pad left
     m_partner_controller.povLeft().onTrue(
-        new ConditionalCommand(
-            new ArmThenWristSequenceCommand(m_arm, SuperStructurePosition.ScoreLow),
-            new WristThenArmSequenceCommand(m_arm, SuperStructurePosition.ScoreLow),
-            () -> m_arm.isBackwardMovement(SuperStructurePosition.ScoreLow)
-        )
-    );
-      m_driver_controller.leftBumper().onTrue(m_drivetrain.shiftToHighGear());
-      m_driver_controller.leftBumper().onFalse(m_drivetrain.shiftToLowGear());
-      m_driver_controller.rightTrigger().whileTrue(new FineGrainedDrivingControl(m_drivetrain, m_driver_controller));
-    
-    m_partner_controller.povRight().onTrue( new StowSuperStructure(m_arm) );
+      m_arm.moveWristToPositionMM(SuperStructurePosition.ScoreLow, () -> !(m_arm.isBackwardMovement(SuperStructurePosition.ScoreLow)))
 
+    );
+    m_driver_controller.leftBumper().onTrue(m_drivetrain.shiftToHighGear());
+    m_driver_controller.leftBumper().onFalse(m_drivetrain.shiftToLowGear());
+    m_driver_controller.leftTrigger().whileTrue(new FineGrainedDrivingControl(m_drivetrain, m_driver_controller));
+    m_driver_controller.rightTrigger().onTrue(m_arm.moveWristToPositionMM(SuperStructurePosition.GroundPickup, () -> !(m_arm.isBackwardMovement(SuperStructurePosition.GroundPickup))));  
+    m_driver_controller.rightTrigger().onFalse(new StowSuperStructure(m_arm));  
   }
   
   /**
@@ -182,23 +160,29 @@ public class RobotContainer {
   private void buildDriveTab() {
     ShuffleboardTab driveTab = Shuffleboard.getTab(("Drive Tab"));
 
-    driveTab.addNumber("Curr Heading", m_drivetrain::getScaledHeading).withPosition(7,0).withSize(1,1);
+    driveTab.add("ArmEncoder", 0).withPosition(5, 0).withSize(1, 1);
+    driveTab.add("WristEncoder", 0).withPosition(5, 1).withSize(1, 1);
+    driveTab.addBoolean("ArmForward", m_arm::getArmForwardLimit).withPosition(6, 0).withSize(1,1);
+    driveTab.addBoolean("ArmReverse", m_arm::getArmReverseLimit).withPosition(7, 0).withSize(1,1);
+    driveTab.addBoolean("WristForward", m_arm::getWristForwardLimit).withPosition(6, 1).withSize(1,1);
+    driveTab.addBoolean("WristReverse", m_arm::getWristReverseLimit).withPosition(7, 1).withSize(1,1);
+    // driveTab.addNumber("Curr Heading", m_drivetrain::getScaledHeading).withPosition(7,0).withSize(1,1);
    
-    driveTab.addBoolean("ArmForward", m_arm::getArmForwardLimit).withPosition(5, 1).withSize(1,1);
-    driveTab.addBoolean("ArmReverse", m_arm::getArmReverseLimit).withPosition(5, 1).withSize(1,1);
-    driveTab.add("Arm", m_arm).withPosition(8, 0).withSize(8, 0);
-    driveTab.add("Gripper", m_gripper).withPosition(8, 1).withSize(8, 1);
+    driveTab.add("Arm", m_arm).withPosition(0, 1).withSize(2, 1);
+    driveTab.add("Gripper", m_gripper).withPosition(0, 2).withSize(2, 1);
 
 
     //Auto Options
     m_auto_chooser = new SendableChooser<Command>();
-    driveTab.add("Autonomous Chooser", m_auto_chooser).withWidget(BuiltInWidgets.kComboBoxChooser).withPosition(5, 0).withSize(2, 1);
-    m_auto_chooser.addOption("Position 1", new Pos1ScoreMoveBalance(m_drivetrain, m_arm, m_gripper));
-    m_auto_chooser.addOption("Position 2", new Pos2ScoreMoveBalance(m_drivetrain, m_arm, m_gripper));
-    m_auto_chooser.addOption("Position 3", new Pos3ScoreMoveBalance(m_drivetrain, m_arm, m_gripper));
+    driveTab.add("Autonomous Chooser", m_auto_chooser).withWidget(BuiltInWidgets.kComboBoxChooser).withPosition(0, 0).withSize(2, 1);
+    m_auto_chooser.addOption("1 Score Balance", new Pos1ScoreMoveBalance(m_drivetrain, m_arm, m_gripper));
+    m_auto_chooser.addOption("2 Score Balance", new Pos2ScoreMoveBalance(m_drivetrain, m_arm, m_gripper));
+    m_auto_chooser.addOption("3 Score Balance", new Pos3ScoreMoveBalance(m_drivetrain, m_arm, m_gripper));
+    m_auto_chooser.addOption("1 Score Move", new Pos1ScoreMove(m_drivetrain, m_gripper));
+    m_auto_chooser.addOption("3 Score Move", new Pos3ScoreMove(m_drivetrain, m_gripper));
     m_auto_chooser.setDefaultOption("Default Auto incase we forget", new DriveMotionMagic(m_drivetrain, -150));
-    m_auto_chooser.addOption("Drive Forward 10ft", new DriveMotionMagic(m_drivetrain, 120));
-    m_auto_chooser.addOption("Drive Backward 5ft", new DriveMotionMagic(m_drivetrain, -60));
+    m_auto_chooser.addOption("Drive Forward 14ft", new DriveMotionMagic(m_drivetrain, 150));
+    m_auto_chooser.addOption("Drive Backward 14ft", new DriveMotionMagic(m_drivetrain, -150));
     
   }
   public Command getAutonomousCommand2() {

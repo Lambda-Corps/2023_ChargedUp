@@ -16,6 +16,7 @@ import frc.robot.subsystems.Arm.Arm.SuperStructurePosition;
 import frc.robot.subsystems.DriveTrain.DriveTrain;
 import frc.robot.subsystems.DriveTrain.TurnToAngleWithGyroPID;
 import frc.robot.subsystems.Gripper.Gripper;
+import frc.robot.subsystems.Gripper.RunMotorsBackward;
 
 // NOTE:  Consider using this command inline, rather than writing a subclass.  For more
 // information, see:
@@ -26,12 +27,13 @@ public class Pos2ScoreMoveBalance extends SequentialCommandGroup {
     // Add your commands in the addCommands() call, e.g.
     // addCommands(new FooCommand(), new BarCommand());
     addCommands(
-      new WristThenArmSequenceCommand(arm, SuperStructurePosition.ScoreConeMid).raceWith(new WaitCommand(3)),
-      // new PrintCommand("Wrist the arm done"),
-      // Drop the cone on the peg
-      gripper.expandGripperCommand(),
-      // Stow the arm back in the robot
-      new StowSuperStructure(arm),
+      // new WristThenArmSequenceCommand(arm, SuperStructurePosition.ScoreConeMid).raceWith(new WaitCommand(3)),
+      // // new PrintCommand("Wrist the arm done"),
+      // // Drop the cone on the peg
+      // gripper.expandGripperCommand(),
+      // // Stow the arm back in the robot
+      // new StowSuperStructure(arm),
+      new RunMotorsBackward(gripper).withTimeout(1),
       //Drive Back 100 inches 
       new DriveMotionMagic(dt, -140),  
       // This needs to be drive and Bang Bang

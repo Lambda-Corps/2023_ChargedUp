@@ -7,6 +7,7 @@ package frc.robot.autoCommands;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import frc.robot.subsystems.Arm.Arm;
+import frc.robot.subsystems.Arm.MoveWristToPositionMM;
 import frc.robot.subsystems.Arm.StowSuperStructure;
 import frc.robot.subsystems.Arm.WristThenArmSequenceCommand;
 import frc.robot.subsystems.Arm.Arm.SuperStructurePosition;
@@ -16,6 +17,7 @@ import frc.robot.subsystems.DriveTrain.DriveSlowlyUntilRamp;
 import frc.robot.subsystems.DriveTrain.DriveTrain;
 import frc.robot.subsystems.DriveTrain.TurnToAngleWithGyroPID;
 import frc.robot.subsystems.Gripper.Gripper;
+import frc.robot.subsystems.Gripper.RunMotorsBackward;
 
 // NOTE:  Consider using this command inline, rather than writing a subclass.  For more
 // information, see:
@@ -26,13 +28,15 @@ public class Pos1ScoreMoveBalance extends SequentialCommandGroup {
     // Add your commands in the addCommands() call, e.g.
     // addCommands(new FooCommand(), new BarCommand());
     addCommands(
-      new WristThenArmSequenceCommand(arm, SuperStructurePosition.ScoreConeMid).raceWith(new WaitCommand(3)),
+      // new WristThenArmSequenceCommand(arm, SuperStructurePosition.ScoreLow).raceWith(new WaitCommand(3)),
+      // new MoveWristToPositionMM(arm, SuperStructurePosition.ScoreLow),
       // new PrintCommand("Wrist the arm done"),
       // Drop the cone on the peg
-      gripper.expandGripperCommand(),
+      // gripper.expandGripperCommand(),
+      new RunMotorsBackward(gripper).withTimeout(1),
       // new PrintCommand("Expand Gripper done"),
       // Stow the arm back in the robot
-      new StowSuperStructure(arm),
+      // new StowSuperStructure(arm),
       //Drive Back 100 inches 
       new DriveMotionMagic(dt, -140), 
       new TurnToAngleWithGyroPID(dt, 90),
