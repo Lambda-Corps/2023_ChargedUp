@@ -39,7 +39,7 @@ public class Pos3ScoreMoveBalance extends SequentialCommandGroup {
       // new StowSuperStructure(arm),
       // new PrintCommand("ArmThenWrist Done"),
       // Drive backward 100 inches
-      new DriveMotionMagic(dt, -140),
+      new DriveMotionMagic(dt, -148),
       new TurnToAngleWithGyroPID(dt, -90),
       new DriveMotionMagic(dt, 65), 
       new TurnToAngleWithGyroPID(dt, 90),

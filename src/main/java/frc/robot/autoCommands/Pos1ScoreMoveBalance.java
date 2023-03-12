@@ -39,7 +39,7 @@ public class Pos1ScoreMoveBalance extends SequentialCommandGroup {
       // Stow the arm back in the robot
       // new StowSuperStructure(arm),
       //Drive Back 100 inches 
-      new DriveMotionMagic(dt, -140), 
+      new DriveMotionMagic(dt, -148), 
       new TurnToAngleWithGyroPID(dt, 90),
       new DriveMotionMagic(dt, 65),
       new TurnToAngleWithGyroPID(dt, -90),

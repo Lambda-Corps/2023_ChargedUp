@@ -23,7 +23,7 @@ public class Pos1ScoreMove extends SequentialCommandGroup {
     // addCommands(new FooCommand(), new BarCommand());
     addCommands(
       new ScoreCone(gripper),
-      new DriveMotionMagic(dt, -144)
+      new DriveMotionMagic(dt, -148)
     );
   }
 }
