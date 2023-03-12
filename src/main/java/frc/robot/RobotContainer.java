@@ -146,26 +146,6 @@ public class RobotContainer {
     );
     // D-pad left
     m_partner_controller.povLeft().onTrue(
-<<<<<<< HEAD
-        new ConditionalCommand(
-            new ArmThenWristSequenceCommand(m_arm, SuperStructurePosition.ScoreLow),
-            new WristThenArmSequenceCommand(m_arm, SuperStructurePosition.ScoreLow),
-            () -> m_arm.isBackwardMovement(SuperStructurePosition.ScoreLow)
-        )
-    );
-    
-    m_partner_controller.povRight().onTrue( new StowSuperStructure(m_arm) );
-
-    /////////////////////////////////// Driver Mappings
-    m_driver_controller.leftBumper().onTrue(m_drivetrain.shiftToHighGear());
-    m_driver_controller.leftBumper().onFalse(m_drivetrain.shiftToLowGear());
-    m_driver_controller.rightTrigger().whileTrue(new FineGrainedDrivingControl(m_drivetrain, m_driver_controller));
-   
-    m_driver_controller.rightStick().onTrue(m_arm.setArmEncoderToZero());
-    m_driver_controller.leftStick().onTrue(m_arm.setWristEncoderToZero());
-    
-
-=======
       new MoveWristToPositionMM(m_arm, SuperStructurePosition.ScoreLow)
       // m_arm.moveWristToPositionMM(SuperStructurePosition.ScoreLow, () -> !(m_arm.isBackwardMovement(SuperStructurePosition.ScoreLow)))
 
@@ -175,7 +155,6 @@ public class RobotContainer {
     m_driver_controller.leftTrigger().whileTrue(new FineGrainedDrivingControl(m_drivetrain, m_driver_controller));
     m_driver_controller.rightTrigger().onTrue(m_arm.moveWristToPositionMM(SuperStructurePosition.GroundPickup, () -> !(m_arm.isBackwardMovement(SuperStructurePosition.GroundPickup))));  
     m_driver_controller.rightTrigger().onFalse(new StowSuperStructure(m_arm));  
->>>>>>> arm_tweaks
   }
   
   /**
