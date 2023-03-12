@@ -11,6 +11,7 @@ import frc.robot.subsystems.DriveTrain.DriveMotionMagic;
 import frc.robot.subsystems.DriveTrain.DriveTrain;
 import frc.robot.subsystems.Gripper.Gripper;
 import frc.robot.subsystems.Gripper.RunMotorsBackward;
+import frc.robot.subsystems.Gripper.ScoreCone;
 
 // NOTE:  Consider using this command inline, rather than writing a subclass.  For more
 // information, see:
@@ -21,7 +22,7 @@ public class Pos3ScoreMove extends SequentialCommandGroup {
     // Add your commands in the addCommands() call, e.g.
     // addCommands(new FooCommand(), new BarCommand());
     addCommands(
-      new RunMotorsBackward(gripper).withTimeout(1),
+      new ScoreCone(gripper),      
       new DriveMotionMagic(dt, -140)
     );
   }

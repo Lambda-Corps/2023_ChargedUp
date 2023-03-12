@@ -150,8 +150,8 @@ public class Arm extends SubsystemBase {
 
   ///////// Constants ///////////////
   // Constant values for ARM movement, must be researched and tuned via tuner
-  final double ARM_FORWARD_SPEED = .2;
-  final double ARM_REVERSE_SPEED = -.2;
+  final double ARM_FORWARD_SPEED = .4;
+  final double ARM_REVERSE_SPEED = -.4;
   final double WRIST_FORWARD_SPEED = .3;
   final double WRIST_REVERSE_SPEED = -.15;
   final double WRIST_FORWARD_COSINE_FF = .15; // When arm is horizontal, calculation should be 1 * .07
@@ -225,7 +225,7 @@ public class Arm extends SubsystemBase {
   final static int ARM_GROUND_PICKUP = 70000;
   final static int WRIST_GROUND_PICKUP = 2000;
   final static int ARM_SUBSTATION = 0;
-  final static int WRIST_SUBSTATION = 40000;
+  final static int WRIST_SUBSTATION = 32500;
   final static int ARM_SCORE_LOW = 0;
   final static int WRIST_SCORE_LOW = 10000;
   final static int ARM_CONE_MID = 43000;
@@ -257,7 +257,7 @@ public class Arm extends SubsystemBase {
     // Setup the PID control variables for arm movement
     SlotConfiguration arm_mm = arm_config.slot0;
     arm_mm.allowableClosedloopError = 10;
-    arm_mm.closedLoopPeakOutput = .2;
+    arm_mm.closedLoopPeakOutput = .4;
     arm_mm.closedLoopPeriod = 1;
     arm_mm.kP = ARM_MM_KP;
     arm_mm.kI = ARM_MM_KI;
@@ -327,8 +327,8 @@ public class Arm extends SubsystemBase {
     // arm_config.statorCurrLimit = stator_limit;
 
     // Set max speeds for output
-    arm_config.peakOutputForward = .2;
-    arm_config.peakOutputReverse = -.2;
+    arm_config.peakOutputForward = .4;
+    arm_config.peakOutputReverse = -.4;
 
     // Configure the arm
     m_arm_motor.configAllSettings(arm_config, 10);
@@ -738,7 +738,7 @@ public class Arm extends SubsystemBase {
   public boolean is_wrist_mm_done(int target_ticks){
     double wrist_pos = m_wrist_motor.getSelectedSensorPosition();
 
-    m_wrist_mm_error.set(Math.abs(target_ticks - wrist_pos));
+    // m_wrist_mm_error.set(Math.abs(target_ticks - wrist_pos));
     return Math.abs((target_ticks - wrist_pos)) < WRIST_POSITION_TOLERANCE;
   }
 

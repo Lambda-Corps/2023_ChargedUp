@@ -18,6 +18,7 @@ import frc.robot.subsystems.DriveTrain.DriveTrain;
 import frc.robot.subsystems.DriveTrain.TurnToAngleWithGyroPID;
 import frc.robot.subsystems.Gripper.Gripper;
 import frc.robot.subsystems.Gripper.RunMotorsBackward;
+import frc.robot.subsystems.Gripper.ScoreCone;
 
 // NOTE:  Consider using this command inline, rather than writing a subclass.  For more
 // information, see:
@@ -33,8 +34,8 @@ public class Pos1ScoreMoveBalance extends SequentialCommandGroup {
       // new PrintCommand("Wrist the arm done"),
       // Drop the cone on the peg
       // gripper.expandGripperCommand(),
-      new RunMotorsBackward(gripper).withTimeout(1),
-      // new PrintCommand("Expand Gripper done"),
+      new ScoreCone(gripper),
+       // new PrintCommand("Expand Gripper done"),
       // Stow the arm back in the robot
       // new StowSuperStructure(arm),
       //Drive Back 100 inches 

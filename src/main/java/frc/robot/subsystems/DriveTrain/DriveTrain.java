@@ -139,13 +139,13 @@ public class DriveTrain extends SubsystemBase {
 	final int MM_SLOT = 0;
 	final int PID_PRIMARY = 0;
 	final int MM_TOLERANCE = 200;
-	final int MM_VELOCITY = 8000;
-	final int MM_ACCELERATION = 8000;
+	final int MM_VELOCITY = 10000;
+	final int MM_ACCELERATION = 10000;
 	final int FORWARD_SLEW_RATE = 3;
 	final int TURN_SLEW_RATE = 5;
 	double TURN_DRIVE_FF = .1;
 	final double DRIVE_BANG_BANG_FWD = .25;
-	final double DRIVE_BANG_BANG_BACK = -.175;
+	final double DRIVE_BANG_BANG_BACK = -.185;
 	final int DRIVE_BANG_BANG_SP = 10;
 	double DRIVE_STRAIGHT_FF = .2;
 	int m_setpoint_left = 0;
