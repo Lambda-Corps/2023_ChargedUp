@@ -20,8 +20,8 @@ public class Gripper extends SubsystemBase {
 
   DoubleSolenoid.Value m_requested_position, m_current_position;
   
-  final DoubleSolenoid.Value GRIPPER_CONTRACT = DoubleSolenoid.Value.kForward;
   final DoubleSolenoid.Value GRIPPER_EXPAND = DoubleSolenoid.Value.kReverse;
+  final DoubleSolenoid.Value GRIPPER_CONTRACT = DoubleSolenoid.Value.kForward;
 
   final double INTAKE_CONE_SPEED = .5;
   final double INTAKE_CUBE_SPEED = .5;
@@ -38,8 +38,9 @@ public class Gripper extends SubsystemBase {
 
     // Left will be the leader, right will be inverted so that in each case forward ejects objects and 
     // reverse brings it in
-    m_rightside.setInverted(true);
+    // m_rightside.setInverted(true);
     // m_rightside.follow(m_leftside);
+    m_leftside.setInverted(true);
 
     m_gripper = new DoubleSolenoid(PneumaticsModuleType.CTREPCM, GRIPPER_SOLENOID_CHANNEL_A,
     GRIPPER_SOLENOID_CHANNEL_B);
@@ -77,8 +78,8 @@ public class Gripper extends SubsystemBase {
   }
 
   private void hold_game_piece() {
-    m_leftside.set(ControlMode.PercentOutput, -INTAKE_HOLD_SPEED);
-    m_rightside.set(ControlMode.PercentOutput, -INTAKE_HOLD_SPEED);
+    m_leftside.set(ControlMode.PercentOutput, INTAKE_HOLD_SPEED);
+    m_rightside.set(ControlMode.PercentOutput, INTAKE_HOLD_SPEED);
   }
 
   public void eject_piece(){
@@ -91,6 +92,10 @@ public class Gripper extends SubsystemBase {
 
   public void stop_motors(){
     runMotors(0);
+  }
+
+  public void full_speed_eject(){
+    runMotors(-1);
   }
   /////////////////////////////////////// Inline Commands Go below here ////////////////////
   public CommandBase expandGripperCommand() {

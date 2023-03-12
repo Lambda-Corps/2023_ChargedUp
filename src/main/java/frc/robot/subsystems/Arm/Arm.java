@@ -150,21 +150,21 @@ public class Arm extends SubsystemBase {
 
   ///////// Constants ///////////////
   // Constant values for ARM movement, must be researched and tuned via tuner
-  final double ARM_FORWARD_SPEED = .35;
-  final double ARM_REVERSE_SPEED = -.35;
+  final double ARM_FORWARD_SPEED = .4;
+  final double ARM_REVERSE_SPEED = -.4;
   final double WRIST_FORWARD_SPEED = .3;
   final double WRIST_REVERSE_SPEED = -.15;
-  final double WRIST_FORWARD_COSINE_FF = .24; // When arm is horizontal, calculation should be 1 * .07
+  final double WRIST_FORWARD_COSINE_FF = .15; // When arm is horizontal, calculation should be 1 * .07
   // We're trying to calculate a feed forward based on the cosine of the wrist angle (when wrist is horizontal,
   // at 90 degrees, the cosine should return 1.  Our wrist starts offset at 21 degrees relative to vertical, so
   // we want the resulting calculation to be cos(69) = 1
-  final double WRIST_COSINE_STARTING_OFFSET = 0;
+  final double WRIST_COSINE_STARTING_OFFSET = 21;
   final double ARM_GEAR_RATIO = 10 * 4 * 4 * (2/1);
   final double WRIST_GEAR_RATIO = 7 * 4 * (64/24);
-  final int WRIST_REVERSE_SOFT_LIMIT = -1000;
+  final int WRIST_REVERSE_SOFT_LIMIT = -500;
   final int WRIST_FORWARD_SOFT_LIMIT = 43000;
   final int ARM_REVERSE_SOFT_LIMIT = 0;
-  final int ARM_FORWARD_SOFT_LIMIT = 125000;
+  final int ARM_FORWARD_SOFT_LIMIT = 93000;
   final int SAFE__MOVE_WRIST_POSITION = 3000; // Puts the wrist up at 11 degrees
   // final int ARM_FORWARD_SOFT_LIMIT = (int)(2048 * ARM_GEAR_RATIO * 1/6); // 60
   // degrees rotation
@@ -197,19 +197,19 @@ public class Arm extends SubsystemBase {
   final double ARM_MM_KD = 0;
   final double ARM_MM_KF = 0.1; // (.4 * 1023) / 8000
   final double ARM_MM_FF = 0;
-  final int ARM_MM_VELOCITY = 6000;
-  final int ARM_MM_ACCELERATION = (int)(ARM_MM_VELOCITY / 1); // 1 Second to full velocity
+  final int ARM_MM_VELOCITY = 4000;
+  final int ARM_MM_ACCELERATION = 4000; // 1 Second to full velocity
   final double ARM_HOLD_POSITION_KP = (ARM_FORWARD_SPEED * 1023) / 512; // Tuned manually (ARM_FORWARD_SPEED * 1023) / 2048;
   final double ARM_HOLD_POSITION_KI = 0;
   final double ARM_HOLD_POSITION_KD = 0;
   final double ARM_HOLD_POSITION_KF = 0;
-  final double WRIST_MM_FORWARD_KP = .8;
+  final double WRIST_MM_FORWARD_KP = .15;
   final double WRIST_MM_FORWARD_KI = 0;
   final double WRIST_MM_FORWARD_KD = 0;
-  final double WRIST_MM_FORWARD_KF = .8;// tuned manually
+  final double WRIST_MM_FORWARD_KF = .07;// tuned manually
   final int WRIST_MM_FORWARD_VELOCITY = 4000;
   final int WRIST_MM_FORWARD_ACCELERATION = 4000; // 1 second to full velocity
-  final double WRIST_MM_REVERSE_KP = (WRIST_REVERSE_SPEED * 1023) / 2048;
+  final double WRIST_MM_REVERSE_KP = .075;
   final double WRIST_MM_REVERSE_KI = 0;
   final double WRIST_MM_REVERSE_KD = 0;
   final double WRIST_MM_REVERSE_KF = 0.058; // (-.4 * 1023) / -7000
@@ -225,7 +225,7 @@ public class Arm extends SubsystemBase {
   final static int ARM_GROUND_PICKUP = 70000;
   final static int WRIST_GROUND_PICKUP = 2000;
   final static int ARM_SUBSTATION = 0;
-  final static int WRIST_SUBSTATION = 40000;
+  final static int WRIST_SUBSTATION = 32500;
   final static int ARM_SCORE_LOW = 0;
   final static int WRIST_SCORE_LOW = 10000;
   final static int ARM_CONE_MID = 43000;
@@ -257,8 +257,7 @@ public class Arm extends SubsystemBase {
     // Setup the PID control variables for arm movement
     SlotConfiguration arm_mm = arm_config.slot0;
     arm_mm.allowableClosedloopError = 10;
-    // arm_manual_forward.closedLoopPeakOutput = ARM_FORWARD_SPEED;
-    arm_mm.closedLoopPeakOutput = .35;
+    arm_mm.closedLoopPeakOutput = .4;
     arm_mm.closedLoopPeriod = 1;
     arm_mm.kP = ARM_MM_KP;
     arm_mm.kI = ARM_MM_KI;
@@ -278,7 +277,7 @@ public class Arm extends SubsystemBase {
 
     SlotConfiguration wrist_mm_forward = wrist_config.slot0;
     wrist_mm_forward.allowableClosedloopError = 10;
-    wrist_mm_forward.closedLoopPeakOutput = 1;
+    wrist_mm_forward.closedLoopPeakOutput = .3;
     wrist_mm_forward.closedLoopPeriod = 1;
     wrist_mm_forward.kP = WRIST_MM_FORWARD_KP;
     wrist_mm_forward.kI = WRIST_MM_FORWARD_KI;
@@ -288,7 +287,7 @@ public class Arm extends SubsystemBase {
 
     SlotConfiguration wrist_mm_reverse = wrist_config.slot1;
     wrist_mm_reverse.allowableClosedloopError = 10;
-    wrist_mm_reverse.closedLoopPeakOutput = Math.abs(WRIST_REVERSE_SPEED); // Must be an absolute value
+    wrist_mm_reverse.closedLoopPeakOutput = .15;
     wrist_mm_reverse.closedLoopPeriod = 1;
     wrist_mm_reverse.kP = WRIST_MM_REVERSE_KP;
     wrist_mm_reverse.kI = WRIST_MM_REVERSE_KI;
@@ -319,17 +318,17 @@ public class Arm extends SubsystemBase {
     arm_config.reverseSoftLimitThreshold = ARM_REVERSE_SOFT_LIMIT;
     arm_config.forwardSoftLimitThreshold = ARM_FORWARD_SOFT_LIMIT;
 
-    // Set current limits for the ARM
-    StatorCurrentLimitConfiguration stator_limit = arm_config.statorCurrLimit;
-    stator_limit.currentLimit = ARM_MAX_STATOR_CURRENT;
-    stator_limit.enable = true;
-    stator_limit.triggerThresholdCurrent = ARM_MAX_STATOR_CURRENT + 5;
-    stator_limit.triggerThresholdTime = .1;
-    arm_config.statorCurrLimit = stator_limit;
+    // // Set current limits for the ARM
+    // StatorCurrentLimitConfiguration stator_limit = arm_config.statorCurrLimit;
+    // stator_limit.currentLimit = ARM_MAX_STATOR_CURRENT;
+    // stator_limit.enable = true;
+    // stator_limit.triggerThresholdCurrent = ARM_MAX_STATOR_CURRENT + 5;
+    // stator_limit.triggerThresholdTime = .1;
+    // arm_config.statorCurrLimit = stator_limit;
 
     // Set max speeds for output
-    arm_config.peakOutputForward = ARM_FORWARD_SPEED;
-    arm_config.peakOutputReverse = ARM_REVERSE_SPEED;
+    arm_config.peakOutputForward = .4;
+    arm_config.peakOutputReverse = -.4;
 
     // Configure the arm
     m_arm_motor.configAllSettings(arm_config, 10);
@@ -356,18 +355,18 @@ public class Arm extends SubsystemBase {
     wrist_config.reverseSoftLimitThreshold = WRIST_REVERSE_SOFT_LIMIT;
     wrist_config.forwardSoftLimitThreshold = WRIST_FORWARD_SOFT_LIMIT;
 
-    // Set current limits for the Wrist
-    stator_limit = wrist_config.statorCurrLimit;
-    stator_limit.currentLimit = WRIST_MAX_STATOR_CURRENT;
-    stator_limit.enable = true;
-    stator_limit.triggerThresholdCurrent = WRIST_STATOR_CURRENT_TRIGGER;
-    stator_limit.triggerThresholdTime = .001;
-    wrist_config.statorCurrLimit = stator_limit;
+    // // Set current limits for the Wrist
+    // stator_limit = wrist_config.statorCurrLimit;
+    // stator_limit.currentLimit = WRIST_MAX_STATOR_CURRENT;
+    // stator_limit.enable = true;
+    // stator_limit.triggerThresholdCurrent = WRIST_STATOR_CURRENT_TRIGGER;
+    // stator_limit.triggerThresholdTime = .001;
+    // wrist_config.statorCurrLimit = stator_limit;
 
     // Set max speeds for output
-    wrist_config.peakOutputForward = .5;
-    wrist_config.peakOutputReverse = WRIST_REVERSE_SPEED;
-    wrist_config.openloopRamp = .3;
+    wrist_config.peakOutputForward = .3;
+    wrist_config.peakOutputReverse = -.15;
+    wrist_config.openloopRamp = .4;
     wrist_config.closedloopRamp = .3;
     // Configure the wrist
     m_wrist_motor.configAllSettings(wrist_config, 10);
@@ -404,8 +403,8 @@ public class Arm extends SubsystemBase {
 
     // The HashMap that associates specific illegal transitions per each position
     // (as needed)
-    // illegal_transitions.put(SuperStructurePosition.Stowed, stowed_illegal_transitions);
-    illegal_transitions.put(SuperStructurePosition.GroundPickup, ground_pickup_illegal_transitions);
+    illegal_transitions.put(SuperStructurePosition.Stowed, stowed_illegal_transitions);
+    // illegal_transitions.put(SuperStructurePosition.GroundPickup, ground_pickup_illegal_transitions);
 
     // Set the motors to hold their initial positions stowed to try and minimize
     // slop until we
@@ -642,13 +641,14 @@ public class Arm extends SubsystemBase {
   }
 
   public void drive_manually(double arm_speed, double wrist_speed) {
-    m_arm_state = ArmState.Moving;
+    // m_arm_state = ArmState.Moving;
     wrist_speed = MathUtil.applyDeadband(wrist_speed, .01);
     arm_speed = MathUtil.applyDeadband(arm_speed, .01);
 
     wrist_speed = MathUtil.clamp(wrist_speed, WRIST_REVERSE_SPEED, WRIST_FORWARD_SPEED);
     arm_speed = MathUtil.clamp(arm_speed, ARM_REVERSE_SPEED, ARM_FORWARD_SPEED);
 
+    // System.out.println("Arm Speed: " + arm_speed);
     m_arm_motor.set(ControlMode.PercentOutput, arm_speed);
     m_wrist_motor.set(ControlMode.PercentOutput, wrist_speed);
   }
@@ -738,7 +738,7 @@ public class Arm extends SubsystemBase {
   public boolean is_wrist_mm_done(int target_ticks){
     double wrist_pos = m_wrist_motor.getSelectedSensorPosition();
 
-    m_wrist_mm_error.set(Math.abs(target_ticks - wrist_pos));
+    // m_wrist_mm_error.set(Math.abs(target_ticks - wrist_pos));
     return Math.abs((target_ticks - wrist_pos)) < WRIST_POSITION_TOLERANCE;
   }
 

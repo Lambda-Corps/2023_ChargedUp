@@ -5,6 +5,16 @@ import java.util.ArrayList;
 
 
 public class LED extends SubsystemBase{
+
+    final public static int RAINBOW_FUNCTION = 4;
+    final public static int PURPLE_FUNCTION = 1;
+    final public static int YELLOW_FUNCTION = 2;
+    final public static int RED_FUNCTION = 3;
+    final public static int TOP_LEFT = 1;
+    final public static int TOP_RIGHT = 2;
+    final public static int ELEC_PANEL = 3;
+    final public static int PNEU_PANEL = 4;
+
     ArrayList<Byte> byteList = new ArrayList<Byte>();
     private static final int kDeviceAddress = 4;
     private I2C i2c;
@@ -37,8 +47,8 @@ public class LED extends SubsystemBase{
     @Override
     public void periodic(){
         if (j == 0){
-            setLED(1, 4);
-            setLED(2, 4);
+            // setLED(1, 4);
+            // setLED(2, 4);
         }
         if (i == 10 ) {
             if (byteList.size() > 0)

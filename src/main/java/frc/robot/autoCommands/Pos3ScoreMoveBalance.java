@@ -16,6 +16,7 @@ import frc.robot.subsystems.DriveTrain.DriveSlowlyUntilRamp;
 import frc.robot.subsystems.DriveTrain.DriveTrain;
 import frc.robot.subsystems.DriveTrain.TurnToAngleWithGyroPID;
 import frc.robot.subsystems.Gripper.Gripper;
+import frc.robot.subsystems.Gripper.ScoreCone;
 
 // NOTE:  Consider using this command inline, rather than writing a subclass.  For more
 // information, see:
@@ -29,23 +30,23 @@ public class Pos3ScoreMoveBalance extends SequentialCommandGroup {
       // Set our odometry to the starting position
       //dt.setRobotStartingPose(1.89, 4.97, 180),
       // Set the superstructure to the scoring position
-      new WristThenArmSequenceCommand(arm, SuperStructurePosition.ScoreConeMid).raceWith(new WaitCommand(3)),
+      new ScoreCone(gripper),
       // new PrintCommand("Wrist the arm done"),
       // Drop the cone on the peg
-      gripper.expandGripperCommand(),
+      // gripper.expandGripperCommand(),
       // new PrintCommand("Expand Gripper done"),
       // Stow the arm back in the robot
-      new StowSuperStructure(arm),
+      // new StowSuperStructure(arm),
       // new PrintCommand("ArmThenWrist Done"),
       // Drive backward 100 inches
-      new DriveMotionMagic(dt, -140),
+      new DriveMotionMagic(dt, -148),
       new TurnToAngleWithGyroPID(dt, -90),
       new DriveMotionMagic(dt, 65), 
       new TurnToAngleWithGyroPID(dt, 90),
       // This IS the drive and Bang Bang
       new DriveSlowlyUntilRamp(dt).raceWith(new WaitCommand(1.5)), 
-      new BalanceBangBangCommand(dt),
-      new TurnToAngleWithGyroPID(dt, 90)
+      new BalanceBangBangCommand(dt)
+      // new TurnToAngleWithGyroPID(dt, 90)
     );
       // dt.driveMotionMagic(-100).until(dt::is_drive_mm_done).andThen(dt.stopMotorsCommand())      );
   }

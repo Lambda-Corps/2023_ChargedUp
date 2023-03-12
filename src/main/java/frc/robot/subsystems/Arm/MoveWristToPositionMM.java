@@ -43,7 +43,7 @@ public class MoveWristToPositionMM extends CommandBase {
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-    m_done = m_arm.is_arm_mm_done(m_target_ticks);
+    m_done = m_arm.is_wrist_mm_done(m_target_ticks);
     if(m_done){
       m_count++;
     }
@@ -51,9 +51,9 @@ public class MoveWristToPositionMM extends CommandBase {
       m_count = 0;
     }
     
-    if( m_direction_is_forward && m_arm.is_arm_fwd_limit_hit() ){
+    if( m_direction_is_forward && m_arm.is_wrist_fwd_limit_hit() ){
       m_half_second_limit_hit++;
-    } else if( !m_direction_is_forward && m_arm.is_arm_rev_limit_hit() ){
+    } else if( !m_direction_is_forward && m_arm.is_wrist_rev_limit_hit() ){
       m_half_second_limit_hit++;
     }
     else{
