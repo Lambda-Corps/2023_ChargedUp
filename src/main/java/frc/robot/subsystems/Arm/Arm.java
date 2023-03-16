@@ -150,8 +150,8 @@ public class Arm extends SubsystemBase {
 
   ///////// Constants ///////////////
   // Constant values for ARM movement, must be researched and tuned via tuner
-  final double ARM_FORWARD_SPEED = .4;
-  final double ARM_REVERSE_SPEED = -.4;
+  final double ARM_FORWARD_SPEED = .2;
+  final double ARM_REVERSE_SPEED = -.2;
   final double WRIST_FORWARD_SPEED = .3;
   final double WRIST_REVERSE_SPEED = -.15;
   final double WRIST_FORWARD_COSINE_FF = .15; // When arm is horizontal, calculation should be 1 * .07
@@ -159,7 +159,7 @@ public class Arm extends SubsystemBase {
   // at 90 degrees, the cosine should return 1.  Our wrist starts offset at 21 degrees relative to vertical, so
   // we want the resulting calculation to be cos(69) = 1
   final double WRIST_COSINE_STARTING_OFFSET = 21;
-  final double ARM_GEAR_RATIO = 10 * 4 * 4 * (2/1);
+  final double ARM_GEAR_RATIO = 4 * 4 * 4 * (2/1);
   final double WRIST_GEAR_RATIO = 7 * 4 * (64/24);
   final int WRIST_REVERSE_SOFT_LIMIT = -500;
   final int WRIST_FORWARD_SOFT_LIMIT = 43000;
@@ -192,13 +192,13 @@ public class Arm extends SubsystemBase {
    * That means, we want to saturate the feedback (full recovery) with an error
    * value
    */
-  final double ARM_MM_KP = .4; // Tuned manually (ARM_FORWARD_SPEED * 1023) / 2048;
+  final double ARM_MM_KP = .2; // Tuned manually (ARM_FORWARD_SPEED * 1023) / 2048;
   final double ARM_MM_KI = 0;
   final double ARM_MM_KD = 0;
-  final double ARM_MM_KF = 0.1; // (.4 * 1023) / 8000
+  final double ARM_MM_KF = 0.067; // (.4 * 1023) / 8000
   final double ARM_MM_FF = 0;
-  final int ARM_MM_VELOCITY = 4000;
-  final int ARM_MM_ACCELERATION = 4000; // 1 Second to full velocity
+  final int ARM_MM_VELOCITY = 3000;
+  final int ARM_MM_ACCELERATION = 3000; // 1 Second to full velocity
   final double ARM_HOLD_POSITION_KP = (ARM_FORWARD_SPEED * 1023) / 512; // Tuned manually (ARM_FORWARD_SPEED * 1023) / 2048;
   final double ARM_HOLD_POSITION_KI = 0;
   final double ARM_HOLD_POSITION_KD = 0;
@@ -222,21 +222,21 @@ public class Arm extends SubsystemBase {
   // Encoder Measurements for the relevant scoring positions
   final static int ARM_STOW = 0;
   final static int WRIST_STOW = 0;
-  final static int ARM_GROUND_PICKUP = 70000;
-  final static int WRIST_GROUND_PICKUP = 2000;
+  final static int ARM_GROUND_PICKUP = 25000;
+  final static int WRIST_GROUND_PICKUP = 0;
   final static int ARM_SUBSTATION = 0;
   final static int WRIST_SUBSTATION = 32500;
   final static int ARM_SCORE_LOW = 0;
   final static int WRIST_SCORE_LOW = 10000;
-  final static int ARM_CONE_MID = 43000;
-  final static int WRIST_CONE_MID = 32000;
-  final static int ARM_CONE_HIGH = 75000;
-  final static int WRIST_CONE_HIGH = 43000;
-  final static int ARM_CUBE_HIGH = 62000;
-  final static int WRIST_CUBE_HIGH = 43000;
+  final static int ARM_CONE_MID =  20000;
+  final static int WRIST_CONE_MID = 37000;
+  final static int ARM_CONE_HIGH = 36000;
+  final static int WRIST_CONE_HIGH = 36000;
+  final static int ARM_CUBE_HIGH = 30000;
+  final static int WRIST_CUBE_HIGH = 36000;
   final static int ARM_CUBE_MID = 0;
-  final static int WRIST_CUBE_MID = 30000;
-  final static int ARM_POSITION_TOLERANCE = 100;
+  final static int WRIST_CUBE_MID = 25500;
+  final static int ARM_POSITION_TOLERANCE = 250;
   final static int WRIST_POSITION_TOLERANCE = 250;
   final int PID_PRIMARY = 0;
 
