@@ -20,6 +20,7 @@ import com.ctre.phoenix.motorcontrol.can.TalonFXConfiguration;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 import com.kauailabs.navx.frc.AHRS;
 
+import edu.wpi.first.cameraserver.CameraServer;
 import edu.wpi.first.hal.SimDouble;
 import edu.wpi.first.hal.simulation.SimDeviceDataJNI;
 import edu.wpi.first.math.MathUtil;
@@ -166,8 +167,13 @@ public class DriveTrain extends SubsystemBase {
 	final double DRIVE_OPEN_LOOP_RAMP = .18;
 	final double DRIVE_CLOSED_LOOP_RAMP = .18;
 
+	CameraServer m_DriveCameraServer;
+	
+
 	/** Creates a new DriveTrain. */
 	public DriveTrain() {
+		m_DriveCameraServer = 
+
 		m_gyro = new AHRS(SPI.Port.kMXP);
 		m_left_leader = new WPI_TalonFX(LEFT_TALON_LEADER);
 		m_left_follower = new WPI_TalonFX(LEFT_TALON_FOLLOWER);
