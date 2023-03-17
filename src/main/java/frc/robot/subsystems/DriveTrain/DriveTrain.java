@@ -172,8 +172,6 @@ public class DriveTrain extends SubsystemBase {
 
 	/** Creates a new DriveTrain. */
 	public DriveTrain() {
-		m_DriveCameraServer = 
-
 		m_gyro = new AHRS(SPI.Port.kMXP);
 		m_left_leader = new WPI_TalonFX(LEFT_TALON_LEADER);
 		m_left_follower = new WPI_TalonFX(LEFT_TALON_FOLLOWER);

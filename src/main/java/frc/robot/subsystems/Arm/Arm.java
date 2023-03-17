@@ -225,11 +225,11 @@ public class Arm extends SubsystemBase {
   final static int ARM_GROUND_PICKUP = 25000;
   final static int WRIST_GROUND_PICKUP = 0;
   final static int ARM_SUBSTATION = 0;
-  final static int WRIST_SUBSTATION = 32500;
+  final static int WRIST_SUBSTATION = 27000;
   final static int ARM_SCORE_LOW = 0;
   final static int WRIST_SCORE_LOW = 10000;
   final static int ARM_CONE_MID =  20000;
-  final static int WRIST_CONE_MID = 37000;
+  final static int WRIST_CONE_MID = 23000;
   final static int ARM_CONE_HIGH = 36000;
   final static int WRIST_CONE_HIGH = 36000;
   final static int ARM_CUBE_HIGH = 30000;

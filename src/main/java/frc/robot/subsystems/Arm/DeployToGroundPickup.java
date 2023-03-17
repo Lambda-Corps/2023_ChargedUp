@@ -4,22 +4,24 @@
 
 package frc.robot.subsystems.Arm;
 
+import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
 import frc.robot.subsystems.Arm.Arm.ArmState;
 import frc.robot.subsystems.Arm.Arm.SuperStructurePosition;
 
 // NOTE:  Consider using this command inline, rather than writing a subclass.  For more
 // information, see:
 // https://docs.wpilib.org/en/stable/docs/software/commandbased/convenience-features.html
-public class StowSuperStructure extends SequentialCommandGroup {
-  /** Creates a new StowSuperStructure. */
-  public StowSuperStructure(Arm arm) {
+public class DeployToGroundPickup extends SequentialCommandGroup {
+  /** Creates a new DeployToGroundPickup. */
+  public DeployToGroundPickup(Arm arm_sub, Arm.SuperStructurePosition position_req) {
     // Add your commands in the addCommands() call, e.g.
     // addCommands(new FooCommand(), new BarCommand());
     addCommands(
-      arm.set_state(ArmState.Moving),
-      new MoveArmToPositionMM(arm, SuperStructurePosition.Stowed).withTimeout(2),
-      arm.set_state(ArmState.Stowed)
+      arm_sub.set_state(ArmState.Moving),
+      new MoveArmToPositionMM(arm_sub, position_req), 
+      arm_sub.set_state(ArmState.Holding)
     );
   }
 }

@@ -14,6 +14,7 @@ import frc.robot.autoCommands.Pos3ScoreMoveBalance;
 import frc.robot.subsystems.Arm.Arm;
 import frc.robot.subsystems.Arm.ArmDriveToPositionPIDTest;
 import frc.robot.subsystems.Arm.ArmThenWristSequenceCommand;
+import frc.robot.subsystems.Arm.DeployToGroundPickup;
 import frc.robot.subsystems.Arm.DriveArmManually;
 import frc.robot.subsystems.Arm.MoveWristToPositionMM;
 import frc.robot.subsystems.Arm.StowSuperStructure;
@@ -41,6 +42,7 @@ import frc.robot.subsystems.LEDs.LED;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.ConditionalCommand;
 import edu.wpi.first.wpilibj2.command.PrintCommand;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 
 /**
@@ -161,9 +163,8 @@ public class RobotContainer {
     m_driver_controller.leftBumper().onTrue(m_drivetrain.shiftToHighGear());
     m_driver_controller.leftBumper().onFalse(m_drivetrain.shiftToLowGear());
     m_driver_controller.leftTrigger().whileTrue(new FineGrainedDrivingControl(m_drivetrain, m_driver_controller));
-    m_driver_controller.rightTrigger().onTrue(m_arm.moveWristToPositionMM(SuperStructurePosition.GroundPickup, () -> !(m_arm.isBackwardMovement(SuperStructurePosition.GroundPickup))));  
-    m_driver_controller.rightTrigger().onFalse(new StowSuperStructure(m_arm));  
-   // m_driver_controller.leftTrigger().onTrue(new ArmDriveToPositionPIDTest(m_arm, ))
+    m_driver_controller.rightTrigger().onTrue(m_gripper.contractGripperCommand().andThen(new WaitCommand(0.3)).andThen(new DeployToGroundPickup(m_arm, SuperStructurePosition.GroundPickup)).andThen(m_gripper.expandGripperCommand().andThen(m_gripper.holdGamePieceCommand())));
+    m_driver_controller.rightTrigger().onFalse(m_gripper.contractGripperCommand().andThen(m_gripper.holdGamePieceCommand()).andThen(new StowSuperStructure(m_arm)));
   }
   
   /**
