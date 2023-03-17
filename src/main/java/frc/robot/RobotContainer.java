@@ -191,7 +191,7 @@ public class RobotContainer {
     driveTab.add("Arm", m_arm).withPosition(0, 1).withSize(2, 1);
     driveTab.add("Gripper", m_gripper).withPosition(0, 2).withSize(2, 1);
 
-    driveTab.add("Camera", m_drivetrain.);
+    driveTab.add("Camera", m_drivetrain);
 
 
     //Auto Options
