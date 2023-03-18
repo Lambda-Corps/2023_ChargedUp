@@ -16,6 +16,7 @@ import frc.robot.subsystems.Arm.ArmDriveToPositionPIDTest;
 import frc.robot.subsystems.Arm.ArmThenWristSequenceCommand;
 import frc.robot.subsystems.Arm.DeployToGroundPickup;
 import frc.robot.subsystems.Arm.DriveArmManually;
+import frc.robot.subsystems.Arm.MoveArmToPositionMM;
 import frc.robot.subsystems.Arm.MoveWristToPositionMM;
 import frc.robot.subsystems.Arm.StowSuperStructure;
 import frc.robot.subsystems.Arm.WristDriveToPositionPIDTest;
@@ -62,7 +63,7 @@ public class RobotContainer {
   private final Arm m_arm = new  Arm();
   private final Gripper m_gripper = new  Gripper();
 
-  private final LED m_led = new LED();
+  // private final LED m_led = new LED();
 
   //private final ExampleCommand m_autoCommand = new ExampleCommand(m_exampleSubsystem);
 
@@ -80,7 +81,7 @@ public class RobotContainer {
     configureButtonBindings();
 
     // Set the LED to rainbow as the default
-    m_led.setLED(LED.TOP_LEFT, LED.RAINBOW_FUNCTION);
+    // m_led.setLED(LED.TOP_LEFT, LED.RAINBOW_FUNCTION);
   }
 
   /**
@@ -102,7 +103,7 @@ public class RobotContainer {
     //     Commands.run(() -> m_gripper.close_gripper()
     // );
     // m_partner_controller.leftStick().onTrue(m_gripper.contractGripperCommand().andThen(m_gripper.holdGamePieceCommand()));
-    m_partner_controller.rightStick().onTrue(m_gripper.contractGripperCommand());
+    m_partner_controller.rightStick().onTrue(m_gripper.contractGripperCommand().andThen(m_gripper.holdGamePieceCommand()));
     // Right stick
     // m_partner_controller.rightStick().onTrue(
     //     Commands.run(() -> m_gripper.open_gripper())
@@ -118,11 +119,12 @@ public class RobotContainer {
     );
     // X button
     m_partner_controller.x().onTrue(
-      new ConditionalCommand(
-          new ArmThenWristSequenceCommand(m_arm, SuperStructurePosition.ScoreCubeMid),
-          new WristThenArmSequenceCommand(m_arm, SuperStructurePosition.ScoreCubeMid),
-          () -> m_arm.isBackwardMovement(SuperStructurePosition.ScoreCubeMid)
-      )
+      // new ConditionalCommand(
+      //     new ArmThenWristSequenceCommand(m_arm, SuperStructurePosition.ScoreCubeMid),
+      //     new WristThenArmSequenceCommand(m_arm, SuperStructurePosition.ScoreCubeMid),
+      //     () -> m_arm.isBackwardMovement(SuperStructurePosition.ScoreCubeMid)
+      // )
+      new MoveWristToPositionMM(m_arm, SuperStructurePosition.ScoreCubeMid)
     );
     // Y button
     m_partner_controller.y().onTrue(
@@ -134,16 +136,18 @@ public class RobotContainer {
     );
     // A button
     m_partner_controller.a().onTrue(
-      new ConditionalCommand(
-          new ArmThenWristSequenceCommand(m_arm, SuperStructurePosition.ScoreConeMid),
-          new WristThenArmSequenceCommand(m_arm, SuperStructurePosition.ScoreConeMid),
-          () -> m_arm.isBackwardMovement(SuperStructurePosition.ScoreConeMid)
-      )
+      // new ConditionalCommand(
+      //     new ArmThenWristSequenceCommand(m_arm, SuperStructurePosition.ScoreConeMid),
+      //     new WristThenArmSequenceCommand(m_arm, SuperStructurePosition.ScoreConeMid),
+      //     () -> m_arm.isBackwardMovement(SuperStructurePosition.ScoreConeMid)
+      // )
+      new MoveWristToPositionMM(m_arm, SuperStructurePosition.SubstationPickup).andThen(new ArmDriveToPositionPIDTest(m_arm, SuperStructurePosition.ScoreConeMid))
   );
     // B button
     // m_partner_controller.b().onTrue(
     //     new PrintCommand("Cone High")
     // );
+
     // D-pad down
     m_partner_controller.povDown().onTrue(
       new StowSuperStructure(m_arm)
@@ -349,9 +353,9 @@ public class RobotContainer {
     armTestTab.add("Wrist Ground MM Test", new WristDriveToPositionPIDTest(m_arm, SuperStructurePosition.GroundPickup).unless(()->m_arm.isTransitionInvalid(SuperStructurePosition.GroundPickup)))     .withPosition(2, 5).withSize(2, 1);
     armTestTab.add("Wrist Sub MM Test", new WristDriveToPositionPIDTest(m_arm, SuperStructurePosition.SubstationPickup).unless(()->m_arm.isTransitionInvalid(SuperStructurePosition.SubstationPickup))).withPosition(4, 5).withSize(2, 1);
     armTestTab.add("Wrist Cube H MM Test", new WristDriveToPositionPIDTest(m_arm, SuperStructurePosition.ScoreCubeHigh).unless(()->m_arm.isTransitionInvalid(SuperStructurePosition.ScoreCubeHigh)))   .withPosition(6, 5).withSize(2, 1);
-    armTestTab.add("Wrist Cube Mid", new MoveWristToPositionMM(m_arm, SuperStructurePosition.ScoreCubeMid).unless(()->m_arm.isTransitionInvalid(SuperStructurePosition.ScoreCubeMid)))     .withPosition(0, 6).withSize(2, 1);
+    armTestTab.add("Wrist Cube Mid", new WristDriveToPositionPIDTest(m_arm, SuperStructurePosition.ScoreCubeMid).unless(()->m_arm.isTransitionInvalid(SuperStructurePosition.ScoreCubeMid)))     .withPosition(0, 6).withSize(2, 1);
     armTestTab.add("Wrist Cone H MM Test", new WristDriveToPositionPIDTest(m_arm, SuperStructurePosition.ScoreConeHigh).unless(()->m_arm.isTransitionInvalid(SuperStructurePosition.ScoreConeHigh)))   .withPosition(2, 6).withSize(2, 1);
-    armTestTab.add("Wrist Cone Mid", new MoveWristToPositionMM(m_arm, SuperStructurePosition.ScoreConeMid).unless(()->m_arm.isTransitionInvalid(SuperStructurePosition.ScoreConeMid)))     .withPosition(4, 6).withSize(2, 1);
+    armTestTab.add("Wrist Cone Mid", new WristDriveToPositionPIDTest(m_arm, SuperStructurePosition.ScoreConeMid).unless(()->m_arm.isTransitionInvalid(SuperStructurePosition.ScoreConeMid)))     .withPosition(4, 6).withSize(2, 1);
 
     // armTestTab.add("Stow Arm Test", new SetArmRequestedPosition(m_arm, SuperStructurePosition.Stowed)).withPosition(0, 4).withSize(2, 1);
     // armTestTab.add("Ground_Pickup Arm Test", new SetArmRequestedPosition(m_arm, SuperStructurePosition.GroundPickup)).withPosition(2, 4).withSize(2, 1);

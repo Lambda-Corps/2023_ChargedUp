@@ -37,6 +37,7 @@ import edu.wpi.first.networktables.DoubleTopic;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.PubSubOption;
+import edu.wpi.first.wpilibj.AnalogInput;
 import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj.RobotController;
@@ -86,8 +87,9 @@ public class DriveTrain extends SubsystemBase {
 	private final int kTimeoutMs = 10;
 
 	private final double MAX_TELEOP_DRIVE_SPEED = 1.0;
-	// private final double arbFF = 0.075;
-	// Fine grained driving will square the inputs, so .6 will really end up being .36 max driving when 
+	private final double m_arbFF_empty = 0.15;
+	private final double m_arbFF_cone = 0.17;
+// Fine grained driving will square the inputs, so .6 will really end up being .36 max driving when 
 	// the fine grained control is being applied.
 	private final double FINE_GRAINED_MAX = .6; 
 	private final double TURN_WITH_GYRO_KP = .015;
@@ -169,6 +171,7 @@ public class DriveTrain extends SubsystemBase {
 
 	CameraServer m_DriveCameraServer;
 	
+	AnalogInput m_rangefinder;
 
 	/** Creates a new DriveTrain. */
 	public DriveTrain() {
@@ -209,8 +212,8 @@ public class DriveTrain extends SubsystemBase {
 		talon_config.supplyCurrLimit.triggerThresholdTime = DRIVE_PEAK_DURATION;
 
 		// Set open loop ramp to 1/4 second from 0->Full output
-		talon_config.openloopRamp = DRIVE_OPEN_LOOP_RAMP;
-		talon_config.closedloopRamp = DRIVE_CLOSED_LOOP_RAMP;
+		// talon_config.openloopRamp = DRIVE_OPEN_LOOP_RAMP;
+		// talon_config.closedloopRamp = DRIVE_CLOSED_LOOP_RAMP;
 		
 		m_left_leader.configAllSettings(talon_config);
 		m_left_follower.configAllSettings(talon_config);
@@ -323,6 +326,8 @@ public class DriveTrain extends SubsystemBase {
 		m_forward_bang_bang.setSetpoint(DRIVE_BANG_BANG_SP);
 		m_reverse_bang_bang = new BangBangController();
 		m_reverse_bang_bang.setSetpoint(-DRIVE_BANG_BANG_SP);
+
+		m_rangefinder = new AnalogInput(0);
 	}
 
 	@Override
@@ -343,19 +348,19 @@ public class DriveTrain extends SubsystemBase {
 		// forward = MathUtil.clamp(forward, -0.4, 0.4);
 		// turn = MathUtil.clamp(turn, -0.4, 0.4);
 
-		// forward = -m_forward_limiter.calculate(forward) * m_drive_absMax;
-		// if (forward != 0 || turn != 0) {
-		// 	forward = m_forward_limiter.calculate(forward) * m_drive_absMax;
-		// 	turn = m_rotation_limiter.calculate(turn) * m_drive_absMax;
-		// } else {
-		// 	if (forward != 0){
-		// 		m_forward_limiter.reset(FORWARD_SLEW_RATE);
-		// 	}
-		// 	if( turn != 0 ){
-		// 		m_rotation_limiter.reset(TURN_SLEW_RATE);
+		forward = -m_forward_limiter.calculate(forward) * m_drive_absMax;
+		if (forward != 0) {
+			forward = m_forward_limiter.calculate(forward) * m_drive_absMax;
+			// turn = m_rotation_limiter.calculate(turn) * m_drive_absMax;
+		} else {
+			if (forward != 0){
+				m_forward_limiter.reset(FORWARD_SLEW_RATE);
+			}
+			// if( turn != 0 ){
+			// 	m_rotation_limiter.reset(TURN_SLEW_RATE);
 				
-		// 	}
-		// }
+			// }
+		}
 
 		var speeds = DifferentialDrive.curvatureDriveIK(forward, turn, true);
 
@@ -810,6 +815,12 @@ public class DriveTrain extends SubsystemBase {
 	public boolean isRollGreaterThan3(){
 		return m_gyro.getRoll() > 3.0;
 	}
+
+	public double getRangeFinderValue() {
+		double range_voltage = m_rangefinder.getAverageVoltage();
+		return 0;
+	}
+
 	// INLINE COMMANDS
 	public CommandBase shiftToHighGear() {
 		return runOnce(

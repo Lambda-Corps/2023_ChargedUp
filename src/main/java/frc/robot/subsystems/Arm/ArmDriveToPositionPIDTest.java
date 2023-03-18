@@ -8,6 +8,7 @@ import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj2.command.CommandBase;
+import frc.robot.subsystems.Arm.Arm.ArmState;
 import frc.robot.subsystems.Arm.Arm.SuperStructurePosition;
 
 public class ArmDriveToPositionPIDTest extends CommandBase {
@@ -40,6 +41,7 @@ public class ArmDriveToPositionPIDTest extends CommandBase {
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {
+    m_arm.set_state(ArmState.Moving);
     m_done = false;
     m_half_second_limit_hit = 0;
     m_count = 0;
@@ -85,8 +87,11 @@ public class ArmDriveToPositionPIDTest extends CommandBase {
       if( !m_direction_is_forward && m_arm.is_arm_rev_limit_hit()){
         m_arm.set_arm_encoder_to_zero();
       }
-
       m_arm.set_current_position(m_position);
+      m_arm.set_state(ArmState.Holding);
+      m_arm.holdPosition();
+    }else {
+      m_arm.set_state(ArmState.Inactive);
     }
   }
 
