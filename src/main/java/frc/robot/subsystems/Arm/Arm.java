@@ -16,7 +16,6 @@ import com.ctre.phoenix.motorcontrol.FeedbackDevice;
 import com.ctre.phoenix.motorcontrol.LimitSwitchNormal;
 import com.ctre.phoenix.motorcontrol.LimitSwitchSource;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
-import com.ctre.phoenix.motorcontrol.StatorCurrentLimitConfiguration;
 import com.ctre.phoenix.motorcontrol.TalonFXFeedbackDevice;
 import com.ctre.phoenix.motorcontrol.TalonFXInvertType;
 import com.ctre.phoenix.motorcontrol.can.SlotConfiguration;
@@ -317,6 +316,7 @@ public class Arm extends SubsystemBase {
     arm_config.forwardSoftLimitEnable = true;
     arm_config.reverseSoftLimitThreshold = ARM_REVERSE_SOFT_LIMIT;
     arm_config.forwardSoftLimitThreshold = ARM_FORWARD_SOFT_LIMIT;
+    arm_config.clearPositionOnLimitR = true;
 
     // // Set current limits for the ARM
     // StatorCurrentLimitConfiguration stator_limit = arm_config.statorCurrLimit;
@@ -354,6 +354,7 @@ public class Arm extends SubsystemBase {
     wrist_config.forwardSoftLimitEnable = true;
     wrist_config.reverseSoftLimitThreshold = WRIST_REVERSE_SOFT_LIMIT;
     wrist_config.forwardSoftLimitThreshold = WRIST_FORWARD_SOFT_LIMIT;
+    wrist_config.clearPositionOnLimitR = true;
 
     // // Set current limits for the Wrist
     // stator_limit = wrist_config.statorCurrLimit;
@@ -386,10 +387,8 @@ public class Arm extends SubsystemBase {
     m_arm_position = shuffleboard.getDoubleTopic("ArmEncoder").publish();
     m_wrist_position = shuffleboard.getDoubleTopic("WristEncoder").publish();
 
-    m_wrist_motor_rev = shuffleboard.getDoubleTopic("Wrist Rev").publish();
-    m_arm_motor_rev = shuffleboard.getDoubleTopic("Arm Rev").publish();
-    m_arm_mm_error = shuffleboard.getDoubleTopic("Arm MM Error").publish();
-    m_wrist_mm_error = shuffleboard.getDoubleTopic("Wrist MM Error").publish();
+    m_arm_mm_error = shuffleboard.getDoubleTopic("Arm Error").publish();
+    m_wrist_mm_error = shuffleboard.getDoubleTopic("Wrist Error").publish();
     m_super_position = shuffleboard.getStringTopic("Super Position").publish();
 
 
@@ -821,7 +820,6 @@ public class Arm extends SubsystemBase {
   public boolean isBackwardMovement(SuperStructurePosition pos){
     double wristPos = m_wrist_motor.getSelectedSensorPosition();
     double armPos = m_arm_motor.getSelectedSensorPosition();
-    System.out.println("Moving arm Backward: " + (!(wristPos < pos.wrist_position) || !(armPos < pos.arm_position)));
     return  !(wristPos < pos.wrist_position) || !(armPos < pos.arm_position);
   }
 
