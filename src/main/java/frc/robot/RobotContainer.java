@@ -74,8 +74,8 @@ public class RobotContainer {
   private SendableChooser<Command> m_auto_chooser;
   public RobotContainer() {
     buildDriveTab();
-    // buildDriveTestTab();
-     buildArmTestTab();
+    buildDriveTestTab();
+    // buildArmTestTab();
     // Set subsystem default commands
     m_drivetrain.setDefaultCommand(new DefaultDriveTrainCommand(m_drivetrain, m_driver_controller));    
     // m_arm.setDefaultCommand(new DriveArmManually(m_arm, m_partner_controller));
@@ -227,54 +227,58 @@ public class RobotContainer {
   private void buildDriveTestTab() {
     ShuffleboardTab driveTestTab = Shuffleboard.getTab("Drive Test");
 
-    driveTestTab.add("Right Encoder", 0).withPosition(1, 0).withSize(1, 1);
-    driveTestTab.add("Left Encoder", 0).withPosition(0, 0).withSize(1, 1);
-    driveTestTab.add("Right Speed", 0).withPosition(3, 0).withSize(1,1);
-    driveTestTab.add("Left Speed", 0).withPosition(2, 0).withSize(1,1);
+    driveTestTab.add("DriveTrain", m_drivetrain).withPosition(0, 0).withSize(2, 1);
+    driveTestTab.addDouble("RangeFinder", m_drivetrain::getRangeFinderValue).withPosition(2, 1).withSize(1, 1);
+    driveTestTab.add("DriveSub Speed", 0).withPosition(3, 1).withSize(1, 1);
+    driveTestTab.add("DriveSub Volt Stop", 0).withPosition(4, 1).withSize(1, 1);
+    // driveTestTab.add("Right Encoder", 0).withPosition(1, 0).withSize(1, 1);
+    // driveTestTab.add("Left Encoder", 0).withPosition(0, 0).withSize(1, 1);
+    // driveTestTab.add("Right Speed", 0).withPosition(3, 0).withSize(1,1);
+    // driveTestTab.add("Left Speed", 0).withPosition(2, 0).withSize(1,1);
     
     // Set the max speed variables
-    driveTestTab.add("Max Speed", 0).withPosition(0, 1).withSize(1,1);
+    // driveTestTab.add("Max Speed", 0).withPosition(0, 1).withSize(1,1);
     // driveTestTab.add("Reset Max Speed", m_drivetrain.setMaxValue()).withPosition(1, 2).withSize(2, 1);
     // Set the max speed variables
-    driveTestTab.add("Set_Max Speed", new SetMaxSpeedCommand(m_drivetrain)).withPosition(1, 1).withSize(2, 1);
+    // driveTestTab.add("Set_Max Speed", new SetMaxSpeedCommand(m_drivetrain)).withPosition(1, 1).withSize(2, 1);
 
     // Motion Magic
-    driveTestTab.add("Target Distance", 0).withPosition(1, 3).withSize(1, 1);
-    driveTestTab.add("Time to Velo", 0).withPosition(0, 3).withSize(1, 1);
-    driveTestTab.add("Target Velocity", 0).withPosition(2, 3).withSize(1,1);
-    driveTestTab.add("Left Encoder Result", 0).withPosition(3, 3).withSize(1,1);
-    driveTestTab.add("Right Encoder Result", 0).withPosition(4, 3).withSize(1,1);
-    driveTestTab.add("MM kP", 0).withPosition(5, 3).withSize(1,1);
-    driveTestTab.add("MM kD", 0).withPosition(5, 4).withSize(1,1);
-    driveTestTab.add("Drive MM", new DriveMotionMagicTest(m_drivetrain)).withPosition(6,3).withSize(2, 1);
-    driveTestTab.add("Drive PID", new DriveDistanceInInchesTest(m_drivetrain)).withPosition(6,3).withSize(2, 1);
-    driveTestTab.addDouble("Left Error", m_drivetrain::getLeftError).withPosition(0,4).withSize(1,1);
-    driveTestTab.addDouble("Right Error", m_drivetrain::getRightError).withPosition(1,4).withSize(1,1);
-    driveTestTab.add("Target Degrees", 0).withPosition(6, 1).withSize(1, 1);
-    driveTestTab.addNumber("Curr Heading", m_drivetrain::getScaledHeading).withPosition(4,0).withSize(1,1);
-    driveTestTab.add("Gyro", m_drivetrain.getGyro()).withPosition(3, 1).withSize(2, 2).withWidget(BuiltInWidgets.kGyro);
-    driveTestTab.addNumber("Yaw", m_drivetrain::getYaw).withPosition(0, 2).withSize(1, 1);
-    driveTestTab.addNumber("Pitch", m_drivetrain::getPitch).withPosition(1, 2).withSize(1, 1);
-    driveTestTab.addNumber("Roll", m_drivetrain::getRoll).withPosition(2, 2).withSize(1, 1);
-    driveTestTab.addNumber("Angle", m_drivetrain::getAngle).withPosition(5, 2).withSize(1, 1);
-    driveTestTab.add("Target in Ticks", 0).withPosition(6, 2).withSize(1, 1);
-    driveTestTab.addNumber("DriveTrain Setpoint", m_drivetrain::get_setpoint).withPosition(7, 2).withSize(1, 1);
-    driveTestTab.add("Reset Drivetrain setpoint", m_drivetrain.reset_dt_setpoint()).withPosition(8, 2).withSize(2, 1);
+    // driveTestTab.add("Target Distance", 0).withPosition(1, 3).withSize(1, 1);
+    // driveTestTab.add("Time to Velo", 0).withPosition(0, 3).withSize(1, 1);
+    // driveTestTab.add("Target Velocity", 0).withPosition(2, 3).withSize(1,1);
+    // driveTestTab.add("Left Encoder Result", 0).withPosition(3, 3).withSize(1,1);
+    // driveTestTab.add("Right Encoder Result", 0).withPosition(4, 3).withSize(1,1);
+    // driveTestTab.add("MM kP", 0).withPosition(5, 3).withSize(1,1);
+    // driveTestTab.add("MM kD", 0).withPosition(5, 4).withSize(1,1);
+    // driveTestTab.add("Drive MM", new DriveMotionMagicTest(m_drivetrain)).withPosition(6,3).withSize(2, 1);
+    // driveTestTab.add("Drive PID", new DriveDistanceInInchesTest(m_drivetrain)).withPosition(6,3).withSize(2, 1);
+    // driveTestTab.addDouble("Left Error", m_drivetrain::getLeftError).withPosition(0,4).withSize(1,1);
+    // driveTestTab.addDouble("Right Error", m_drivetrain::getRightError).withPosition(1,4).withSize(1,1);
+    // driveTestTab.add("Target Degrees", 0).withPosition(6, 1).withSize(1, 1);
+    // driveTestTab.addNumber("Curr Heading", m_drivetrain::getScaledHeading).withPosition(4,0).withSize(1,1);
+    // driveTestTab.add("Gyro", m_drivetrain.getGyro()).withPosition(3, 1).withSize(2, 2).withWidget(BuiltInWidgets.kGyro);
+    // driveTestTab.addNumber("Yaw", m_drivetrain::getYaw).withPosition(0, 2).withSize(1, 1);
+    // driveTestTab.addNumber("Pitch", m_drivetrain::getPitch).withPosition(1, 2).withSize(1, 1);
+    // driveTestTab.addNumber("Roll", m_drivetrain::getRoll).withPosition(2, 2).withSize(1, 1);
+    // driveTestTab.addNumber("Angle", m_drivetrain::getAngle).withPosition(5, 2).withSize(1, 1);
+    // driveTestTab.add("Target in Ticks", 0).withPosition(6, 2).withSize(1, 1);
+    // driveTestTab.addNumber("DriveTrain Setpoint", m_drivetrain::get_setpoint).withPosition(7, 2).withSize(1, 1);
+    // driveTestTab.add("Reset Drivetrain setpoint", m_drivetrain.reset_dt_setpoint()).withPosition(8, 2).withSize(2, 1);
 
-    driveTestTab.add("Bang Bang Forward Speed", 0).withPosition(0, 5).withSize(1, 1);
-    driveTestTab.add("Bang Bang Reverse Speed", 0).withPosition(1, 5).withSize(1, 1);
-    driveTestTab.add("Bang Bang Target Pitch", 0).withPosition(2, 5).withSize(1, 1);
-    driveTestTab.add("Fwd Out", 0).withPosition(3, 4).withSize(1, 1);
-    driveTestTab.add("Rev Out", 0).withPosition(3, 5).withSize(1, 1);
-    driveTestTab.add("Bang Bang Test Pitch Value", 0).withPosition(4, 5).withSize(2, 1).withWidget(BuiltInWidgets.kNumberSlider);
+    // driveTestTab.add("Bang Bang Forward Speed", 0).withPosition(0, 5).withSize(1, 1);
+    // driveTestTab.add("Bang Bang Reverse Speed", 0).withPosition(1, 5).withSize(1, 1);
+    // driveTestTab.add("Bang Bang Target Pitch", 0).withPosition(2, 5).withSize(1, 1);
+    // driveTestTab.add("Fwd Out", 0).withPosition(3, 4).withSize(1, 1);
+    // driveTestTab.add("Rev Out", 0).withPosition(3, 5).withSize(1, 1);
+    // driveTestTab.add("Bang Bang Test Pitch Value", 0).withPosition(4, 5).withSize(2, 1).withWidget(BuiltInWidgets.kNumberSlider);
 
     // PID Tuning
-    driveTestTab.add("Turn PID", m_drivetrain.get_dt_turn_pidcontroller()).withPosition(5, 0);
-    driveTestTab.add("Turn with PID", new DriveDistanceInInchesTest(m_drivetrain)).withPosition(6, 0).withSize(2, 1);
-    driveTestTab.add("Drive Fine Grained", new FineGrainedDrivingControl(m_drivetrain, m_driver_controller)).withPosition(8, 1).withSize(2, 1);
-    driveTestTab.add("BangBang Command", new BalanceBangBangTestCommand(m_drivetrain).andThen(new TurnToAngleWithGyroPID(m_drivetrain, 90))).withPosition(6, 5 ).withSize(2, 1); 
+    // driveTestTab.add("Turn PID", m_drivetrain.get_dt_turn_pidcontroller()).withPosition(5, 0);
+    // driveTestTab.add("Turn with PID", new DriveDistanceInInchesTest(m_drivetrain)).withPosition(6, 0).withSize(2, 1);
+    // driveTestTab.add("Drive Fine Grained", new FineGrainedDrivingControl(m_drivetrain, m_driver_controller)).withPosition(8, 1).withSize(2, 1);
+    // driveTestTab.add("BangBang Command", new BalanceBangBangTestCommand(m_drivetrain).andThen(new TurnToAngleWithGyroPID(m_drivetrain, 90))).withPosition(6, 5 ).withSize(2, 1); 
 
-    driveTestTab.add("DriveSlowly Command", m_drivetrain.driveSlowlyUntil().withTimeout(2).andThen(m_drivetrain.stopMotorsCommand()));
+    // driveTestTab.add("DriveSlowly Command", m_drivetrain.driveSlowlyUntil().withTimeout(2).andThen(m_drivetrain.stopMotorsCommand()));
   }
 
   private void buildArmTestTab() {

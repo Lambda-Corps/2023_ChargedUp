@@ -159,7 +159,7 @@ public class DriveTrain extends SubsystemBase {
 
 	PIDController m_turn_pid_controller, m_drive_pid_controller;
 
-	BangBangController m_forward_bang_bang, m_reverse_bang_bang;
+	BangBangController m_forward_bang_bang, m_reverse_bang_bang, m_subraise_bang_bang, m_subgrab_bang_bang;
 
 	// Constants for Drive Current limits
 	final int DRIVE_CONTINUOUS_CURRENT_LIMIT = 35;
@@ -326,6 +326,10 @@ public class DriveTrain extends SubsystemBase {
 		m_forward_bang_bang.setSetpoint(DRIVE_BANG_BANG_SP);
 		m_reverse_bang_bang = new BangBangController();
 		m_reverse_bang_bang.setSetpoint(-DRIVE_BANG_BANG_SP);
+
+		// TODO Input the set point values when we want to stop driving when we've tuned.
+		m_subgrab_bang_bang = new BangBangController();
+		m_subraise_bang_bang = new BangBangController();
 
 		m_rangefinder = new AnalogInput(0);
 	}
@@ -817,8 +821,7 @@ public class DriveTrain extends SubsystemBase {
 	}
 
 	public double getRangeFinderValue() {
-		double range_voltage = m_rangefinder.getAverageVoltage();
-		return 0;
+		return m_rangefinder.getAverageVoltage();
 	}
 
 	// INLINE COMMANDS
@@ -891,5 +894,19 @@ public class DriveTrain extends SubsystemBase {
 
 				m_odometry.resetPosition(m_gyro.getRotation2d(), x, y,pose);
 			});
+	}
+
+	public CommandBase testBangBangSubstationCommand(){
+		return run( 
+			() -> {
+				NetworkTable table = NetworkTableInstance.getDefault().getTable("Shuffleboard").getSubTable("Drive Test");
+				double drive_speed = table.getEntry("DriveSub Speed").getDouble(0);
+				double set_point = table.getEntry("DriveSub Volt Stop").getDouble(0);
+				m_subraise_bang_bang.setSetpoint(set_point);
+				drive_speed = m_subraise_bang_bang.calculate(m_rangefinder.getAverageVoltage()) * drive_speed;
+
+				teleop_drive(drive_speed, 0);
+			}
+		);
 	}
 }
