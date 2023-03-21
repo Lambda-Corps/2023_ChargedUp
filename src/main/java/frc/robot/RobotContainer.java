@@ -4,6 +4,8 @@
 
 package frc.robot;
 
+import javax.print.event.PrintEvent;
+
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import frc.robot.autoCommands.Pos1ScoreMove;
@@ -64,6 +66,10 @@ public class RobotContainer {
   private final Vision m_vision = new Vision();
   private final Arm m_arm = new  Arm();
   private final Gripper m_gripper = new  Gripper();
+  private final LED m_led = new LED();
+  
+
+
 
   // private final LED m_led = new LED();
 
@@ -73,6 +79,7 @@ public class RobotContainer {
 
   private SendableChooser<Command> m_auto_chooser;
   public RobotContainer() {
+    
     buildDriveTab();
     // buildDriveTestTab();
      buildArmTestTab();
@@ -84,6 +91,7 @@ public class RobotContainer {
 
     // Set the LED to rainbow as the default
     // m_led.setLED(LED.TOP_LEFT, LED.RAINBOW_FUNCTION);
+    m_led.setLED(LED.ALL, LED.RAINBOW);
   }
 
   /**
@@ -172,6 +180,7 @@ public class RobotContainer {
     m_driver_controller.rightTrigger().onTrue(m_gripper.contractGripperCommand().andThen(new WaitCommand(0.3)).andThen(new DeployToGroundPickup(m_arm, SuperStructurePosition.GroundPickup)).andThen(m_gripper.expandGripperCommand().andThen(m_gripper.holdGamePieceCommand())));
     m_driver_controller.rightTrigger().onFalse(m_gripper.contractGripperCommand().andThen(m_gripper.holdGamePieceCommand()).andThen(new StowSuperStructure(m_arm)));
     m_driver_controller.a().whileTrue(new AlignToConeTapeWithVision(m_drivetrain, m_vision, m_driver_controller));
+    m_driver_controller.x().onTrue(m_led.Testcommand());
   }
   
   /**
