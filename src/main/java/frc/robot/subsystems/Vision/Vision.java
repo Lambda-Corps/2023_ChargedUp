@@ -26,7 +26,7 @@ public class Vision extends SubsystemBase {
   public static final int LIFE_SUBSTATION_PIPE = 2;
 
   /** Creates a new Vision. */
-  public Vision() {
+  /*  Vision() {
     m_limelight = new PhotonCamera("limelight");
     m_lifecam = new PhotonCamera("lifecam");
 
@@ -43,6 +43,7 @@ public class Vision extends SubsystemBase {
 
     m_lifecam.setDriverMode(true);
   }
+  */
 
   @Override
   public void periodic() {
@@ -70,6 +71,8 @@ public class Vision extends SubsystemBase {
       m_life_tx = 0;
     }
   }
+
+  
 
   public boolean getLimelightTargetStatus() {
     return m_lime_has_targets;

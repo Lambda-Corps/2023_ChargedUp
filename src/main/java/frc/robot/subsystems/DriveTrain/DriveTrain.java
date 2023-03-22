@@ -818,9 +818,36 @@ public class DriveTrain extends SubsystemBase {
 
 	public double getRangeFinderValue() {
 		double range_voltage = m_rangefinder.getAverageVoltage();
-		return 0;
+		return range_voltage;
 	}
 
+	public boolean DriveUntil2FeetFromSubStation(double forward, double turn){
+		//1 is about 2 feet from the wall
+		double distance_from_wall =getRangeFinderValue();
+
+		if (distance_from_wall <= 3){
+			teleop_drive(0, 0);
+			return true;
+		}
+		else{
+			teleop_drive(forward, turn);
+			return false;
+		}
+	  }
+	
+	public boolean DriveUntilSubstationPickup(double forward, double turn){
+		//0.5 is the gam piece pick up
+		double distance_from_wall = getRangeFinderValue();
+
+		if (distance_from_wall <= .75) {
+			teleop_drive(0, 0);
+			return true;
+		}
+		else {
+			teleop_drive(forward, turn);
+			return false;
+		}
+	}
 	// INLINE COMMANDS
 	public CommandBase shiftToHighGear() {
 		return runOnce(
