@@ -191,23 +191,23 @@ public class Arm extends SubsystemBase {
    * That means, we want to saturate the feedback (full recovery) with an error
    * value
    */
-  final double ARM_MM_KP = 1.6; // Tuned manually (ARM_FORWARD_SPEED * 1023) / 2048;
+  final double ARM_MM_KP = 2.1; // Tuned manually (ARM_FORWARD_SPEED * 1023) / 2048;
   final double ARM_MM_KI = 0;
   final double ARM_MM_KD = 0;
   final double ARM_MM_KF = 0.067; // (.4 * 1023) / 8000
   final double ARM_MM_FF = 0;
-  final int ARM_MM_VELOCITY = 1000;
-  final int ARM_MM_ACCELERATION = 1000; // 1 Second to full velocity
+  final int ARM_MM_VELOCITY = 1750;
+  final int ARM_MM_ACCELERATION = 1750; // 1 Second to full velocity
   final double ARM_HOLD_POSITION_KP = (ARM_FORWARD_SPEED * 1023) / 512; // Tuned manually (ARM_FORWARD_SPEED * 1023) / 2048;
   final double ARM_HOLD_POSITION_KI = 0;
   final double ARM_HOLD_POSITION_KD = 0;
   final double ARM_HOLD_POSITION_KF = 0;
-  final double WRIST_MM_FORWARD_KP = 1.02;
+  final double WRIST_MM_FORWARD_KP = 1.6;
   final double WRIST_MM_FORWARD_KI = 0;
   final double WRIST_MM_FORWARD_KD = 0;
   final double WRIST_MM_FORWARD_KF = .17;// tuned manually
-  final int WRIST_MM_FORWARD_VELOCITY = 8000;
-  final int WRIST_MM_FORWARD_ACCELERATION = 8000; // 1 second to full velocity
+  final int WRIST_MM_FORWARD_VELOCITY = 10000;
+  final int WRIST_MM_FORWARD_ACCELERATION = 10000; // 1 second to full velocity
   final double WRIST_MM_REVERSE_KP = .075;
   final double WRIST_MM_REVERSE_KI = 0;
   final double WRIST_MM_REVERSE_KD = 0;
@@ -221,20 +221,20 @@ public class Arm extends SubsystemBase {
   // Encoder Measurements for the relevant scoring positions
   final static int ARM_STOW = 0;
   final static int WRIST_STOW = 0;
-  final static int ARM_GROUND_PICKUP = 17000;
+  final static int ARM_GROUND_PICKUP = 15000;
   final static int WRIST_GROUND_PICKUP = 0;
   final static int ARM_SUBSTATION = 0;
   final static int WRIST_SUBSTATION = 28500;
   final static int ARM_SCORE_LOW = 0;
-  final static int WRIST_SCORE_LOW = 10000;
-  final static int ARM_CONE_MID =  10000;
-  final static int WRIST_CONE_MID = 31000;
+  final static int WRIST_SCORE_LOW = 4000;
+  final static int ARM_CONE_MID =  1300;
+  final static int WRIST_CONE_MID = 26500;
   final static int ARM_CONE_HIGH = 0;
   final static int WRIST_CONE_HIGH = 0;
-  final static int ARM_CUBE_HIGH = 31785;
+  final static int ARM_CUBE_HIGH = 8000;
   final static int WRIST_CUBE_HIGH = 32000;
   final static int ARM_CUBE_MID = 0;
-  final static int WRIST_CUBE_MID = 25500;
+  final static int WRIST_CUBE_MID = 23500;
   final static int ARM_POSITION_TOLERANCE = 250;
   final static int WRIST_POSITION_TOLERANCE = 250;
   final int PID_PRIMARY = 0;

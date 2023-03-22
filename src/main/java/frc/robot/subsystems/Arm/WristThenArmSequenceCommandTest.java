@@ -17,8 +17,8 @@ public class WristThenArmSequenceCommandTest extends SequentialCommandGroup {
     // addCommands(new FooCommand(), new BarCommand());
     addCommands(
       arm_sub.set_state(ArmState.Moving),
-      new WristDriveToPositionPIDTest(arm_sub, position_req).withTimeout(1.5),
-      new ArmDriveToPositionPIDTest(arm_sub, position_req).withTimeout(1.5),
+      new WristDriveToPositionPIDTest(arm_sub, position_req),
+      new ArmDriveToPositionPIDTest(arm_sub, position_req),
       arm_sub.set_state(ArmState.Holding)
     );
   }

@@ -62,7 +62,7 @@ public class RobotContainer {
 
   // The robot's subsystems and commands are defined here...
   private final DriveTrain m_drivetrain = new DriveTrain();
-  private final Vision m_vision = new Vision();
+  // private final Vision m_vision = new Vision();
   private final Arm m_arm = new  Arm();
   private final Gripper m_gripper = new  Gripper();
 
@@ -131,11 +131,7 @@ public class RobotContainer {
     );
     // Y button
     m_partner_controller.y().onTrue(
-      new ConditionalCommand(
-          new ArmThenWristSequenceCommand(m_arm, SuperStructurePosition.ScoreCubeHigh),
-          new WristThenArmSequenceCommand(m_arm, SuperStructurePosition.ScoreCubeHigh),
-          () -> m_arm.isBackwardMovement(SuperStructurePosition.ScoreCubeHigh)
-      )
+      new WristThenArmSequenceCommand(m_arm, SuperStructurePosition.ScoreCubeHigh)
     );
     // A button
     m_partner_controller.a().onTrue(
@@ -144,7 +140,7 @@ public class RobotContainer {
       //     new WristThenArmSequenceCommand(m_arm, SuperStructurePosition.ScoreConeMid),
       //     () -> m_arm.isBackwardMovement(SuperStructurePosition.ScoreConeMid)
       // )
-      new MoveWristToPositionMM(m_arm, SuperStructurePosition.SubstationPickup).andThen(new ArmDriveToPositionPIDTest(m_arm, SuperStructurePosition.ScoreConeMid))
+      new WristThenArmSequenceCommand(m_arm, SuperStructurePosition.ScoreConeMid)
   );
     // B button
     // m_partner_controller.b().onTrue(
@@ -172,7 +168,7 @@ public class RobotContainer {
     m_driver_controller.leftTrigger().whileTrue(new FineGrainedDrivingControl(m_drivetrain, m_driver_controller));
     m_driver_controller.rightTrigger().onTrue(m_gripper.contractGripperCommand().andThen(new WaitCommand(0.3)).andThen(new DeployToGroundPickup(m_arm, SuperStructurePosition.GroundPickup)).andThen(m_gripper.expandGripperCommand().andThen(m_gripper.holdGamePieceCommand())));
     m_driver_controller.rightTrigger().onFalse(m_gripper.contractGripperCommand().andThen(m_gripper.holdGamePieceCommand()).andThen(new StowSuperStructure(m_arm)));
-    m_driver_controller.a().whileTrue(new AlignToConeTapeWithVision(m_drivetrain, m_vision, m_driver_controller));
+    // m_driver_controller.a().whileTrue(new AlignToConeTapeWithVision(m_drivetrain, m_vision, m_driver_controller));
   }
   
   /**

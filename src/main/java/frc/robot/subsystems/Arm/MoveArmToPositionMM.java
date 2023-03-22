@@ -36,6 +36,7 @@ public class MoveArmToPositionMM extends CommandBase {
     m_arm.configure_arm_motion_magic();
 
     m_arm.move_arm_motion_magic(m_target_ticks);
+    m_direction_is_forward = (m_arm.getSuperStructureArmPosition() < m_position.getArmPosition());
   }
 
   // Called every time the scheduler runs while the command is scheduled.
