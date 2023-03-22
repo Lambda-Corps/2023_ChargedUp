@@ -39,7 +39,7 @@ public class LED extends SubsystemBase{
         dataList.add(data);
     }
     
-    public CommandBase Testcommand() {
+    public CommandBase ResendLEDBytes() {
 		return runOnce(
 				() -> {
                 setLED(LED.ALL, LED.RAINBOW);

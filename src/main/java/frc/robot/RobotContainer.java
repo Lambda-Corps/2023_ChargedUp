@@ -36,6 +36,7 @@ import frc.robot.subsystems.DriveTrain.DriveMotionMagicTest;
 import frc.robot.subsystems.DriveTrain.DriveTrain;
 import frc.robot.subsystems.DriveTrain.FineGrainedDrivingControl;
 import frc.robot.subsystems.DriveTrain.SetMaxSpeedCommand;
+import frc.robot.subsystems.DriveTrain.SubStationDriveStop2feet;
 import frc.robot.subsystems.DriveTrain.TurnToAngleWithGyroPID;
 import frc.robot.subsystems.DriveTrain.DriveDistanceInInchesTest;
 import frc.robot.subsystems.DriveTrain.DriveMotionMagic;
@@ -180,7 +181,7 @@ public class RobotContainer {
     m_driver_controller.rightTrigger().onTrue(m_gripper.contractGripperCommand().andThen(new WaitCommand(0.3)).andThen(new DeployToGroundPickup(m_arm, SuperStructurePosition.GroundPickup)).andThen(m_gripper.expandGripperCommand().andThen(m_gripper.holdGamePieceCommand())));
     m_driver_controller.rightTrigger().onFalse(m_gripper.contractGripperCommand().andThen(m_gripper.holdGamePieceCommand()).andThen(new StowSuperStructure(m_arm)));
     m_driver_controller.a().whileTrue(new AlignToConeTapeWithVision(m_drivetrain, m_vision, m_driver_controller));
-    m_driver_controller.x().onTrue(m_led.Testcommand());
+    m_driver_controller.x().onTrue(m_led.ResendLEDBytes());
   }
   
   /**
@@ -208,6 +209,9 @@ public class RobotContainer {
     driveTab.add("Gripper", m_gripper).withPosition(0, 2).withSize(2, 1);
 
     driveTab.add("Camera", m_drivetrain);
+
+    //delete this
+    driveTab.add("Drive Till 2 feet from Wall", new SubStationDriveStop2feet(m_drivetrain, m_driver_controller));
 
 
     //Auto Options
