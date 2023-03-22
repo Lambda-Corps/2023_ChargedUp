@@ -37,6 +37,7 @@ import frc.robot.subsystems.DriveTrain.DriveTrain;
 import frc.robot.subsystems.DriveTrain.FineGrainedDrivingControl;
 import frc.robot.subsystems.DriveTrain.SetMaxSpeedCommand;
 import frc.robot.subsystems.DriveTrain.SubStationDriveStop2feet;
+import frc.robot.subsystems.DriveTrain.SubstationPickupDistanceRangefinder;
 import frc.robot.subsystems.DriveTrain.TurnToAngleWithGyroPID;
 import frc.robot.subsystems.DriveTrain.DriveDistanceInInchesTest;
 import frc.robot.subsystems.DriveTrain.DriveMotionMagic;
@@ -64,7 +65,7 @@ public class RobotContainer {
 
   // The robot's subsystems and commands are defined here...
   private final DriveTrain m_drivetrain = new DriveTrain();
-  private final Vision m_vision = new Vision();
+  /* private final Vision m_vision = new Vision(); */
   private final Arm m_arm = new  Arm();
   private final Gripper m_gripper = new  Gripper();
   private final LED m_led = new LED();
@@ -180,7 +181,7 @@ public class RobotContainer {
     m_driver_controller.leftTrigger().whileTrue(new FineGrainedDrivingControl(m_drivetrain, m_driver_controller));
     m_driver_controller.rightTrigger().onTrue(m_gripper.contractGripperCommand().andThen(new WaitCommand(0.3)).andThen(new DeployToGroundPickup(m_arm, SuperStructurePosition.GroundPickup)).andThen(m_gripper.expandGripperCommand().andThen(m_gripper.holdGamePieceCommand())));
     m_driver_controller.rightTrigger().onFalse(m_gripper.contractGripperCommand().andThen(m_gripper.holdGamePieceCommand()).andThen(new StowSuperStructure(m_arm)));
-    m_driver_controller.a().whileTrue(new AlignToConeTapeWithVision(m_drivetrain, m_vision, m_driver_controller));
+   /*  m_driver_controller.a().whileTrue(new AlignToConeTapeWithVision(m_drivetrain, m_vision, m_driver_controller)); */
     m_driver_controller.x().onTrue(m_led.ResendLEDBytes());
   }
   
@@ -208,10 +209,13 @@ public class RobotContainer {
     driveTab.add("Arm", m_arm).withPosition(0, 1).withSize(2, 1);
     driveTab.add("Gripper", m_gripper).withPosition(0, 2).withSize(2, 1);
 
-    driveTab.add("Camera", m_drivetrain);
+    // driveTab.add("Camera", m_drivetrain);
 
     //delete this
-    driveTab.add("Drive Till 2 feet from Wall", new SubStationDriveStop2feet(m_drivetrain, m_driver_controller));
+    driveTab.add("Drive Till 2 feet from Wall", new SubStationDriveStop2feet(m_drivetrain, m_driver_controller)).withPosition(2, 2).withSize(2, 1);
+    driveTab.add("Drive to substation pickup", new SubstationPickupDistanceRangefinder(m_drivetrain)).withPosition(4, 2).withSize(2, 1);
+    driveTab.addDouble("UltraSonic sensor voltage", m_drivetrain::getRangeFinderValue).withPosition(2, 3).withSize(2, 1);;
+
 
 
     //Auto Options

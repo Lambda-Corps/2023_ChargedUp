@@ -822,9 +822,10 @@ public class DriveTrain extends SubsystemBase {
 	}
 
 	public boolean DriveUntil2FeetFromSubStation(double forward, double turn){
-		double distance_from_wall = MathUtil.clamp(getRangeFinderValue(), .7, 2);
+		//1 is about 2 feet from the wall
+		double distance_from_wall =getRangeFinderValue();
 
-		if (distance_from_wall <= 1 | distance_from_wall >= 2){
+		if (distance_from_wall <= 1.5){
 			teleop_drive(0, 0);
 			return true;
 		}
@@ -833,7 +834,20 @@ public class DriveTrain extends SubsystemBase {
 			return false;
 		}
 	  }
+	
+	public boolean DriveUntilSubstationPickup(double forward, double turn){
+		//0.5 is the gam piece pick up
+		double distance_from_wall = getRangeFinderValue();
 
+		if (distance_from_wall <= .95) {
+			teleop_drive(0, 0);
+			return true;
+		}
+		else {
+			teleop_drive(forward, turn);
+			return false;
+		}
+	}
 	// INLINE COMMANDS
 	public CommandBase shiftToHighGear() {
 		return runOnce(
