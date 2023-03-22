@@ -183,6 +183,8 @@ public class RobotContainer {
     m_driver_controller.rightTrigger().onFalse(m_gripper.contractGripperCommand().andThen(m_gripper.holdGamePieceCommand()).andThen(new StowSuperStructure(m_arm)));
    /*  m_driver_controller.a().whileTrue(new AlignToConeTapeWithVision(m_drivetrain, m_vision, m_driver_controller)); */
     m_driver_controller.x().onTrue(m_led.ResendLEDBytes());
+    m_driver_controller.povUp().onTrue(new SubstationPickupDistanceRangefinder(m_drivetrain));
+    m_driver_controller.povDown().onTrue(new SubStationDriveStop2feet(m_drivetrain, m_driver_controller));
   }
   
   /**

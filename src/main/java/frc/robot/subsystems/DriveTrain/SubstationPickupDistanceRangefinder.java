@@ -15,7 +15,7 @@ public class SubstationPickupDistanceRangefinder extends CommandBase {
   public SubstationPickupDistanceRangefinder(DriveTrain dt) {
     m_drivetrain = dt;
 
-    drive_speed = 0.3; // 30% motor output
+    drive_speed = 0.2; // 30% motor output
     // Use addRequirements() here to declare subsystem dependencies.
     addRequirements(m_drivetrain);
   }

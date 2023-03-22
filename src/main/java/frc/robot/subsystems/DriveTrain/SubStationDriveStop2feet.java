@@ -17,7 +17,7 @@ public class SubStationDriveStop2feet extends CommandBase {
     m_drivetrain = dt;
     m_driver_controller = xbox;
 
-    drive_speed = 0.3; // 30% motor output
+    drive_speed = 0.7; // 40% motor output
     // Use addRequirements() here to declare subsystem dependencies.
     addRequirements(m_drivetrain);
   }
@@ -31,7 +31,7 @@ public class SubStationDriveStop2feet extends CommandBase {
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-    double raw_turn_axis = m_driver_controller.getRawAxis(1);
+    double raw_turn_axis = -(m_driver_controller.getRawAxis(4));
     is_done = m_drivetrain.DriveUntil2FeetFromSubStation(drive_speed, raw_turn_axis);
     
   }

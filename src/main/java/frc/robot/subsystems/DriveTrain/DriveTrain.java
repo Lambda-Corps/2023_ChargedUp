@@ -825,7 +825,7 @@ public class DriveTrain extends SubsystemBase {
 		//1 is about 2 feet from the wall
 		double distance_from_wall =getRangeFinderValue();
 
-		if (distance_from_wall <= 1.5){
+		if (distance_from_wall <= 3){
 			teleop_drive(0, 0);
 			return true;
 		}
@@ -839,7 +839,7 @@ public class DriveTrain extends SubsystemBase {
 		//0.5 is the gam piece pick up
 		double distance_from_wall = getRangeFinderValue();
 
-		if (distance_from_wall <= .95) {
+		if (distance_from_wall <= .75) {
 			teleop_drive(0, 0);
 			return true;
 		}
