@@ -10,6 +10,7 @@ import frc.robot.subsystems.Arm.Arm.ArmState;
 // NOTE:  Consider using this command inline, rather than writing a subclass.  For more
 // information, see:
 // https://docs.wpilib.org/en/stable/docs/software/commandbased/convenience-features.html
+// public class WristThenArmSequenceCommand extends SequentialCommandGroup {
 public class WristThenArmSequenceCommand extends SequentialCommandGroup {
   /** Creates a new WristThenArmSequenceCommand. */
   public WristThenArmSequenceCommand(Arm arm_sub, Arm.SuperStructurePosition position_req) {
@@ -17,8 +18,8 @@ public class WristThenArmSequenceCommand extends SequentialCommandGroup {
     // addCommands(new FooCommand(), new BarCommand());
     addCommands(
       arm_sub.set_state(ArmState.Moving),
-      new MoveWristToPositionMM(arm_sub, position_req).withTimeout(3),
-      new MoveArmToPositionMM(arm_sub, position_req).withTimeout(3),
+      new MoveWristToPositionMM(arm_sub, position_req),
+      new MoveArmToPositionMM(arm_sub, position_req),
       arm_sub.set_state(ArmState.Holding)
     );
   }

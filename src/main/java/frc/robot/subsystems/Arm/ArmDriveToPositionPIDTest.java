@@ -20,7 +20,7 @@ public class ArmDriveToPositionPIDTest extends CommandBase {
   int m_half_second_limit_hit;
   int m_count;
 
-  NetworkTableEntry m_kPEntry, m_kFEntry, m_time_to_velo, m_target_velocity, m_target;
+  NetworkTableEntry m_kPEntry, m_kFEntry, m_velo, m_target;
   /** Creates a new DriveToPosition. */
   public ArmDriveToPositionPIDTest(Arm arm, SuperStructurePosition position) {
     m_arm = arm;
@@ -32,10 +32,8 @@ public class ArmDriveToPositionPIDTest extends CommandBase {
     m_kPEntry = armTab.getEntry("Arm kP");
     m_kFEntry = armTab.getEntry("Arm kF");
 
-    m_time_to_velo = armTab.getEntry("Time to Velo");
-    m_target_velocity = armTab.getEntry("Target Velocity");
+    m_velo = armTab.getEntry("Arm Velo");
     m_target = armTab.getEntry("Target Ticks");
-
   }
 
   // Called when the command is initially scheduled.
@@ -47,8 +45,8 @@ public class ArmDriveToPositionPIDTest extends CommandBase {
     m_count = 0;
     // m_target_ticks = (int)(m_target.getDouble(SuperStructurePosition.Stowed.getArmPosition()));
     m_target_ticks = m_position.getArmPosition();
-    m_arm.configure_arm_motion_magic_test(m_target_velocity.getDouble(0), 
-                                          m_time_to_velo.getDouble(1),
+    m_arm.configure_arm_motion_magic_test(m_velo.getDouble(1), 
+                                          1,
                                           m_kPEntry.getDouble(0), 
                                           m_kFEntry.getDouble(0));
 
@@ -92,6 +90,7 @@ public class ArmDriveToPositionPIDTest extends CommandBase {
       m_arm.holdPosition();
     }else {
       m_arm.set_state(ArmState.Inactive);
+      m_arm.drive_manually(0, 0);
     }
   }
 

@@ -16,7 +16,6 @@ import com.ctre.phoenix.motorcontrol.FeedbackDevice;
 import com.ctre.phoenix.motorcontrol.LimitSwitchNormal;
 import com.ctre.phoenix.motorcontrol.LimitSwitchSource;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
-import com.ctre.phoenix.motorcontrol.StatorCurrentLimitConfiguration;
 import com.ctre.phoenix.motorcontrol.TalonFXFeedbackDevice;
 import com.ctre.phoenix.motorcontrol.TalonFXInvertType;
 import com.ctre.phoenix.motorcontrol.can.SlotConfiguration;
@@ -44,7 +43,7 @@ public class Arm extends SubsystemBase {
   private ArmTask arm_task;
   private HashMap<SuperStructurePosition, ArrayList<SuperStructurePosition>> illegal_transitions = new HashMap<SuperStructurePosition, ArrayList<SuperStructurePosition>>();
   private ArrayList<SuperStructurePosition> stowed_illegal_transitions = new ArrayList<SuperStructurePosition>();
-  private ArrayList<SuperStructurePosition> ground_pickup_illegal_transitions = new ArrayList<SuperStructurePosition>();
+  // private ArrayList<SuperStructurePosition> ground_pickup_illegal_transitions = new ArrayList<SuperStructurePosition>();
 
   public static enum ArmState {
     Moving,
@@ -192,23 +191,23 @@ public class Arm extends SubsystemBase {
    * That means, we want to saturate the feedback (full recovery) with an error
    * value
    */
-  final double ARM_MM_KP = 1.6; // Tuned manually (ARM_FORWARD_SPEED * 1023) / 2048;
+  final double ARM_MM_KP = 2.1; // Tuned manually (ARM_FORWARD_SPEED * 1023) / 2048;
   final double ARM_MM_KI = 0;
   final double ARM_MM_KD = 0;
   final double ARM_MM_KF = 0.067; // (.4 * 1023) / 8000
   final double ARM_MM_FF = 0;
-  final int ARM_MM_VELOCITY = 1000;
-  final int ARM_MM_ACCELERATION = 1000; // 1 Second to full velocity
+  final int ARM_MM_VELOCITY = 1750;
+  final int ARM_MM_ACCELERATION = 1750; // 1 Second to full velocity
   final double ARM_HOLD_POSITION_KP = (ARM_FORWARD_SPEED * 1023) / 512; // Tuned manually (ARM_FORWARD_SPEED * 1023) / 2048;
   final double ARM_HOLD_POSITION_KI = 0;
   final double ARM_HOLD_POSITION_KD = 0;
   final double ARM_HOLD_POSITION_KF = 0;
-  final double WRIST_MM_FORWARD_KP = 1.02;
+  final double WRIST_MM_FORWARD_KP = 1.6;
   final double WRIST_MM_FORWARD_KI = 0;
   final double WRIST_MM_FORWARD_KD = 0;
   final double WRIST_MM_FORWARD_KF = .17;// tuned manually
-  final int WRIST_MM_FORWARD_VELOCITY = 8000;
-  final int WRIST_MM_FORWARD_ACCELERATION = 8000; // 1 second to full velocity
+  final int WRIST_MM_FORWARD_VELOCITY = 10000;
+  final int WRIST_MM_FORWARD_ACCELERATION = 10000; // 1 second to full velocity
   final double WRIST_MM_REVERSE_KP = .075;
   final double WRIST_MM_REVERSE_KI = 0;
   final double WRIST_MM_REVERSE_KD = 0;
@@ -222,20 +221,20 @@ public class Arm extends SubsystemBase {
   // Encoder Measurements for the relevant scoring positions
   final static int ARM_STOW = 0;
   final static int WRIST_STOW = 0;
-  final static int ARM_GROUND_PICKUP = 17000;
+  final static int ARM_GROUND_PICKUP = 15000;
   final static int WRIST_GROUND_PICKUP = 0;
   final static int ARM_SUBSTATION = 0;
   final static int WRIST_SUBSTATION = 28500;
   final static int ARM_SCORE_LOW = 0;
-  final static int WRIST_SCORE_LOW = 10000;
-  final static int ARM_CONE_MID =  10000;
-  final static int WRIST_CONE_MID = 31000;
+  final static int WRIST_SCORE_LOW = 4000;
+  final static int ARM_CONE_MID =  4000;
+  final static int WRIST_CONE_MID = 27500;
   final static int ARM_CONE_HIGH = 0;
   final static int WRIST_CONE_HIGH = 0;
-  final static int ARM_CUBE_HIGH = 31785;
+  final static int ARM_CUBE_HIGH = 8000;
   final static int WRIST_CUBE_HIGH = 32000;
   final static int ARM_CUBE_MID = 0;
-  final static int WRIST_CUBE_MID = 25500;
+  final static int WRIST_CUBE_MID = 23500;
   final static int ARM_POSITION_TOLERANCE = 250;
   final static int WRIST_POSITION_TOLERANCE = 250;
   final int PID_PRIMARY = 0;
@@ -317,6 +316,7 @@ public class Arm extends SubsystemBase {
     arm_config.forwardSoftLimitEnable = true;
     arm_config.reverseSoftLimitThreshold = ARM_REVERSE_SOFT_LIMIT;
     arm_config.forwardSoftLimitThreshold = ARM_FORWARD_SOFT_LIMIT;
+    arm_config.clearPositionOnLimitR = true;
 
     // // Set current limits for the ARM
     // StatorCurrentLimitConfiguration stator_limit = arm_config.statorCurrLimit;
@@ -354,6 +354,7 @@ public class Arm extends SubsystemBase {
     wrist_config.forwardSoftLimitEnable = true;
     wrist_config.reverseSoftLimitThreshold = WRIST_REVERSE_SOFT_LIMIT;
     wrist_config.forwardSoftLimitThreshold = WRIST_FORWARD_SOFT_LIMIT;
+    wrist_config.clearPositionOnLimitR = true;
 
     // // Set current limits for the Wrist
     // stator_limit = wrist_config.statorCurrLimit;
@@ -386,10 +387,8 @@ public class Arm extends SubsystemBase {
     m_arm_position = shuffleboard.getDoubleTopic("ArmEncoder").publish();
     m_wrist_position = shuffleboard.getDoubleTopic("WristEncoder").publish();
 
-    m_wrist_motor_rev = shuffleboard.getDoubleTopic("Wrist Rev").publish();
-    m_arm_motor_rev = shuffleboard.getDoubleTopic("Arm Rev").publish();
-    m_arm_mm_error = shuffleboard.getDoubleTopic("Arm MM Error").publish();
-    m_wrist_mm_error = shuffleboard.getDoubleTopic("Wrist MM Error").publish();
+    m_arm_mm_error = shuffleboard.getDoubleTopic("Arm Error").publish();
+    m_wrist_mm_error = shuffleboard.getDoubleTopic("Wrist Error").publish();
     m_super_position = shuffleboard.getStringTopic("Super Position").publish();
 
 
@@ -463,8 +462,7 @@ public class Arm extends SubsystemBase {
     // checkReverseLimits();
 
     checkArmSuperState();
-
-    // TODO Don't keep this in here:
+    
     m_super_position.set(m_current_position.toString());
   }
 
@@ -821,7 +819,6 @@ public class Arm extends SubsystemBase {
   public boolean isBackwardMovement(SuperStructurePosition pos){
     double wristPos = m_wrist_motor.getSelectedSensorPosition();
     double armPos = m_arm_motor.getSelectedSensorPosition();
-    System.out.println("Moving arm Backward: " + (!(wristPos < pos.wrist_position) || !(armPos < pos.arm_position)));
     return  !(wristPos < pos.wrist_position) || !(armPos < pos.arm_position);
   }
 

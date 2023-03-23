@@ -23,13 +23,14 @@ public class Vision extends SubsystemBase {
   public static final int LIME_APRILTAG_PIPE = 1;
 
   /** Creates a new Vision. */
-  public Vision() {
+  /*  Vision() {
     m_limelight = new PhotonCamera("limelight");
     m_lime_result = new PhotonPipelineResult();
     m_lime_target = new PhotonTrackedTarget();
     m_limelight.setPipelineIndex(LIME_CONE_PIPE);
     m_limelight.setLED(VisionLEDMode.kOff);
   }
+  */
 
   @Override
   public void periodic() {
@@ -48,6 +49,8 @@ public class Vision extends SubsystemBase {
       m_lime_tx = 0;
     }
   }
+
+  
 
   public boolean getLimelightTargetStatus() {
     return m_lime_has_targets;

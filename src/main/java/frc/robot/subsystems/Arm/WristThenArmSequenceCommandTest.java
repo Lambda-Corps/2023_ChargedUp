@@ -2,25 +2,24 @@
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
 
-package frc.robot.autoCommands;
+package frc.robot.subsystems.Arm;
 
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
-import frc.robot.subsystems.DriveTrain.DriveMotionMagic;
-import frc.robot.subsystems.DriveTrain.DriveTrain;
-import frc.robot.subsystems.Gripper.Gripper;
-import frc.robot.subsystems.Gripper.ScoreCone;
+import frc.robot.subsystems.Arm.Arm.ArmState;
 
 // NOTE:  Consider using this command inline, rather than writing a subclass.  For more
 // information, see:
 // https://docs.wpilib.org/en/stable/docs/software/commandbased/convenience-features.html
-public class Pos3ScoreMove extends SequentialCommandGroup {
-  /** Creates a new Pos1ScoreMove. */
-  public Pos3ScoreMove(DriveTrain dt, Gripper gripper) {
+public class WristThenArmSequenceCommandTest extends SequentialCommandGroup {
+  /** Creates a new WristThenArmSequenceCommand. */
+  public WristThenArmSequenceCommandTest(Arm arm_sub, Arm.SuperStructurePosition position_req) {
     // Add your commands in the addCommands() call, e.g.
     // addCommands(new FooCommand(), new BarCommand());
     addCommands(
-      new ScoreCone(gripper),      
-      new DriveMotionMagic(dt, -148)
+      arm_sub.set_state(ArmState.Moving),
+      new WristDriveToPositionPIDTest(arm_sub, position_req),
+      new ArmDriveToPositionPIDTest(arm_sub, position_req),
+      arm_sub.set_state(ArmState.Holding)
     );
   }
 }
