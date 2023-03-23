@@ -15,7 +15,7 @@ public class LED extends SubsystemBase{
     final public static int TRIGHT = 2;
     final public static int TLEFT = 3;
     final public static int PPANEL = 4;
-    final public static int ALL = 7;
+    final public static int ALL = 15;
 
     public ArrayList<Integer> dataList = new ArrayList<Integer>();
     private static final int kDeviceAddress = 4;
