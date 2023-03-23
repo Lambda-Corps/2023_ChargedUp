@@ -87,8 +87,8 @@ public class DriveTrain extends SubsystemBase {
 	private final int kTimeoutMs = 10;
 
 	private final double MAX_TELEOP_DRIVE_SPEED = 1.0;
-	private final double m_arbFF_empty = 0.15;
-	private final double m_arbFF_cone = 0.17;
+	// private final double m_arbFF_empty = 0.15;
+	// private final double m_arbFF_cone = 0.17;
 // Fine grained driving will square the inputs, so .6 will really end up being .36 max driving when 
 	// the fine grained control is being applied.
 	private final double FINE_GRAINED_MAX = .6; 

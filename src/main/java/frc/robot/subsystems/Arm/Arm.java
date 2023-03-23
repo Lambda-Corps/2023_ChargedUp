@@ -43,7 +43,7 @@ public class Arm extends SubsystemBase {
   private ArmTask arm_task;
   private HashMap<SuperStructurePosition, ArrayList<SuperStructurePosition>> illegal_transitions = new HashMap<SuperStructurePosition, ArrayList<SuperStructurePosition>>();
   private ArrayList<SuperStructurePosition> stowed_illegal_transitions = new ArrayList<SuperStructurePosition>();
-  private ArrayList<SuperStructurePosition> ground_pickup_illegal_transitions = new ArrayList<SuperStructurePosition>();
+  // private ArrayList<SuperStructurePosition> ground_pickup_illegal_transitions = new ArrayList<SuperStructurePosition>();
 
   public static enum ArmState {
     Moving,
@@ -462,8 +462,7 @@ public class Arm extends SubsystemBase {
     // checkReverseLimits();
 
     checkArmSuperState();
-
-    // TODO Don't keep this in here:
+    
     m_super_position.set(m_current_position.toString());
   }
 

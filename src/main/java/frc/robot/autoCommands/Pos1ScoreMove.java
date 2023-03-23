@@ -4,13 +4,10 @@
 
 package frc.robot.autoCommands;
 
-import javax.swing.text.html.parser.DTD;
-
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import frc.robot.subsystems.DriveTrain.DriveMotionMagic;
 import frc.robot.subsystems.DriveTrain.DriveTrain;
 import frc.robot.subsystems.Gripper.Gripper;
-import frc.robot.subsystems.Gripper.RunMotorsBackward;
 import frc.robot.subsystems.Gripper.ScoreCone;
 
 // NOTE:  Consider using this command inline, rather than writing a subclass.  For more

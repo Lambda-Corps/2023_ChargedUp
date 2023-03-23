@@ -4,8 +4,6 @@
 
 package frc.robot;
 
-import javax.print.event.PrintEvent;
-
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import frc.robot.autoCommands.Pos1ScoreMove;
@@ -14,15 +12,10 @@ import frc.robot.autoCommands.Pos2ScoreMoveBalance;
 import frc.robot.autoCommands.Pos3ScoreMove;
 import frc.robot.autoCommands.Pos3ScoreMoveBalance;
 import frc.robot.subsystems.Arm.Arm;
-import frc.robot.subsystems.Arm.ArmDriveToPositionPIDTest;
-import frc.robot.subsystems.Arm.ArmThenWristSequenceCommand;
 import frc.robot.subsystems.Arm.DeployToGroundPickup;
 import frc.robot.subsystems.Arm.DriveArmManually;
-import frc.robot.subsystems.Arm.MoveArmToPositionMM;
 import frc.robot.subsystems.Arm.MoveWristToPositionMM;
 import frc.robot.subsystems.Arm.StowSuperStructure;
-import frc.robot.subsystems.Arm.WristDriveToPositionPIDTest;
-import frc.robot.subsystems.Arm.WristThenArmSequenceCommand;
 import frc.robot.subsystems.Arm.WristThenArmSequenceCommandTest;
 import frc.robot.subsystems.Arm.Arm.ArmState;
 import frc.robot.subsystems.Arm.Arm.SuperStructurePosition;
@@ -30,7 +23,6 @@ import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
-import frc.robot.subsystems.DriveTrain.AlignToConeTapeWithVision;
 import frc.robot.subsystems.DriveTrain.BalanceBangBangTestCommand;
 import frc.robot.subsystems.DriveTrain.DefaultDriveTrainCommand;
 import frc.robot.subsystems.DriveTrain.DriveMotionMagicTest;
@@ -46,10 +38,7 @@ import frc.robot.subsystems.Gripper.Gripper;
 import frc.robot.subsystems.Gripper.RunMotorsBackward;
 import frc.robot.subsystems.Gripper.RunMotorsForward;
 import frc.robot.subsystems.LEDs.LED;
-import frc.robot.subsystems.Vision.Vision;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.ConditionalCommand;
-import edu.wpi.first.wpilibj2.command.PrintCommand;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 
