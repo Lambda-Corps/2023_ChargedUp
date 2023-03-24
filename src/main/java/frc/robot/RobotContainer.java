@@ -12,8 +12,10 @@ import frc.robot.autoCommands.Pos2ScoreMoveBalance;
 import frc.robot.autoCommands.Pos3ScoreMove;
 import frc.robot.autoCommands.Pos3ScoreMoveBalance;
 import frc.robot.subsystems.Arm.Arm;
+import frc.robot.subsystems.Arm.ArmDriveToPositionPIDTest;
 import frc.robot.subsystems.Arm.DeployToGroundPickup;
 import frc.robot.subsystems.Arm.DriveArmManually;
+import frc.robot.subsystems.Arm.StowArmManually;
 import frc.robot.subsystems.Arm.MoveWristToPositionMM;
 import frc.robot.subsystems.Arm.StowSuperStructure;
 import frc.robot.subsystems.Arm.WristThenArmSequenceCommandTest;
@@ -38,6 +40,7 @@ import frc.robot.subsystems.Gripper.Gripper;
 import frc.robot.subsystems.Gripper.RunMotorsBackward;
 import frc.robot.subsystems.Gripper.RunMotorsForward;
 import frc.robot.subsystems.LEDs.LED;
+import frc.robot.subsystems.LEDs.SetLEDs;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -93,6 +96,10 @@ public class RobotContainer {
    * edu.wpi.first.wpilibj2.command.button.JoystickButton}.
    */
   private void configureButtonBindings() {
+    m_partner_controller.povRight().onTrue(new SetLEDs(  m_led, LED.ALL, LED.RAINBOW));
+    m_partner_controller.leftBumper().onTrue(new SetLEDs(m_led, LED.ALL, LED.YELLOW ));
+    m_partner_controller.b().onTrue(new SetLEDs(         m_led, LED.ALL, LED.PURPLE ));
+
     m_partner_controller.rightBumper().whileTrue(m_arm.set_state(ArmState.Moving).andThen(
         new DriveArmManually(m_arm, m_partner_controller)).withName("Drive Manually")
     );
@@ -166,7 +173,7 @@ public class RobotContainer {
     m_driver_controller.leftBumper().onFalse(m_drivetrain.shiftToLowGear());
     m_driver_controller.leftTrigger().whileTrue(new FineGrainedDrivingControl(m_drivetrain, m_driver_controller));
     m_driver_controller.rightTrigger().onTrue(m_gripper.contractGripperCommand().andThen(new WaitCommand(0.3)).andThen(new DeployToGroundPickup(m_arm, SuperStructurePosition.GroundPickup)).andThen(m_gripper.expandGripperCommand().andThen(m_gripper.holdGamePieceCommand())));
-    m_driver_controller.rightTrigger().onFalse(m_gripper.contractGripperCommand().andThen(m_gripper.holdGamePieceCommand()).andThen(new StowSuperStructure(m_arm)));
+    m_driver_controller.rightTrigger().onFalse(m_gripper.contractGripperCommand().andThen(m_gripper.holdGamePieceCommand()).andThen(new StowArmManually(m_arm)));
    /*  m_driver_controller.a().whileTrue(new AlignToConeTapeWithVision(m_drivetrain, m_vision, m_driver_controller)); */
     m_driver_controller.x().onTrue(m_led.ResendLEDBytes());
     m_driver_controller.povUp().onTrue(new SubstationPickupDistanceRangefinder(m_drivetrain));
@@ -314,5 +321,7 @@ public class RobotContainer {
     armTestTab.add("Cone Mid Test", new WristThenArmSequenceCommandTest(m_arm, SuperStructurePosition.ScoreConeMid)).withPosition(4, 3).withSize(2, 1);
     armTestTab.add("Stow Test", new WristThenArmSequenceCommandTest(m_arm, SuperStructurePosition.Stowed)).withPosition(6, 3).withSize(2, 1);
     armTestTab.add("Cube High Test", new WristThenArmSequenceCommandTest(m_arm, SuperStructurePosition.ScoreCubeHigh)).withPosition(8, 3).withSize(2, 1);
+    armTestTab.add("Ground Pickup", new ArmDriveToPositionPIDTest(m_arm, SuperStructurePosition.GroundPickup)).withPosition(0, 4);
+    armTestTab.add("Stow Arm Test", new StowArmManually(m_arm));
   }
 }

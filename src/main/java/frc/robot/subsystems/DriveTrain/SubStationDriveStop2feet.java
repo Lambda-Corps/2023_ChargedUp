@@ -17,7 +17,7 @@ public class SubStationDriveStop2feet extends CommandBase {
     m_drivetrain = dt;
     m_driver_controller = xbox;
 
-    drive_speed = 0.7; // 40% motor output
+    drive_speed = 0.7; // 70% motor output
     // Use addRequirements() here to declare subsystem dependencies.
     addRequirements(m_drivetrain);
   }

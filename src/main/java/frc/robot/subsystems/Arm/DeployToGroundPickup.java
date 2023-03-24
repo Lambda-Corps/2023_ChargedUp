@@ -17,7 +17,7 @@ public class DeployToGroundPickup extends SequentialCommandGroup {
     // addCommands(new FooCommand(), new BarCommand());
     addCommands(
       arm_sub.set_state(ArmState.Moving),
-      new MoveArmToPositionMM(arm_sub, position_req), 
+      new ArmDriveToPositionPIDTest(arm_sub, position_req), 
       arm_sub.set_state(ArmState.Holding)
     );
   }

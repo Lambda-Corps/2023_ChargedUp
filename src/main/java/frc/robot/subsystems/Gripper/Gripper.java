@@ -106,6 +106,16 @@ public class Gripper extends SubsystemBase {
           m_gripper.set(GRIPPER_EXPAND);
         });
   }
+  public CommandBase JustexpandGripper() {
+    // Expand Gripper wthout running motors
+    // Inline construction of command goes here.
+    // Subsystem::RunOnce implicitly requires `this` subsystem.
+    return runOnce(
+        () -> {
+          m_gripper.set(GRIPPER_EXPAND);
+          runMotors(0);
+        });
+  }
 
   public CommandBase contractGripperCommand() {
     // Inline construction of command goes here.

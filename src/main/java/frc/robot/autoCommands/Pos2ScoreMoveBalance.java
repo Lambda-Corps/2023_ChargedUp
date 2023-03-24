@@ -10,10 +10,12 @@ import frc.robot.subsystems.DriveTrain.DriveSlowlyUntilRamp;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import frc.robot.subsystems.Arm.Arm;
+import frc.robot.subsystems.Arm.StowArmManually;
+import frc.robot.subsystems.Arm.WristThenArmSequenceCommandTest;
+import frc.robot.subsystems.Arm.Arm.SuperStructurePosition;
 import frc.robot.subsystems.DriveTrain.DriveTrain;
 import frc.robot.subsystems.DriveTrain.TurnToAngleWithGyroPID;
 import frc.robot.subsystems.Gripper.Gripper;
-import frc.robot.subsystems.Gripper.ScoreCone;
 
 // NOTE:  Consider using this command inline, rather than writing a subclass.  For more
 // information, see:
@@ -30,13 +32,16 @@ public class Pos2ScoreMoveBalance extends SequentialCommandGroup {
       // gripper.expandGripperCommand(),
       // // Stow the arm back in the robot
       // new StowSuperStructure(arm),
-      new ScoreCone(gripper),      
+      new WristThenArmSequenceCommandTest(arm, SuperStructurePosition.ScoreConeMid),
+      gripper.JustexpandGripper(),
+      new StowArmManually(arm),
+      new DriveMotionMagic(dt, -6),
+      new TurnToAngleWithGyroPID(dt, 180),
       //Drive Back 100 inches 
-      new DriveMotionMagic(dt, -140),  
-      // This needs to be drive and Bang Bang
       new DriveSlowlyUntilRamp(dt).raceWith(new WaitCommand(1.5)), 
-      new BalanceBangBangCommand(dt),
-      new TurnToAngleWithGyroPID(dt, 90)
+     
+      // This needs to be drive and Bang Bang
+      new BalanceBangBangCommand(dt)
     );
   }
 }
