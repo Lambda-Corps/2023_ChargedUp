@@ -8,12 +8,12 @@ import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import frc.robot.autoCommands.Pos1ScoreMove;
 import frc.robot.autoCommands.Pos1ScoreMoveBalance;
+import frc.robot.autoCommands.Pos2ScoreHighMoveBalance;
 import frc.robot.autoCommands.Pos2ScoreMoveBalance;
 import frc.robot.autoCommands.Pos3ScoreMove;
 import frc.robot.autoCommands.Pos3ScoreMoveBalance;
 import frc.robot.subsystems.Arm.Arm;
 import frc.robot.subsystems.Arm.ArmDriveToPositionPIDTest;
-import frc.robot.subsystems.Arm.DeployToGroundPickup;
 import frc.robot.subsystems.Arm.DriveArmManually;
 import frc.robot.subsystems.Arm.StowArmManually;
 import frc.robot.subsystems.Arm.MoveWristToPositionMM;
@@ -25,6 +25,7 @@ import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+import frc.robot.subsystems.DriveTrain.AlignToConeTapeWithVision;
 import frc.robot.subsystems.DriveTrain.BalanceBangBangTestCommand;
 import frc.robot.subsystems.DriveTrain.DefaultDriveTrainCommand;
 import frc.robot.subsystems.DriveTrain.DriveMotionMagicTest;
@@ -41,6 +42,7 @@ import frc.robot.subsystems.Gripper.RunMotorsBackward;
 import frc.robot.subsystems.Gripper.RunMotorsForward;
 import frc.robot.subsystems.LEDs.LED;
 import frc.robot.subsystems.LEDs.SetLEDs;
+import frc.robot.subsystems.Vision.Vision;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -172,12 +174,13 @@ public class RobotContainer {
     m_driver_controller.leftBumper().onTrue(m_drivetrain.shiftToHighGear());
     m_driver_controller.leftBumper().onFalse(m_drivetrain.shiftToLowGear());
     m_driver_controller.leftTrigger().whileTrue(new FineGrainedDrivingControl(m_drivetrain, m_driver_controller));
-    m_driver_controller.rightTrigger().onTrue(m_gripper.contractGripperCommand().andThen(new WaitCommand(0.3)).andThen(new DeployToGroundPickup(m_arm, SuperStructurePosition.GroundPickup)).andThen(m_gripper.expandGripperCommand().andThen(m_gripper.holdGamePieceCommand())));
+    m_driver_controller.rightTrigger().onTrue(m_gripper.contractGripperCommand().andThen(new WaitCommand(0.3)).andThen(m_arm.deployArm().andThen(m_gripper.expandGripperCommand()).andThen(m_gripper.holdGamePieceCommand())));
     m_driver_controller.rightTrigger().onFalse(m_gripper.contractGripperCommand().andThen(m_gripper.holdGamePieceCommand()).andThen(new StowArmManually(m_arm)));
    /*  m_driver_controller.a().whileTrue(new AlignToConeTapeWithVision(m_drivetrain, m_vision, m_driver_controller)); */
     m_driver_controller.x().onTrue(m_led.ResendLEDBytes());
     m_driver_controller.povUp().onTrue(new SubstationPickupDistanceRangefinder(m_drivetrain));
     m_driver_controller.povDown().onTrue(new SubStationDriveStop2feet(m_drivetrain, m_driver_controller));
+    // m_driver_controller.a().whileTrue(new AlignToConeTapeWithVision(m_drivetrain, m_vision, m_driver_controller));
   }
   
   /**
@@ -207,10 +210,7 @@ public class RobotContainer {
     // driveTab.add("Camera", m_drivetrain);
 
     //delete this
-    driveTab.add("Drive Till 2 feet from Wall", new SubStationDriveStop2feet(m_drivetrain, m_driver_controller)).withPosition(2, 2).withSize(2, 1);
-    driveTab.add("Drive to substation pickup", new SubstationPickupDistanceRangefinder(m_drivetrain)).withPosition(4, 2).withSize(2, 1);
-    driveTab.addDouble("UltraSonic sensor voltage", m_drivetrain::getRangeFinderValue).withPosition(2, 3).withSize(2, 1);;
-
+    driveTab.add("Pos 2 Score High Cube", new Pos2ScoreHighMoveBalance(m_drivetrain, m_arm, m_gripper)).withPosition(2, 2).withSize(2, 1);
 
 
     //Auto Options
@@ -219,8 +219,8 @@ public class RobotContainer {
     m_auto_chooser.addOption("1 Score Balance", new Pos1ScoreMoveBalance(m_drivetrain, m_arm, m_gripper));
     m_auto_chooser.addOption("2 Score Balance", new Pos2ScoreMoveBalance(m_drivetrain, m_arm, m_gripper));
     m_auto_chooser.addOption("3 Score Balance", new Pos3ScoreMoveBalance(m_drivetrain, m_arm, m_gripper));
-    m_auto_chooser.addOption("1 Score Move", new Pos1ScoreMove(m_drivetrain, m_gripper));
-    m_auto_chooser.addOption("3 Score Move", new Pos3ScoreMove(m_drivetrain, m_gripper));
+    m_auto_chooser.addOption("1 Score Move", new Pos1ScoreMove(m_drivetrain, m_gripper, m_arm));
+    m_auto_chooser.addOption("3 Score Move", new Pos3ScoreMove(m_drivetrain, m_gripper, m_arm));
     m_auto_chooser.setDefaultOption("Default Auto incase we forget", new DriveMotionMagic(m_drivetrain, -150));
     m_auto_chooser.addOption("Drive Forward 14ft", new DriveMotionMagic(m_drivetrain, 150));
     m_auto_chooser.addOption("Drive Backward 14ft", new DriveMotionMagic(m_drivetrain, -150));
@@ -305,13 +305,13 @@ public class RobotContainer {
     armTestTab.add("Super Position", "None yet").withPosition(8, 2).withSize(2, 1);
 
     // PIDF Values
-    armTestTab.add("Arm kP", 0).withPosition(4, 0).withSize(1, 1);
-    armTestTab.add("Arm kF", 0).withPosition(5, 0).withSize(1, 1);
-    armTestTab.add("Arm Velo", 0).withPosition(6, 0).withSize(1, 1);
+    armTestTab.add("Arm kP", 2.1).withPosition(4, 0).withSize(1, 1);
+    armTestTab.add("Arm kF", 0.43).withPosition(5, 0).withSize(1, 1);
+    armTestTab.add("Arm Velo", 700).withPosition(6, 0).withSize(1, 1);
     armTestTab.add("Arm Error", 0).withPosition(7, 0).withSize(1, 1);
-    armTestTab.add("Wrist kP", 0).withPosition(4, 1).withSize(1, 1);
-    armTestTab.add("Wrist kF", 0).withPosition(5, 1).withSize(1, 1);
-    armTestTab.add("Wrist Velo", 0).withPosition(6, 1).withSize(1, 1);
+    armTestTab.add("Wrist kP", 1.6).withPosition(4, 1).withSize(1, 1);
+    armTestTab.add("Wrist kF", .17).withPosition(5, 1).withSize(1, 1);
+    armTestTab.add("Wrist Velo", 10000).withPosition(6, 1).withSize(1, 1);
     armTestTab.add("Wrist Error", 0).withPosition(7, 1).withSize(1, 1);
 
     // Add the commands to the page

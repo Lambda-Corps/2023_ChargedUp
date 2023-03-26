@@ -194,13 +194,13 @@ public class Arm extends SubsystemBase {
   final double ARM_MM_KP = 2.1; // Tuned manually (ARM_FORWARD_SPEED * 1023) / 2048;
   final double ARM_MM_KI = 0;
   final double ARM_MM_KD = 0;
-  final double ARM_MM_KF = 0.067; // (.4 * 1023) / 8000
+  final double ARM_MM_KF = 0.43; // (.4 * 1023) / 8000
   final double ARM_MM_FF = 0;
-  final int ARM_MM_VELOCITY = 1750;
-  final int ARM_MM_ACCELERATION = 1750; // 1 Second to full velocity
+  final int ARM_MM_VELOCITY = 700;
+  final int ARM_MM_ACCELERATION = 700; // 1 Second to full velocity
   final double ARM_HOLD_POSITION_KP = 3.069;
   final double ARM_HOLD_POSITION_KI = 0;
-  final double ARM_HOLD_POSITION_KD = 0;
+  final double ARM_HOLD_POSITION_KD = 15;
   final double ARM_HOLD_POSITION_KF = 0;
   final double WRIST_MM_FORWARD_KP = 1.6;
   final double WRIST_MM_FORWARD_KI = 0;
@@ -221,13 +221,13 @@ public class Arm extends SubsystemBase {
   // Encoder Measurements for the relevant scoring positions
   final static int ARM_STOW = 0;
   final static int WRIST_STOW = 0;
-  final static int ARM_GROUND_PICKUP = 23000;
+  final static int ARM_GROUND_PICKUP = 12000;
   final static int WRIST_GROUND_PICKUP = 0;
   final static int ARM_SUBSTATION = 0;
   final static int WRIST_SUBSTATION = 28500;
   final static int ARM_SCORE_LOW = 0;
   final static int WRIST_SCORE_LOW = 4000;
-  final static int ARM_CONE_MID =  7500;
+  final static int ARM_CONE_MID =  7000;
   final static int WRIST_CONE_MID = 27500;
   final static int ARM_CONE_HIGH = 0;
   final static int WRIST_CONE_HIGH = 0;
@@ -952,6 +952,17 @@ public class Arm extends SubsystemBase {
       () -> {
         m_arm_state = state;
       });
+  }
+
+  public boolean is_arm_deployed(){
+    return m_arm_motor.getSelectedSensorPosition() > ARM_GROUND_PICKUP;
+  }
+  public CommandBase deployArm(){
+    return run(
+      () -> {
+        m_arm_motor.set(ControlMode.PercentOutput, ARM_FORWARD_SPEED);
+      }
+    ).until(this::is_arm_deployed);
   }
 
 }

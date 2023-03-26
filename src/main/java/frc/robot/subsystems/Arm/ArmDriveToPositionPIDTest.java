@@ -45,10 +45,10 @@ public class ArmDriveToPositionPIDTest extends CommandBase {
     m_count = 0;
     // m_target_ticks = (int)(m_target.getDouble(SuperStructurePosition.Stowed.getArmPosition()));
     m_target_ticks = m_position.getArmPosition();
-    m_arm.configure_arm_motion_magic_test(m_velo.getDouble(1), 
+    m_arm.configure_arm_motion_magic_test(m_velo.getDouble(1750), 
                                           1,
-                                          m_kPEntry.getDouble(0), 
-                                          m_kFEntry.getDouble(0));
+                                          m_kPEntry.getDouble(2.1), 
+                                          m_kFEntry.getDouble(0.67));
 
     m_arm.move_arm_motion_magic(m_target_ticks);
 

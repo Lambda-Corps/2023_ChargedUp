@@ -78,7 +78,7 @@ public class Gripper extends SubsystemBase {
   }
 
   private void hold_game_piece() {
-    m_leftside.set(ControlMode.PercentOutput, INTAKE_HOLD_SPEED);
+    m_leftside.set(ControlMode.PercentOutput, .3);
     m_rightside.set(ControlMode.PercentOutput, INTAKE_HOLD_SPEED);
   }
 
