@@ -30,10 +30,14 @@ import edu.wpi.first.networktables.StringPublisher;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.subsystems.Wrist.Wrist;
 
 public class Arm extends SubsystemBase {
   WPI_TalonFX m_arm_motor, m_wrist_motor;
-  DigitalInput m_arm_forward_limit, m_arm_reverse_limit, m_wrist_reverse_limit, m_wrist_forward_limit;
+  DigitalInput m_arm_forward_limit;
+  DigitalInput m_arm_reverse_limit;
+  DigitalInput m_wrist_reverse_limit;
+  DigitalInput m_wrist_forward_limit;
   DoublePublisher m_arm_position, m_wrist_position, m_wrist_motor_rev, m_arm_motor_rev, m_arm_mm_error, m_wrist_mm_error;
   StringPublisher m_super_position;
 
@@ -59,54 +63,54 @@ public class Arm extends SubsystemBase {
   }
 
   public enum SuperStructurePosition {
-    Stowed(ARM_STOW, WRIST_STOW){
+    Stowed(ARM_STOW){
       @Override
       public String toString() {
           return "Stowed";
       }
     },
-    GroundPickup(ARM_GROUND_PICKUP, WRIST_GROUND_PICKUP){
+    GroundPickup(ARM_GROUND_PICKUP){
       @Override
       public String toString() {
           return "Ground Pickup";
       }
     },
-    SubstationPickup(ARM_SUBSTATION, WRIST_SUBSTATION){
+    SubstationPickup(ARM_SUBSTATION){
       @Override
       public String toString() {
           return "Substation";
       }
     },
-    ScoreLow(ARM_SCORE_LOW, WRIST_SCORE_LOW){
+    ScoreLow(ARM_SCORE_LOW){
       @Override
       public String toString() {
           return "Score Low";
       }},
-    ScoreConeMid(ARM_CONE_MID, WRIST_CONE_MID){
+    ScoreConeMid(ARM_CONE_MID){
       @Override
       public String toString() {
           return "Cone Mid";
       }
     },
-    ScoreConeHigh(ARM_CONE_HIGH, WRIST_CONE_HIGH){
+    ScoreConeHigh(ARM_CONE_HIGH){
       @Override
       public String toString() {
           return "Cone High";
       }
     },
-    ScoreCubeMid(ARM_CUBE_MID, WRIST_CUBE_MID){
+    ScoreCubeMid(ARM_CUBE_MID){
       @Override
       public String toString() {
           return "Cube Mid";
       }
     },
-    ScoreCubeHigh(ARM_CUBE_HIGH, WRIST_CUBE_HIGH){
+    ScoreCubeHigh(ARM_CUBE_HIGH){
       @Override
       public String toString() {
           return "Cube High";
       }
     },
-    Manual(1, 1){
+    Manual(1){
       @Override
       public String toString() {
           return "Manual";
@@ -116,9 +120,8 @@ public class Arm extends SubsystemBase {
     private int arm_position, wrist_position;
     private ArrayList<SuperStructurePosition> illegal_transitions;
 
-    private SuperStructurePosition(int arm_pos, int wrist_pos) {
+    private SuperStructurePosition(int arm_pos) {
       arm_position = arm_pos;
-      wrist_position = wrist_pos;
 
       illegal_transitions = new ArrayList<SuperStructurePosition>();
     }
@@ -420,6 +423,8 @@ public class Arm extends SubsystemBase {
     return m_wrist_motor.isRevLimitSwitchClosed();
   }
 
+
+
   @Override
   public void periodic() {
     m_arm_position.set(m_arm_motor.getSelectedSensorPosition());
@@ -464,6 +469,8 @@ public class Arm extends SubsystemBase {
     checkArmSuperState();
     
     m_super_position.set(m_current_position.toString());
+
+
   }
 
   // ==================================== Arm State Machine Methods
