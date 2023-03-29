@@ -12,10 +12,12 @@ import edu.wpi.first.hal.HAL;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.simulation.DIOSim;
 import frc.robot.subsystems.Arm.Arm;
+import frc.robot.subsystems.Wrist.Wrist;
 
 /** Add your docs here. */
 public class ArmTest {
     static final double DELTA = 1e-2; // acceptable deviation range
+    static Wrist m_wrist = new Wrist();
     static Arm m_arm = new Arm();
     WPI_TalonFX m_bottom_motor, m_upper_motor;
     DigitalInput m_upper_reverse_limit, m_lower_reverse_limit;
@@ -26,7 +28,7 @@ public class ArmTest {
         assert HAL.initialize(500, 0);
 
         m_bottom_motor = m_arm.getBottomStageMotor();
-        m_upper_motor = m_arm.getTopStageMotor();
+        m_upper_motor = m_wrist.getTopStageMotor();
 
         m_lower_reverse_limit = m_arm.getBottomLimitSwitch();
         m_upper_reverse_limit = m_arm.getTopLimitSwitch();

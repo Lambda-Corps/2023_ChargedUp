@@ -20,6 +20,7 @@ import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.TalonFXFeedbackDevice;
 import com.ctre.phoenix.motorcontrol.TalonFXInvertType;
 import com.ctre.phoenix.motorcontrol.can.SlotConfiguration;
+import com.ctre.phoenix.motorcontrol.can.TalonFX;
 import com.ctre.phoenix.motorcontrol.can.TalonFXConfiguration;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 
@@ -298,6 +299,11 @@ Automatic,
     return m_wrist_motor.isRevLimitSwitchClosed();
   }
 
+  public TalonFX getWristMotor(TalonFX m_m_wrist_motor){
+    m_m_wrist_motor = m_wrist_motor;
+    return m_m_wrist_motor;
+  }
+
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
@@ -507,7 +513,7 @@ public boolean is_wrist_fwd_limit_hit() {
   return m_wrist_motor.isFwdLimitSwitchClosed() == 1;
 }
 
-public void holdPosition(){
+public void holdWristPosition(){
   double wrist_pos = m_wrist_motor.getSelectedSensorPosition();
 
   // Set the arm and wrist to their hold position slots as primary pids
@@ -531,6 +537,11 @@ public void configure_wrist_motion_magic(int target_ticks, boolean isForward){
     m_wrist_motor.selectProfileSlot(WRIST_MM_REVERSE_SLOT, PID_PRIMARY);
     m_wrist_motor.configMotionCruiseVelocity(WRIST_MM_REVERSE_VELOCITY);
     m_wrist_motor.configMotionAcceleration(WRIST_MM_REVERSE_ACCELERATION); 
+  }
+}
+public void checkArmSuperState() {
+  if(m_wrist_motor.getSelectedSensorPosition() <= 500){
+    m_current_position = SuperStructurePosition.Stowed;
   }
 }
 

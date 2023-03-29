@@ -10,9 +10,11 @@ import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import frc.robot.subsystems.Arm.Arm.ArmState;
 import frc.robot.subsystems.Arm.Arm.SuperStructurePosition;
+import frc.robot.subsystems.Wrist.Wrist;
 
 public class ArmDriveToPositionPIDTest extends CommandBase {
   Arm m_arm;
+  Wrist m_wrist;
   SuperStructurePosition m_position;
   int m_target_ticks;
 
@@ -22,8 +24,9 @@ public class ArmDriveToPositionPIDTest extends CommandBase {
 
   NetworkTableEntry m_kPEntry, m_kFEntry, m_velo, m_target;
   /** Creates a new DriveToPosition. */
-  public ArmDriveToPositionPIDTest(Arm arm, SuperStructurePosition position) {
+  public ArmDriveToPositionPIDTest(Arm arm, Wrist wrist, SuperStructurePosition position) {
     m_arm = arm;
+    m_wrist = wrist;
     m_position = position;
     
     addRequirements(m_arm);
@@ -87,7 +90,8 @@ public class ArmDriveToPositionPIDTest extends CommandBase {
       }
       m_arm.set_current_position(m_position);
       m_arm.set_state(ArmState.Holding);
-      m_arm.holdPosition();
+      m_wrist.holdWristPosition();
+      m_arm.holdArmPosition();
     }else {
       m_arm.set_state(ArmState.Inactive);
       m_arm.drive_manually(0, 0);

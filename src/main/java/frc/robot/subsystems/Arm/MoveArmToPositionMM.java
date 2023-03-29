@@ -6,9 +6,11 @@ package frc.robot.subsystems.Arm;
 
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import frc.robot.subsystems.Arm.Arm.SuperStructurePosition;
+import frc.robot.subsystems.Wrist.Wrist;
 
 public class MoveArmToPositionMM extends CommandBase {
   Arm m_arm;
+  Wrist m_wrist;
   SuperStructurePosition m_position;
   int m_target_ticks;
 
@@ -17,7 +19,7 @@ public class MoveArmToPositionMM extends CommandBase {
   int m_count;
 
   /** Creates a new MoveWristToPositionMM. */
-  public MoveArmToPositionMM(Arm arm, SuperStructurePosition position) {
+  public MoveArmToPositionMM(Arm arm, Wrist wrist, SuperStructurePosition position) {
     m_arm = arm;
     m_position = position;
 
@@ -65,7 +67,8 @@ public class MoveArmToPositionMM extends CommandBase {
   public void end(boolean interrupted) {
     if( !interrupted ){
       m_arm.set_current_position(m_position);
-      m_arm.holdPosition();
+      m_arm.holdArmPosition();
+      m_wrist.holdWristPosition();
     }
   }
 

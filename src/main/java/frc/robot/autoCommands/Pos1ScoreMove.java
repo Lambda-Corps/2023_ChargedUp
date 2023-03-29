@@ -15,6 +15,7 @@ import frc.robot.subsystems.DriveTrain.DriveMotionMagic;
 import frc.robot.subsystems.DriveTrain.DriveTrain;
 import frc.robot.subsystems.Gripper.Gripper;
 import frc.robot.subsystems.Gripper.ScoreCone;
+import frc.robot.subsystems.Wrist.Wrist;
 
 // NOTE:  Consider using this command inline, rather than writing a subclass.  For more
 // information, see:
@@ -23,17 +24,17 @@ public class Pos1ScoreMove extends SequentialCommandGroup {
   Arm m_arm;
   Gripper m_gripper;
   DriveTrain m_dt;
-  public Pos1ScoreMove(DriveTrain dt, Gripper gripper, Arm arm) {
+  public Pos1ScoreMove(DriveTrain dt, Gripper gripper, Arm arm, Wrist wrist) {
     m_arm = arm;
     m_gripper = gripper;
     m_dt = dt;
 
     addCommands(
-      new WristThenArmSequenceCommandTest(arm, SuperStructurePosition.ScoreConeMid).raceWith(new WaitCommand(4)),
+      new WristThenArmSequenceCommandTest(arm, wrist, SuperStructurePosition.ScoreConeMid).raceWith(new WaitCommand(4)),
       new WaitCommand(0.3),
       gripper.expandGripperCommand(),
       new StowArmManually(arm),
-      new WristDriveToPositionPIDTest(arm, SuperStructurePosition.Stowed).raceWith(new WaitCommand(3)),
+      new WristDriveToPositionPIDTest(arm, wrist, SuperStructurePosition.Stowed).raceWith(new WaitCommand(3)),
       new DriveMotionMagic(dt, -148)
     );
   }

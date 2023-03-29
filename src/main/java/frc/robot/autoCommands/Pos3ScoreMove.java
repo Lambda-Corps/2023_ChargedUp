@@ -14,21 +14,22 @@ import frc.robot.subsystems.Arm.WristThenArmSequenceCommandTest;
 import frc.robot.subsystems.DriveTrain.DriveMotionMagic;
 import frc.robot.subsystems.DriveTrain.DriveTrain;
 import frc.robot.subsystems.Gripper.Gripper;
+import frc.robot.subsystems.Wrist.Wrist;
 
 // NOTE:  Consider using this command inline, rather than writing a subclass.  For more
 // information, see:
 // https://docs.wpilib.org/en/stable/docs/software/commandbased/convenience-features.html
 public class Pos3ScoreMove extends SequentialCommandGroup {
   /** Creates a new Pos1ScoreMove. */
-  public Pos3ScoreMove(DriveTrain dt, Gripper gripper, Arm arm) {
+  public Pos3ScoreMove(DriveTrain dt, Gripper gripper, Arm arm, Wrist wrist) {
     // Add your commands in the addCommands() call, e.g.
     // addCommands(new FooCommand(), new BarCommand());
     addCommands(
-      new WristThenArmSequenceCommandTest(arm, SuperStructurePosition.ScoreConeMid).raceWith(new WaitCommand(4)),
+      new WristThenArmSequenceCommandTest(arm, wrist, SuperStructurePosition.ScoreConeMid).raceWith(new WaitCommand(4)),
       new WaitCommand(0.3),
       gripper.expandGripperCommand(),
       new StowArmManually(arm),
-      new WristDriveToPositionPIDTest(arm, SuperStructurePosition.Stowed).raceWith(new WaitCommand(3)),
+      new WristDriveToPositionPIDTest(arm, wrist, SuperStructurePosition.Stowed).raceWith(new WaitCommand(3)),
       new DriveMotionMagic(dt, -148)
     );
   }

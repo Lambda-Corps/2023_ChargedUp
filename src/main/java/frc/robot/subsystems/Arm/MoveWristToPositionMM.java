@@ -6,9 +6,11 @@ package frc.robot.subsystems.Arm;
 
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import frc.robot.subsystems.Arm.Arm.SuperStructurePosition;
+import frc.robot.subsystems.Wrist.Wrist;
 
 public class MoveWristToPositionMM extends CommandBase {
   Arm m_arm;
+  Wrist m_wrist;
   SuperStructurePosition m_position;
   int m_target_ticks;
 
@@ -17,8 +19,9 @@ public class MoveWristToPositionMM extends CommandBase {
   int m_count;
 
   /** Creates a new MoveWristToPositionMM. */
-  public MoveWristToPositionMM(Arm arm, SuperStructurePosition position) {
+  public MoveWristToPositionMM(Arm arm, Wrist wrist, SuperStructurePosition position) {
     m_arm = arm;
+    m_wrist = wrist;
     m_position = position;
 
     // Use addRequirements() here to declare subsystem dependencies.
@@ -33,17 +36,17 @@ public class MoveWristToPositionMM extends CommandBase {
     m_half_second_limit_hit = 0;
 
     // m_target_ticks = (int)(m_target.getDouble(SuperStructurePosition.Stowed.getArmPosition()));
-    m_direction_is_forward = m_arm.getSuperStructureWristPosition() < m_position.getWristPosition();
+    m_direction_is_forward = m_wrist.getSuperStructureWristPosition() < m_position.getWristPosition();
     m_target_ticks = m_position.getWristPosition();
-    m_arm.configure_wrist_motion_magic(m_target_ticks, m_direction_is_forward);
+    m_wrist.configure_wrist_motion_magic(m_target_ticks, m_direction_is_forward);
 
-    m_arm.move_wrist_motion_magic(m_target_ticks, m_direction_is_forward);
+    m_wrist.move_wrist_motion_magic(m_target_ticks, m_direction_is_forward);
   }
 
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-    m_done = m_arm.is_wrist_mm_done(m_target_ticks);
+    m_done = m_wrist.is_wrist_mm_done(m_target_ticks);
     if(m_done){
       m_count++;
     }
@@ -51,9 +54,9 @@ public class MoveWristToPositionMM extends CommandBase {
       m_count = 0;
     }
     
-    if( m_direction_is_forward && m_arm.is_wrist_fwd_limit_hit() ){
+    if( m_direction_is_forward && m_wrist.is_wrist_fwd_limit_hit() ){
       m_half_second_limit_hit++;
-    } else if( !m_direction_is_forward && m_arm.is_wrist_rev_limit_hit() ){
+    } else if( !m_direction_is_forward && m_wrist.is_wrist_rev_limit_hit() ){
       m_half_second_limit_hit++;
     }
     else{
@@ -66,7 +69,8 @@ public class MoveWristToPositionMM extends CommandBase {
   public void end(boolean interrupted) {
     if( !interrupted ){
       m_arm.set_current_position(m_position);
-      m_arm.holdPosition();
+      m_arm.holdArmPosition();
+      m_wrist.holdWristPosition();
     }
   }
 

@@ -43,6 +43,7 @@ import frc.robot.subsystems.Gripper.RunMotorsForward;
 import frc.robot.subsystems.LEDs.LED;
 import frc.robot.subsystems.LEDs.SetLEDs;
 import frc.robot.subsystems.Vision.Vision;
+import frc.robot.subsystems.Wrist.Wrist;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -64,6 +65,7 @@ public class RobotContainer {
   private final Arm m_arm = new  Arm();
   private final Gripper m_gripper = new  Gripper();
   private final LED m_led = new LED();
+  private final Wrist m_wrist = new Wrist();
   
 
 
@@ -135,11 +137,11 @@ public class RobotContainer {
       //     new WristThenArmSequenceCommand(m_arm, SuperStructurePosition.ScoreCubeMid),
       //     () -> m_arm.isBackwardMovement(SuperStructurePosition.ScoreCubeMid)
       // )
-      new MoveWristToPositionMM(m_arm, SuperStructurePosition.ScoreCubeMid)
+      new MoveWristToPositionMM(m_arm, m_wrist, SuperStructurePosition.ScoreCubeMid)
     );
     // Y button
     m_partner_controller.y().onTrue(
-      new WristThenArmSequenceCommandTest(m_arm, SuperStructurePosition.ScoreCubeHigh)
+      new WristThenArmSequenceCommandTest(m_arm, m_wrist, SuperStructurePosition.ScoreCubeHigh)
     );
     // A button
     m_partner_controller.a().onTrue(
@@ -148,7 +150,7 @@ public class RobotContainer {
       //     new WristThenArmSequenceCommand(m_arm, SuperStructurePosition.ScoreConeMid),
       //     () -> m_arm.isBackwardMovement(SuperStructurePosition.ScoreConeMid)
       // )
-      new WristThenArmSequenceCommandTest(m_arm, SuperStructurePosition.ScoreConeMid)
+      new WristThenArmSequenceCommandTest(m_arm, m_wrist, SuperStructurePosition.ScoreConeMid)
   );
     // B button
     // m_partner_controller.b().onTrue(
@@ -157,17 +159,17 @@ public class RobotContainer {
 
     // D-pad down
     m_partner_controller.povDown().onTrue(
-      new StowSuperStructure(m_arm)
+      new StowSuperStructure(m_arm, m_wrist)
     );
     // D-pad up
     m_partner_controller.povUp().onTrue(
-      new MoveWristToPositionMM(m_arm, SuperStructurePosition.SubstationPickup)
+      new MoveWristToPositionMM(m_arm, m_wrist, SuperStructurePosition.SubstationPickup)
       // m_arm.moveWristToPositionMM(SuperStructurePosition.SubstationPickup, () -> !(m_arm.isBackwardMovement(SuperStructurePosition.SubstationPickup)))
 
     );
     // D-pad left
     m_partner_controller.povLeft().onTrue(
-      new MoveWristToPositionMM(m_arm, SuperStructurePosition.ScoreLow)
+      new MoveWristToPositionMM(m_arm, m_wrist, SuperStructurePosition.ScoreLow)
       // m_arm.moveWristToPositionMM(SuperStructurePosition.ScoreLow, () -> !(m_arm.isBackwardMovement(SuperStructurePosition.ScoreLow)))
 
     );
@@ -200,8 +202,8 @@ public class RobotContainer {
     driveTab.add("WristEncoder", 0).withPosition(2, 1).withSize(1, 1);
     driveTab.addBoolean("ArmForward", m_arm::getArmForwardLimit).withPosition(3, 0).withSize(1,1);
     driveTab.addBoolean("ArmReverse", m_arm::getArmReverseLimit).withPosition(4, 0).withSize(1,1);
-    driveTab.addBoolean("WristForward", m_arm::getWristForwardLimit).withPosition(3, 1).withSize(1,1);
-    driveTab.addBoolean("WristReverse", m_arm::getWristReverseLimit).withPosition(4, 1).withSize(1,1);
+    driveTab.addBoolean("WristForward", m_wrist::getWristForwardLimit).withPosition(3, 1).withSize(1,1);
+    driveTab.addBoolean("WristReverse", m_wrist::getWristReverseLimit).withPosition(4, 1).withSize(1,1);
     // driveTab.addNumber("Curr Heading", m_drivetrain::getScaledHeading).withPosition(7,0).withSize(1,1);
    
     driveTab.add("Arm", m_arm).withPosition(0, 1).withSize(2, 1);
@@ -210,17 +212,17 @@ public class RobotContainer {
     // driveTab.add("Camera", m_drivetrain);
 
     //delete this
-    driveTab.add("Pos 2 Score High Cube", new Pos2ScoreHighMoveBalance(m_drivetrain, m_arm, m_gripper)).withPosition(2, 2).withSize(2, 1);
+    driveTab.add("Pos 2 Score High Cube", new Pos2ScoreHighMoveBalance(m_drivetrain, m_arm, m_gripper, m_wrist)).withPosition(2, 2).withSize(2, 1);
 
 
     //Auto Options
     m_auto_chooser = new SendableChooser<Command>();
     driveTab.add("Autonomous Chooser", m_auto_chooser).withWidget(BuiltInWidgets.kComboBoxChooser).withPosition(0, 0).withSize(2, 1);
     m_auto_chooser.addOption("1 Score Balance", new Pos1ScoreMoveBalance(m_drivetrain, m_arm, m_gripper));
-    m_auto_chooser.addOption("2 Score Balance", new Pos2ScoreMoveBalance(m_drivetrain, m_arm, m_gripper));
+    m_auto_chooser.addOption("2 Score Balance", new Pos2ScoreMoveBalance(m_drivetrain, m_arm, m_gripper, m_wrist));
     m_auto_chooser.addOption("3 Score Balance", new Pos3ScoreMoveBalance(m_drivetrain, m_arm, m_gripper));
-    m_auto_chooser.addOption("1 Score Move", new Pos1ScoreMove(m_drivetrain, m_gripper, m_arm));
-    m_auto_chooser.addOption("3 Score Move", new Pos3ScoreMove(m_drivetrain, m_gripper, m_arm));
+    m_auto_chooser.addOption("1 Score Move", new Pos1ScoreMove(m_drivetrain, m_gripper, m_arm, m_wrist));
+    m_auto_chooser.addOption("3 Score Move", new Pos3ScoreMove(m_drivetrain, m_gripper, m_arm, m_wrist));
     m_auto_chooser.setDefaultOption("Default Auto incase we forget", new DriveMotionMagic(m_drivetrain, -150));
     m_auto_chooser.addOption("Drive Forward 14ft", new DriveMotionMagic(m_drivetrain, 150));
     m_auto_chooser.addOption("Drive Backward 14ft", new DriveMotionMagic(m_drivetrain, -150));
@@ -298,8 +300,8 @@ public class RobotContainer {
   
     armTestTab.add("WristEncoder", 0).withPosition(0, 1).withSize(1, 1);
 
-    armTestTab.addBoolean("WristForward", m_arm::getWristForwardLimit).withPosition(1, 1).withSize(1,1);
-    armTestTab.addBoolean("WristReverse", m_arm::getWristReverseLimit).withPosition(2, 1).withSize(1,1);
+    armTestTab.addBoolean("WristForward", m_wrist::getWristForwardLimit).withPosition(1, 1).withSize(1,1);
+    armTestTab.addBoolean("WristReverse", m_wrist::getWristReverseLimit).withPosition(2, 1).withSize(1,1);
     armTestTab.add("Arm", m_arm).withPosition(8, 0).withSize(2, 1);
     armTestTab.add("Gripper", m_gripper).withPosition(8, 1).withSize(2, 1);
     armTestTab.add("Super Position", "None yet").withPosition(8, 2).withSize(2, 1);
@@ -315,13 +317,13 @@ public class RobotContainer {
     armTestTab.add("Wrist Error", 0).withPosition(7, 1).withSize(1, 1);
 
     // Add the commands to the page
-    armTestTab.add("Zero Wrist Encoder", m_arm.setWristEncoderToZero()).withPosition(0, 2).withSize(2, 1);
+    armTestTab.add("Zero Wrist Encoder", m_wrist.setWristEncoderToZero()).withPosition(0, 2).withSize(2, 1);
     armTestTab.add("Zero Arm Encoder", m_arm.setArmEncoderToZero()).withPosition(2, 2).withSize(2, 1);
    
-    armTestTab.add("Cone Mid Test", new WristThenArmSequenceCommandTest(m_arm, SuperStructurePosition.ScoreConeMid)).withPosition(4, 3).withSize(2, 1);
-    armTestTab.add("Stow Test", new WristThenArmSequenceCommandTest(m_arm, SuperStructurePosition.Stowed)).withPosition(6, 3).withSize(2, 1);
-    armTestTab.add("Cube High Test", new WristThenArmSequenceCommandTest(m_arm, SuperStructurePosition.ScoreCubeHigh)).withPosition(8, 3).withSize(2, 1);
-    armTestTab.add("Ground Pickup", new ArmDriveToPositionPIDTest(m_arm, SuperStructurePosition.GroundPickup)).withPosition(0, 4);
+    armTestTab.add("Cone Mid Test", new WristThenArmSequenceCommandTest(m_arm, m_wrist, SuperStructurePosition.ScoreConeMid)).withPosition(4, 3).withSize(2, 1);
+    armTestTab.add("Stow Test", new WristThenArmSequenceCommandTest(m_arm, m_wrist, SuperStructurePosition.Stowed)).withPosition(6, 3).withSize(2, 1);
+    armTestTab.add("Cube High Test", new WristThenArmSequenceCommandTest(m_arm, m_wrist, SuperStructurePosition.ScoreCubeHigh)).withPosition(8, 3).withSize(2, 1);
+    armTestTab.add("Ground Pickup", new ArmDriveToPositionPIDTest(m_arm, m_wrist, SuperStructurePosition.GroundPickup)).withPosition(0, 4);
     armTestTab.add("Stow Arm Test", new StowArmManually(m_arm));
   }
 }
