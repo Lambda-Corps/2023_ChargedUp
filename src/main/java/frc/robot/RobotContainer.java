@@ -20,7 +20,7 @@ import frc.robot.subsystems.Arm.MoveWristToPositionMM;
 import frc.robot.subsystems.Arm.StowSuperStructure;
 import frc.robot.subsystems.Arm.WristThenArmSequenceCommandTest;
 import frc.robot.subsystems.Arm.Arm.ArmState;
-import frc.robot.subsystems.Arm.Arm.SuperStructurePosition;
+import frc.robot.subsystems.Arm.Arm.ArmSuperStructurePosition;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
@@ -137,11 +137,11 @@ public class RobotContainer {
       //     new WristThenArmSequenceCommand(m_arm, SuperStructurePosition.ScoreCubeMid),
       //     () -> m_arm.isBackwardMovement(SuperStructurePosition.ScoreCubeMid)
       // )
-      new MoveWristToPositionMM(m_arm, m_wrist, SuperStructurePosition.ScoreCubeMid)
+      new MoveWristToPositionMM(m_arm, m_wrist, ArmSuperStructurePosition.ScoreCubeMid)
     );
     // Y button
     m_partner_controller.y().onTrue(
-      new WristThenArmSequenceCommandTest(m_arm, m_wrist, SuperStructurePosition.ScoreCubeHigh)
+      new WristThenArmSequenceCommandTest(m_arm, m_wrist, ArmSuperStructurePosition.ScoreCubeHigh)
     );
     // A button
     m_partner_controller.a().onTrue(
@@ -150,7 +150,7 @@ public class RobotContainer {
       //     new WristThenArmSequenceCommand(m_arm, SuperStructurePosition.ScoreConeMid),
       //     () -> m_arm.isBackwardMovement(SuperStructurePosition.ScoreConeMid)
       // )
-      new WristThenArmSequenceCommandTest(m_arm, m_wrist, SuperStructurePosition.ScoreConeMid)
+      new WristThenArmSequenceCommandTest(m_arm, m_wrist, ArmSuperStructurePosition.ScoreConeMid)
   );
     // B button
     // m_partner_controller.b().onTrue(
@@ -163,13 +163,13 @@ public class RobotContainer {
     );
     // D-pad up
     m_partner_controller.povUp().onTrue(
-      new MoveWristToPositionMM(m_arm, m_wrist, SuperStructurePosition.SubstationPickup)
+      new MoveWristToPositionMM(m_arm, m_wrist, ArmSuperStructurePosition.SubstationPickup)
       // m_arm.moveWristToPositionMM(SuperStructurePosition.SubstationPickup, () -> !(m_arm.isBackwardMovement(SuperStructurePosition.SubstationPickup)))
 
     );
     // D-pad left
     m_partner_controller.povLeft().onTrue(
-      new MoveWristToPositionMM(m_arm, m_wrist, SuperStructurePosition.ScoreLow)
+      new MoveWristToPositionMM(m_arm, m_wrist, ArmSuperStructurePosition.ScoreLow)
       // m_arm.moveWristToPositionMM(SuperStructurePosition.ScoreLow, () -> !(m_arm.isBackwardMovement(SuperStructurePosition.ScoreLow)))
 
     );
@@ -320,10 +320,10 @@ public class RobotContainer {
     armTestTab.add("Zero Wrist Encoder", m_wrist.setWristEncoderToZero()).withPosition(0, 2).withSize(2, 1);
     armTestTab.add("Zero Arm Encoder", m_arm.setArmEncoderToZero()).withPosition(2, 2).withSize(2, 1);
    
-    armTestTab.add("Cone Mid Test", new WristThenArmSequenceCommandTest(m_arm, m_wrist, SuperStructurePosition.ScoreConeMid)).withPosition(4, 3).withSize(2, 1);
-    armTestTab.add("Stow Test", new WristThenArmSequenceCommandTest(m_arm, m_wrist, SuperStructurePosition.Stowed)).withPosition(6, 3).withSize(2, 1);
-    armTestTab.add("Cube High Test", new WristThenArmSequenceCommandTest(m_arm, m_wrist, SuperStructurePosition.ScoreCubeHigh)).withPosition(8, 3).withSize(2, 1);
-    armTestTab.add("Ground Pickup", new ArmDriveToPositionPIDTest(m_arm, m_wrist, SuperStructurePosition.GroundPickup)).withPosition(0, 4);
+    armTestTab.add("Cone Mid Test", new WristThenArmSequenceCommandTest(m_arm, m_wrist, ArmSuperStructurePosition.ScoreConeMid)).withPosition(4, 3).withSize(2, 1);
+    armTestTab.add("Stow Test", new WristThenArmSequenceCommandTest(m_arm, m_wrist, ArmSuperStructurePosition.Stowed)).withPosition(6, 3).withSize(2, 1);
+    armTestTab.add("Cube High Test", new WristThenArmSequenceCommandTest(m_arm, m_wrist, ArmSuperStructurePosition.ScoreCubeHigh)).withPosition(8, 3).withSize(2, 1);
+    armTestTab.add("Ground Pickup", new ArmDriveToPositionPIDTest(m_arm, m_wrist, ArmSuperStructurePosition.GroundPickup)).withPosition(0, 4);
     armTestTab.add("Stow Arm Test", new StowArmManually(m_arm));
   }
 }

@@ -14,7 +14,7 @@ import frc.robot.subsystems.Wrist.Wrist;
 // public class WristThenArmSequenceCommand extends SequentialCommandGroup {
 public class WristThenArmSequenceCommand extends SequentialCommandGroup {
   /** Creates a new WristThenArmSequenceCommand. */
-  public WristThenArmSequenceCommand(Arm arm_sub, Wrist wrist, Arm.SuperStructurePosition position_req) {
+  public WristThenArmSequenceCommand(Arm arm_sub, Wrist wrist, Arm.ArmSuperStructurePosition position_req) {
     // Add your commands in the addCommands() call, e.g.
     // addCommands(new FooCommand(), new BarCommand());
     addCommands(

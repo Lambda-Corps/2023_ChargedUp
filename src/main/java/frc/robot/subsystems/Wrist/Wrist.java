@@ -32,8 +32,7 @@ import edu.wpi.first.networktables.StringPublisher;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.subsystems.Arm.Arm;
-import frc.robot.subsystems.Arm.Arm.SuperStructurePosition;
+
 
 public class Wrist extends SubsystemBase {
 
@@ -47,9 +46,9 @@ public class Wrist extends SubsystemBase {
   private WristState m_wrist_state;
   private WristControlMode m_wrist_control_mode;
   private WristTask wrist_task;
-  private SuperStructurePosition m_current_position, m_requested_position;
-  private HashMap<SuperStructurePosition, ArrayList<SuperStructurePosition>> m_illegal_transitions = new HashMap<SuperStructurePosition, ArrayList<SuperStructurePosition>>();
-  private ArrayList<SuperStructurePosition> stowed_illegal_transitions = new ArrayList<SuperStructurePosition>();
+  private WristSuperStructurePosition m_current_position, m_requested_position;
+  private HashMap<WristSuperStructurePosition, ArrayList<WristSuperStructurePosition>> m_illegal_transitions = new HashMap<WristSuperStructurePosition, ArrayList<WristSuperStructurePosition>>();
+  private ArrayList<WristSuperStructurePosition> stowed_illegal_transitions = new ArrayList<WristSuperStructurePosition>();
 
 
   public static enum WristState {
@@ -65,7 +64,7 @@ Manual,
 Automatic,
 }
 
-  public enum SuperStructurePosition {
+  public enum WristSuperStructurePosition {
     Stowed(WRIST_STOW){
       @Override
       public String toString() {
@@ -121,18 +120,18 @@ Automatic,
     }; // Default small values to make sure calculations won't fail
 
   private int wrist_position;
-  private ArrayList<SuperStructurePosition> m_illegal_transitions;
+  private ArrayList<WristSuperStructurePosition> m_illegal_transitions;
 
-  private SuperStructurePosition( int wrist_pos ) {
+  private WristSuperStructurePosition( int wrist_pos ) {
     wrist_position = wrist_pos;
 
-    m_illegal_transitions = new ArrayList<SuperStructurePosition>();
+    m_illegal_transitions = new ArrayList<WristSuperStructurePosition>();
   }
 
-  private SuperStructurePosition( int wrist_pos, SuperStructurePosition illegalPosition) {
+  private WristSuperStructurePosition( int wrist_pos, WristSuperStructurePosition illegalPosition) {
     wrist_position = wrist_pos;
 
-    m_illegal_transitions = new ArrayList<SuperStructurePosition>();
+    m_illegal_transitions = new ArrayList<WristSuperStructurePosition>();
     m_illegal_transitions.add(illegalPosition);
   }
 
@@ -278,20 +277,25 @@ Automatic,
     NetworkTable shuffleboard = NetworkTableInstance.getDefault().getTable("Shuffleboard").getSubTable("Arm Test");
     m_wrist_position = shuffleboard.getDoubleTopic("WristEncoder").publish();
     m_wrist_mm_error = shuffleboard.getDoubleTopic("Wrist Error").publish();
+    m_super_position = shuffleboard.getStringTopic("Super Position").publish();
 
-    m_current_position = SuperStructurePosition.Stowed;
-    m_requested_position = SuperStructurePosition.Stowed;
+    m_current_position = WristSuperStructurePosition.Stowed;
+    m_requested_position = WristSuperStructurePosition.Stowed;
 
-    stowed_illegal_transitions.add(SuperStructurePosition.GroundPickup);
+    stowed_illegal_transitions.add(WristSuperStructurePosition.GroundPickup);
     // ground_pickup_illegal_transitions.add(SuperStructurePosition.Stowed);
 
     // The HashMap that associates specific illegal transitions per each position
     // (as needed)
-    m_illegal_transitions.put(SuperStructurePosition.Stowed, stowed_illegal_transitions);
+    m_illegal_transitions.put(WristSuperStructurePosition.Stowed, stowed_illegal_transitions);
     // illegal_transitions.put(SuperStructurePosition.GroundPickup, ground_pickup_illegal_transitions);
 
     m_wrist_motor.selectProfileSlot(WRIST_HOLD_POSITION_SLOT, 0);
-    m_wrist_motor.set(ControlMode.Position, SuperStructurePosition.Stowed.wrist_position);
+    m_wrist_motor.set(ControlMode.Position, WristSuperStructurePosition.Stowed.wrist_position);
+
+    m_wrist_state = WristState.Holding;
+
+    
 
   }
 
@@ -302,8 +306,11 @@ Automatic,
   public TalonFX getWristMotor(TalonFX m_m_wrist_motor){
     m_m_wrist_motor = m_wrist_motor;
     return m_m_wrist_motor;
+
+
   }
 
+  
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
@@ -340,15 +347,15 @@ Automatic,
 
   }
 
-  public boolean isTransitionInvalid(SuperStructurePosition requestedPosition) {
+  public boolean isTransitionInvalid(WristSuperStructurePosition requestedPosition) {
     boolean isInvalid = false;
 
     // If the position is a known position, we can make a smart decision
-    if( m_current_position != SuperStructurePosition.Manual ){
+    if( m_current_position != WristSuperStructurePosition.Manual ){
       if( m_illegal_transitions.containsKey(m_current_position) ){
-        ArrayList<SuperStructurePosition> illegals = m_illegal_transitions.get(m_current_position);
+        ArrayList<WristSuperStructurePosition> illegals = m_illegal_transitions.get(m_current_position);
 
-        for( SuperStructurePosition pos : illegals ){
+        for( WristSuperStructurePosition pos : illegals ){
           if (requestedPosition == pos){
             // System.out.println("Invalid request: " + m_current_position + " to " + pos);
             isInvalid = true;
@@ -374,7 +381,7 @@ Automatic,
     m_current_position = m_requested_position;
   }
 
-  public void wrist_set_current_position( SuperStructurePosition position ){
+  public void wrist_set_current_position( WristSuperStructurePosition position ){
     m_current_position = position;
   }
 
@@ -524,7 +531,7 @@ public void holdWristPosition(){
 }
 
 public void set_current_position_to_manual() {
-  m_current_position = SuperStructurePosition.Manual;
+  m_current_position = WristSuperStructurePosition.Manual;
 }
 
 public void configure_wrist_motion_magic(int target_ticks, boolean isForward){
@@ -541,11 +548,11 @@ public void configure_wrist_motion_magic(int target_ticks, boolean isForward){
 }
 public void checkArmSuperState() {
   if(m_wrist_motor.getSelectedSensorPosition() <= 500){
-    m_current_position = SuperStructurePosition.Stowed;
+    m_current_position = WristSuperStructurePosition.Stowed;
   }
 }
 
-public boolean isBackwardMovement(SuperStructurePosition pos){
+public boolean isBackwardMovement(WristSuperStructurePosition pos){
   double wristPos = m_wrist_motor.getSelectedSensorPosition();
   return  !(wristPos < pos.wrist_position);
 }
@@ -595,7 +602,7 @@ public CommandBase stopArmAndWristCommand() {
       });
 }
 
-public CommandBase requestMoveSuperstructure(SuperStructurePosition position){
+public CommandBase requestMoveSuperstructure(WristSuperStructurePosition position){
   return runOnce(
     () -> {
       System.out.println("Moving Superposition to: " + position.toString());
@@ -622,7 +629,7 @@ public CommandBase configureWristMM(BooleanSupplier isForward){
     });
 }
 
-public CommandBase moveWristToPositionMM(SuperStructurePosition position, BooleanSupplier isForward){
+public CommandBase moveWristToPositionMM(WristSuperStructurePosition position, BooleanSupplier isForward){
   return run(
     () -> {
       if( isForward.getAsBoolean() ){

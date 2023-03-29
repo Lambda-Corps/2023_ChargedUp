@@ -5,15 +5,15 @@
 package frc.robot.subsystems.Arm;
 
 import edu.wpi.first.wpilibj2.command.InstantCommand;
-import frc.robot.subsystems.Arm.Arm.SuperStructurePosition;
+import frc.robot.subsystems.Arm.Arm.ArmSuperStructurePosition;
 
 // NOTE:  Consider using this command inline, rather than writing a subclass.  For more
 // information, see:
 // https://docs.wpilib.org/en/stable/docs/software/commandbased/convenience-features.html
 public class SetArmRequestedPosition extends InstantCommand {
   Arm m_arm;
-  SuperStructurePosition m_requested_position;
-  public SetArmRequestedPosition(Arm arm, SuperStructurePosition requested_position) {
+  ArmSuperStructurePosition m_requested_position;
+  public SetArmRequestedPosition(Arm arm, ArmSuperStructurePosition requested_position) {
     m_arm = arm;
     m_requested_position = requested_position;
 

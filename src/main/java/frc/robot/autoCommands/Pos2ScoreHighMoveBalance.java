@@ -12,7 +12,7 @@ import edu.wpi.first.wpilibj2.command.WaitCommand;
 import frc.robot.subsystems.Arm.Arm;
 import frc.robot.subsystems.Arm.StowArmManually;
 import frc.robot.subsystems.Arm.WristThenArmSequenceCommandTest;
-import frc.robot.subsystems.Arm.Arm.SuperStructurePosition;
+import frc.robot.subsystems.Arm.Arm.ArmSuperStructurePosition;
 import frc.robot.subsystems.DriveTrain.DriveTrain;
 import frc.robot.subsystems.DriveTrain.TurnToAngleWithGyroPID;
 import frc.robot.subsystems.Gripper.Gripper;
@@ -34,7 +34,7 @@ public class Pos2ScoreHighMoveBalance extends SequentialCommandGroup {
       // gripper.expandGripperCommand(),
       // // Stow the arm back in the robot
       // new StowSuperStructure(arm),
-      new WristThenArmSequenceCommandTest(arm, wrist, SuperStructurePosition.ScoreCubeHigh),
+      new WristThenArmSequenceCommandTest(arm, wrist, ArmSuperStructurePosition.ScoreCubeHigh),
       new ScoreCone(gripper),
       // gripper.JustexpandGripper(),
       new StowArmManually(arm),

@@ -5,13 +5,15 @@
 package frc.robot.subsystems.Arm;
 
 import edu.wpi.first.wpilibj2.command.CommandBase;
-import frc.robot.subsystems.Arm.Arm.SuperStructurePosition;
+import frc.robot.subsystems.Arm.Arm.ArmSuperStructurePosition;
 import frc.robot.subsystems.Wrist.Wrist;
+import frc.robot.subsystems.Wrist.Wrist.WristSuperStructurePosition;
 
 public class MoveWristToPositionMM extends CommandBase {
   Arm m_arm;
   Wrist m_wrist;
-  SuperStructurePosition m_position;
+  ArmSuperStructurePosition m_arm_position;
+  WristSuperStructurePosition m_wrist_position;
   int m_target_ticks;
 
   boolean m_done, m_direction_is_forward;
@@ -19,10 +21,10 @@ public class MoveWristToPositionMM extends CommandBase {
   int m_count;
 
   /** Creates a new MoveWristToPositionMM. */
-  public MoveWristToPositionMM(Arm arm, Wrist wrist, SuperStructurePosition position) {
+  public MoveWristToPositionMM(Arm arm, Wrist wrist, ArmSuperStructurePosition position) {
     m_arm = arm;
     m_wrist = wrist;
-    m_position = position;
+    m_arm_position = position;
 
     // Use addRequirements() here to declare subsystem dependencies.
     addRequirements(m_arm);
@@ -36,8 +38,8 @@ public class MoveWristToPositionMM extends CommandBase {
     m_half_second_limit_hit = 0;
 
     // m_target_ticks = (int)(m_target.getDouble(SuperStructurePosition.Stowed.getArmPosition()));
-    m_direction_is_forward = m_wrist.getSuperStructureWristPosition() < m_position.getWristPosition();
-    m_target_ticks = m_position.getWristPosition();
+    m_direction_is_forward = m_wrist.getSuperStructureWristPosition() < m_wrist_position.getWristPosition();
+    m_target_ticks = m_wrist_position.getWristPosition();
     m_wrist.configure_wrist_motion_magic(m_target_ticks, m_direction_is_forward);
 
     m_wrist.move_wrist_motion_magic(m_target_ticks, m_direction_is_forward);
@@ -68,7 +70,7 @@ public class MoveWristToPositionMM extends CommandBase {
   @Override
   public void end(boolean interrupted) {
     if( !interrupted ){
-      m_arm.set_current_position(m_position);
+      m_arm.set_current_position(m_arm_position);
       m_arm.holdArmPosition();
       m_wrist.holdWristPosition();
     }

@@ -8,10 +8,8 @@ import static frc.robot.Constants.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.function.BooleanSupplier;
 
 import com.ctre.phoenix.motorcontrol.ControlMode;
-import com.ctre.phoenix.motorcontrol.DemandType;
 import com.ctre.phoenix.motorcontrol.FeedbackDevice;
 import com.ctre.phoenix.motorcontrol.LimitSwitchNormal;
 import com.ctre.phoenix.motorcontrol.LimitSwitchSource;
@@ -42,10 +40,10 @@ public class Arm extends SubsystemBase {
 
   private ArmState m_arm_state;
   private ArmControlMode m_arm_control_mode;
-  private SuperStructurePosition m_current_position, m_requested_position;
+  private ArmSuperStructurePosition m_current_position, m_requested_position;
   private ArmTask arm_task;
-  private HashMap<SuperStructurePosition, ArrayList<SuperStructurePosition>> illegal_transitions = new HashMap<SuperStructurePosition, ArrayList<SuperStructurePosition>>();
-  private ArrayList<SuperStructurePosition> stowed_illegal_transitions = new ArrayList<SuperStructurePosition>();
+  private HashMap<ArmSuperStructurePosition, ArrayList<ArmSuperStructurePosition>> illegal_transitions = new HashMap<ArmSuperStructurePosition, ArrayList<ArmSuperStructurePosition>>();
+  private ArrayList<ArmSuperStructurePosition> stowed_illegal_transitions = new ArrayList<ArmSuperStructurePosition>();
   // private ArrayList<SuperStructurePosition> ground_pickup_illegal_transitions = new ArrayList<SuperStructurePosition>();
 
   public static enum ArmState {
@@ -61,7 +59,7 @@ public class Arm extends SubsystemBase {
     Automatic,
   }
 
-  public enum SuperStructurePosition {
+  public enum ArmSuperStructurePosition {
     Stowed(ARM_STOW){
       @Override
       public String toString() {
@@ -116,19 +114,19 @@ public class Arm extends SubsystemBase {
       }
     }; // Default small values to make sure calculations won't fail
 
-    private int arm_position, wrist_position;
-    private ArrayList<SuperStructurePosition> illegal_transitions;
+    private int arm_position;
+    private ArrayList<ArmSuperStructurePosition> illegal_transitions;
 
-    private SuperStructurePosition(int arm_pos) {
+    private ArmSuperStructurePosition(int arm_pos) {
       arm_position = arm_pos;
 
-      illegal_transitions = new ArrayList<SuperStructurePosition>();
+      illegal_transitions = new ArrayList<ArmSuperStructurePosition>();
     }
 
-    private SuperStructurePosition(int arm_pos, SuperStructurePosition illegalPosition) {
+    private ArmSuperStructurePosition(int arm_pos, ArmSuperStructurePosition illegalPosition) {
       arm_position = arm_pos;
 
-      illegal_transitions = new ArrayList<SuperStructurePosition>();
+      illegal_transitions = new ArrayList<ArmSuperStructurePosition>();
       illegal_transitions.add(illegalPosition);
     }
 
@@ -136,9 +134,7 @@ public class Arm extends SubsystemBase {
       return this.arm_position;
     }
 
-    public int getWristPosition(){
-      return this.wrist_position;
-    }
+
   }
 
   public enum ArmTask {
@@ -382,23 +378,23 @@ public class Arm extends SubsystemBase {
 
 
 
-    m_current_position = SuperStructurePosition.Stowed;
-    m_requested_position = SuperStructurePosition.Stowed;
+    m_current_position = ArmSuperStructurePosition.Stowed;
+    m_requested_position = ArmSuperStructurePosition.Stowed;
 
     // puts the illegal transitions into an arraylist to use in our HashMap
-    stowed_illegal_transitions.add(SuperStructurePosition.GroundPickup);
+    stowed_illegal_transitions.add(ArmSuperStructurePosition.GroundPickup);
     // ground_pickup_illegal_transitions.add(SuperStructurePosition.Stowed);
 
     // The HashMap that associates specific illegal transitions per each position
     // (as needed)
-    illegal_transitions.put(SuperStructurePosition.Stowed, stowed_illegal_transitions);
+    illegal_transitions.put(ArmSuperStructurePosition.Stowed, stowed_illegal_transitions);
     // illegal_transitions.put(SuperStructurePosition.GroundPickup, ground_pickup_illegal_transitions);
 
     // Set the motors to hold their initial positions stowed to try and minimize
     // slop until we
     // deliberately move them.
     m_arm_motor.selectProfileSlot(ARM_HOLD_POSITION_SLOT, 0);
-    m_arm_motor.set(ControlMode.Position, SuperStructurePosition.Stowed.arm_position);
+    m_arm_motor.set(ControlMode.Position, ArmSuperStructurePosition.Stowed.arm_position);
 
 
     m_arm_state = ArmState.Holding;
@@ -443,15 +439,15 @@ public class Arm extends SubsystemBase {
   // =======================================
   public void checkArmSuperState() {
     if( m_arm_motor.getSelectedSensorPosition() <= 500){
-      m_current_position = SuperStructurePosition.Stowed;
+      m_current_position = ArmSuperStructurePosition.Stowed;
     }
   }
 
-  public void requestArmMove(SuperStructurePosition requested_position) {
+  public void requestArmMove(ArmSuperStructurePosition requested_position) {
     m_requested_position = requested_position;
   }
 
-  public SuperStructurePosition getArmCurrentState() {
+  public ArmSuperStructurePosition getArmCurrentState() {
     return m_current_position;
   }
 
@@ -468,15 +464,15 @@ public class Arm extends SubsystemBase {
     return isAtPosition;
   }
 
-  public boolean isTransitionInvalid(SuperStructurePosition requestedPosition) {
+  public boolean isTransitionInvalid(ArmSuperStructurePosition requestedPosition) {
     boolean isInvalid = false;
 
     // If the position is a known position, we can make a smart decision
-    if( m_current_position != SuperStructurePosition.Manual ){
+    if( m_current_position != ArmSuperStructurePosition.Manual ){
       if( illegal_transitions.containsKey(m_current_position) ){
-        ArrayList<SuperStructurePosition> illegals = illegal_transitions.get(m_current_position);
+        ArrayList<ArmSuperStructurePosition> illegals = illegal_transitions.get(m_current_position);
 
-        for( SuperStructurePosition pos : illegals ){
+        for( ArmSuperStructurePosition pos : illegals ){
           if (requestedPosition == pos){
             // System.out.println("Invalid request: " + m_current_position + " to " + pos);
             isInvalid = true;
@@ -498,7 +494,7 @@ public class Arm extends SubsystemBase {
     m_current_position = m_requested_position;
   }
 
-  public void set_current_position( SuperStructurePosition position ){
+  public void set_current_position( ArmSuperStructurePosition position ){
     m_current_position = position;
   }
   // ======================================================================================================
@@ -683,11 +679,11 @@ public class Arm extends SubsystemBase {
   }
 
   public void set_current_position_to_manual() {
-    m_current_position = SuperStructurePosition.Manual;
+    m_current_position = ArmSuperStructurePosition.Manual;
   }
 
 
-  public boolean isBackwardMovement(SuperStructurePosition pos){
+  public boolean isBackwardMovement(ArmSuperStructurePosition pos){
     double armPos = m_arm_motor.getSelectedSensorPosition();
     return  !(armPos < pos.arm_position);
   }
@@ -739,7 +735,7 @@ public class Arm extends SubsystemBase {
         });
   }
 
-  public CommandBase requestMoveSuperstructure(SuperStructurePosition position){
+  public CommandBase requestMoveSuperstructure(ArmSuperStructurePosition position){
     return runOnce(
       () -> {
         System.out.println("Moving Superposition to: " + position.toString());

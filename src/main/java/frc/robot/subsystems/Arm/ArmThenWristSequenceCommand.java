@@ -6,7 +6,7 @@ package frc.robot.subsystems.Arm;
 
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import frc.robot.subsystems.Arm.Arm.ArmState;
-import frc.robot.subsystems.Arm.Arm.SuperStructurePosition;
+import frc.robot.subsystems.Arm.Arm.ArmSuperStructurePosition;
 import frc.robot.subsystems.Wrist.Wrist;
 
 // NOTE:  Consider using this command inline, rather than writing a subclass.  For more
@@ -14,7 +14,7 @@ import frc.robot.subsystems.Wrist.Wrist;
 // https://docs.wpilib.org/en/stable/docs/software/commandbased/convenience-features.html
 public class ArmThenWristSequenceCommand extends SequentialCommandGroup {
   /** Creates a new ArmThenWristSequenceCommand. */
-  public ArmThenWristSequenceCommand(Arm arm, Wrist wrist, SuperStructurePosition position) {
+  public ArmThenWristSequenceCommand(Arm arm, Wrist wrist, ArmSuperStructurePosition position) {
     // Add your commands in the addCommands() call, e.g.
     // addCommands(new FooCommand(), new BarCommand());
     addCommands(

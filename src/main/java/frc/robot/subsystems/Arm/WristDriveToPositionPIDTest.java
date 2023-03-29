@@ -9,13 +9,16 @@ import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import frc.robot.subsystems.Arm.Arm.ArmState;
-import frc.robot.subsystems.Arm.Arm.SuperStructurePosition;
+import frc.robot.subsystems.Arm.Arm.ArmSuperStructurePosition;
 import frc.robot.subsystems.Wrist.Wrist;
+import frc.robot.subsystems.Wrist.Wrist.WristState;
+import frc.robot.subsystems.Wrist.Wrist.WristSuperStructurePosition;
 
 public class WristDriveToPositionPIDTest extends CommandBase {
   Arm m_arm;
   Wrist m_wrist;
-  SuperStructurePosition m_position;
+  ArmSuperStructurePosition m_arm_position;
+  WristSuperStructurePosition m_wrist_position;
   int m_target_ticks, m_half_second_limit_hit;
 
   boolean m_done, m_is_forward_movement;
@@ -23,10 +26,11 @@ public class WristDriveToPositionPIDTest extends CommandBase {
 
   NetworkTableEntry m_kPEntry, m_kFEntry, m_time_to_velo, m_target_velocity, m_target;
   /** Creates a new DriveToPosition. */
-  public WristDriveToPositionPIDTest(Arm arm, Wrist wrist, SuperStructurePosition position) {
+  public WristDriveToPositionPIDTest(Arm arm, Wrist wrist, ArmSuperStructurePosition armposition, WristSuperStructurePosition wristposition) {
     m_arm = arm;
     m_wrist = wrist;
-    m_position = position;
+    m_arm_position = armposition;
+    m_wrist_position = wristposition;
     
     addRequirements(m_arm);
     // Use addRequirements() here to declare subsystem dependencies.
@@ -44,9 +48,9 @@ public class WristDriveToPositionPIDTest extends CommandBase {
     m_done = false;
     m_count = 0;
     m_half_second_limit_hit = 0;
-    m_is_forward_movement = m_wrist.getSuperStructureWristPosition() < m_position.getWristPosition();
+    m_is_forward_movement = m_wrist.getSuperStructureWristPosition() < m_wrist_position.getWristPosition();
     // m_target_ticks = (int)(m_target.getDouble(SuperStructurePosition.Stowed.getArmPosition()));
-    m_target_ticks = m_position.getWristPosition();
+    m_target_ticks = m_wrist_position.getWristPosition();
     m_wrist.configure_wrist_motion_magic_test(m_target_velocity.getDouble(10000), 
                                             1, 
                                             m_kPEntry.getDouble(1.6), 
@@ -81,7 +85,7 @@ public class WristDriveToPositionPIDTest extends CommandBase {
   @Override
   public void end(boolean interrupted) {
     if( !interrupted ){
-      m_arm.set_current_position(m_position);
+      m_arm.set_current_position(m_arm_position);
       m_arm.holdArmPosition();
       m_wrist.holdWristPosition();
       m_arm.set_state(ArmState.Holding);
