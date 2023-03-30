@@ -434,7 +434,7 @@ Automatic,
     return wrist_task;
   }
 
-  public void drive_manually(double arm_speed, double wrist_speed) {
+  public void drive_manually(double wrist_speed) {
     // m_arm_state = ArmState.Moving;
     wrist_speed = MathUtil.applyDeadband(wrist_speed, .01);
     wrist_speed = MathUtil.clamp(wrist_speed, WRIST_REVERSE_SPEED, WRIST_FORWARD_SPEED);
@@ -497,7 +497,6 @@ Automatic,
   }else {
     m_wrist_motor.set(ControlMode.MotionMagic, target_in_ticks);
   }
-  // m_wrist_motor.set(ControlMode.MotionMagic, target_in_ticks);
 }
 
 private double getWristArbFF(){
@@ -534,6 +533,10 @@ public void set_current_position_to_manual() {
   m_current_position = WristSuperStructurePosition.Manual;
 }
 
+public void set_current_position( WristSuperStructurePosition position ){
+  m_current_position = position;
+}
+
 public void configure_wrist_motion_magic(int target_ticks, boolean isForward){
   if( isForward ){
     m_wrist_motor.selectProfileSlot(WRIST_MM_FORWARD_SLOT, PID_PRIMARY);
@@ -546,7 +549,7 @@ public void configure_wrist_motion_magic(int target_ticks, boolean isForward){
     m_wrist_motor.configMotionAcceleration(WRIST_MM_REVERSE_ACCELERATION); 
   }
 }
-public void checkArmSuperState() {
+public void checkWristSuperState() {
   if(m_wrist_motor.getSelectedSensorPosition() <= 500){
     m_current_position = WristSuperStructurePosition.Stowed;
   }

@@ -6,16 +6,19 @@ package frc.robot.subsystems.Arm;
 
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import frc.robot.subsystems.Wrist.Wrist;
 
 import static frc.robot.Constants.*;
 
 public class DriveArmManually extends CommandBase {
   private final Arm m_arm;
+  private final Wrist m_wrist;
   private final CommandXboxController m_partner_controller;
 
   /** Creates a new DriveArmManually. */
-  public DriveArmManually(Arm arm, CommandXboxController xbox) {
+  public DriveArmManually(Arm arm, Wrist wrist, CommandXboxController xbox) {
     m_arm = arm;
+    m_wrist = wrist;
     m_partner_controller = xbox;
 
     // Use addRequirements() here to declare subsystem dependencies.
@@ -26,6 +29,7 @@ public class DriveArmManually extends CommandBase {
   @Override
   public void initialize() {
     m_arm.set_current_position_to_manual();
+    m_wrist.set_current_position_to_manual();
   }
 
   // Called every time the scheduler runs while the command is scheduled.
@@ -35,13 +39,15 @@ public class DriveArmManually extends CommandBase {
     arm = m_partner_controller.getRawAxis(PARTNER_LEFT_AXIS);
     wrist = -m_partner_controller.getRawAxis(PARTNER_RIGHT_AXIS);
 
-    m_arm.drive_manually(arm, wrist);
+    m_arm.drive_manually(arm);
+    m_wrist.drive_manually(wrist);
   }
 
   // Called once the command ends or is interrupted.
   @Override
   public void end(boolean interrupted) {
-    m_arm.drive_manually(0, 0);
+    m_arm.drive_manually(0);
+    m_wrist.drive_manually(0);
     m_arm.set_state_to_inactive();
   }
 

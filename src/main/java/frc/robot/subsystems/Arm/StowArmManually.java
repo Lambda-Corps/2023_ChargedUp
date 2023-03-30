@@ -5,15 +5,18 @@
 package frc.robot.subsystems.Arm;
 
 import edu.wpi.first.wpilibj2.command.CommandBase;
+import frc.robot.subsystems.Wrist.Wrist;
 
 
 public class StowArmManually extends CommandBase {
   private Arm m_arm;
+  private Wrist m_wrist;
   private double armDriveSpeed;
   private boolean is_done;
   /** Creates a new GroundPickupArmDriveManually. */
-  public StowArmManually(Arm arm) {
+  public StowArmManually(Arm arm, Wrist wrist) {
     m_arm = arm;
+    m_wrist = wrist;
     armDriveSpeed = m_arm.ARM_REVERSE_SPEED;
 
     // Use addRequirements() here to declare subsystem dependencies.
@@ -28,9 +31,11 @@ public class StowArmManually extends CommandBase {
   public void execute() {
     is_done = m_arm.getArmReverseLimit();
     if(m_arm.getArmReverseLimit() == true){
-      m_arm.drive_manually(armDriveSpeed,0);
+      m_arm.drive_manually(armDriveSpeed);
+      m_wrist.drive_manually(0);
     }else if (m_arm.getArmReverseLimit() == false){
-      m_arm.drive_manually(0, 0);
+      m_arm.drive_manually(0);
+      m_wrist.drive_manually(0);
     }
   }
 

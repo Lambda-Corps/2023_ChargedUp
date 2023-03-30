@@ -14,13 +14,13 @@ import frc.robot.subsystems.Wrist.Wrist;
 // public class WristThenArmSequenceCommand extends SequentialCommandGroup {
 public class WristThenArmSequenceCommand extends SequentialCommandGroup {
   /** Creates a new WristThenArmSequenceCommand. */
-  public WristThenArmSequenceCommand(Arm arm_sub, Wrist wrist, Arm.ArmSuperStructurePosition position_req) {
+  public WristThenArmSequenceCommand(Arm arm_sub, Wrist wrist, Arm.ArmSuperStructurePosition arm_position_req, Wrist.WristSuperStructurePosition wrist_postion_req) {
     // Add your commands in the addCommands() call, e.g.
     // addCommands(new FooCommand(), new BarCommand());
     addCommands(
       arm_sub.set_state(ArmState.Moving),
-      new MoveWristToPositionMM(arm_sub, wrist, position_req),
-      new MoveArmToPositionMM(arm_sub, wrist, position_req),
+      new MoveWristToPositionMM(arm_sub, wrist, arm_position_req, wrist_postion_req),
+      new MoveArmToPositionMM(arm_sub, wrist, arm_position_req, wrist_postion_req),
       arm_sub.set_state(ArmState.Holding)
     );
   }

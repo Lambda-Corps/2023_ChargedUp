@@ -35,7 +35,7 @@ public class Arm extends SubsystemBase {
   public WPI_TalonFX m_arm_motor;
   DigitalInput m_arm_forward_limit;
   DigitalInput m_arm_reverse_limit;
-  DoublePublisher m_arm_position, m_wrist_position, m_wrist_motor_rev, m_arm_motor_rev, m_arm_mm_error, m_wrist_mm_error;
+  DoublePublisher m_arm_position, m_wrist_position, m_arm_motor_rev, m_arm_mm_error;
   StringPublisher m_super_position;
 
   private ArmState m_arm_state;
@@ -148,37 +148,22 @@ public class Arm extends SubsystemBase {
   // Constant values for ARM movement, must be researched and tuned via tuner
   final double ARM_FORWARD_SPEED = .2;
   final double ARM_REVERSE_SPEED = -.2;
-  final double WRIST_FORWARD_SPEED = .3;
-  final double WRIST_REVERSE_SPEED = -.15;
-  final double WRIST_FORWARD_COSINE_FF = .15; // When arm is horizontal, calculation should be 1 * .07
-  // We're trying to calculate a feed forward based on the cosine of the wrist angle (when wrist is horizontal,
-  // at 90 degrees, the cosine should return 1.  Our wrist starts offset at 21 degrees relative to vertical, so
-  // we want the resulting calculation to be cos(69) = 1
-  final double WRIST_COSINE_STARTING_OFFSET = 21;
+ 
   final double ARM_GEAR_RATIO = 4 * 4 * 4 * (2/1);
-  final double WRIST_GEAR_RATIO = 7 * 4 * (64/24);
-  final int WRIST_REVERSE_SOFT_LIMIT = -500;
-  final int WRIST_FORWARD_SOFT_LIMIT = 43000;
   final int ARM_REVERSE_SOFT_LIMIT = 0;
   final int ARM_FORWARD_SOFT_LIMIT = 93000;
   final int SAFE__MOVE_WRIST_POSITION = 3000; // Puts the wrist up at 11 degrees
   // final int ARM_FORWARD_SOFT_LIMIT = (int)(2048 * ARM_GEAR_RATIO * 1/6); // 60
   // degrees rotation
-  final double WRIST_MAX_STATOR_CURRENT = 50;
-  final double WRIST_STATOR_CURRENT_TRIGGER = 100;
   final double ARM_MAX_STATOR_CURRENT = 40;
   final double ARM_STATOR_CURRENT_TRIGGER = 100;
   final int ARM_MM_SLOT = 0;
   final int ARM_HOLD_POSITION_SLOT = 2;
-  final int WRIST_MM_FORWARD_SLOT = 0;
-  final int WRIST_MM_REVERSE_SLOT = 1;
-  final int WRIST_HOLD_POSITION_SLOT = 2;
 
 
 
   // The wrist travels 90 degrees total, for manual steps try to go 3 degrees at a
   // time
-  final int WRIST_POSITION_STEP = (int) (WRIST_FORWARD_SOFT_LIMIT / 30);
   // The arm travels 46 degrees total, for manual steps try one degree at a time
   final int ARM_POSITION_STEP = (int) (ARM_FORWARD_SOFT_LIMIT / 23);
 
@@ -199,41 +184,25 @@ public class Arm extends SubsystemBase {
   final double ARM_HOLD_POSITION_KI = 0;
   final double ARM_HOLD_POSITION_KD = 15;
   final double ARM_HOLD_POSITION_KF = 0;
-  final double WRIST_MM_FORWARD_KP = 1.6;
-  final double WRIST_MM_FORWARD_KI = 0;
-  final double WRIST_MM_FORWARD_KD = 0;
-  final double WRIST_MM_FORWARD_KF = .17;// tuned manually
-  final int WRIST_MM_FORWARD_VELOCITY = 10000;
-  final int WRIST_MM_FORWARD_ACCELERATION = 10000; // 1 second to full velocity
-  final double WRIST_MM_REVERSE_KP = .075;
-  final double WRIST_MM_REVERSE_KI = 0;
-  final double WRIST_MM_REVERSE_KD = 0;
-  final double WRIST_MM_REVERSE_KF = 0.058; // (-.4 * 1023) / -7000
-  final int WRIST_MM_REVERSE_VELOCITY = 6000;
-  final int WRIST_MM_REVERSE_ACCELERATION = (int)(WRIST_MM_REVERSE_VELOCITY / 1); // 1 second to full velocity
-  final double WRIST_HOLD_POSITION_KP = (WRIST_FORWARD_SPEED * 1023) / 512; // Tuned manually (ARM_FORWARD_SPEED * 1023) / 2048;
-  final double WRIST_HOLD_POSITION_KI = 0;
-  final double WRIST_HOLD_POSITION_KD = 0;
-  final double WRIST_HOLD_POSITION_KF = 0;
   // Encoder Measurements for the relevant scoring positions
   final static int ARM_STOW = 0;
-  final static int WRIST_STOW = 0;
+ // final static int WRIST_STOW = 0;
   final static int ARM_GROUND_PICKUP = 12000;
-  final static int WRIST_GROUND_PICKUP = 0;
+  //final static int WRIST_GROUND_PICKUP = 0;
   final static int ARM_SUBSTATION = 0;
-  final static int WRIST_SUBSTATION = 28500;
+ // final static int WRIST_SUBSTATION = 28500;
   final static int ARM_SCORE_LOW = 0;
-  final static int WRIST_SCORE_LOW = 4000;
+ // final static int WRIST_SCORE_LOW = 4000;
   final static int ARM_CONE_MID =  7000;
-  final static int WRIST_CONE_MID = 27500;
+ // final static int WRIST_CONE_MID = 27500;
   final static int ARM_CONE_HIGH = 0;
-  final static int WRIST_CONE_HIGH = 0;
+ // final static int WRIST_CONE_HIGH = 0;
   final static int ARM_CUBE_HIGH = 8000;
-  final static int WRIST_CUBE_HIGH = 32000;
+ // final static int WRIST_CUBE_HIGH = 32000;
   final static int ARM_CUBE_MID = 0;
-  final static int WRIST_CUBE_MID = 23500;
+ // final static int WRIST_CUBE_MID = 23500;
   final static int ARM_POSITION_TOLERANCE = 250;
-  final static int WRIST_POSITION_TOLERANCE = 250;
+ // final static int WRIST_POSITION_TOLERANCE = 250;
   final int PID_PRIMARY = 0;
 
   /** Creates a new Arm. */
@@ -269,34 +238,7 @@ public class Arm extends SubsystemBase {
     arm_config.slot2 = arm_hold_config;
   
 
-    SlotConfiguration wrist_mm_forward = wrist_config.slot0;
-    wrist_mm_forward.allowableClosedloopError = 10;
-    wrist_mm_forward.closedLoopPeakOutput = .3;
-    wrist_mm_forward.closedLoopPeriod = 1;
-    wrist_mm_forward.kP = WRIST_MM_FORWARD_KP;
-    wrist_mm_forward.kI = WRIST_MM_FORWARD_KI;
-    wrist_mm_forward.kD = WRIST_MM_FORWARD_KD;
-    wrist_mm_forward.kF = WRIST_MM_FORWARD_KF;
-    wrist_config.slot0 = wrist_mm_forward;
-
-    SlotConfiguration wrist_mm_reverse = wrist_config.slot1;
-    wrist_mm_reverse.allowableClosedloopError = 10;
-    wrist_mm_reverse.closedLoopPeakOutput = .15;
-    wrist_mm_reverse.closedLoopPeriod = 1;
-    wrist_mm_reverse.kP = WRIST_MM_REVERSE_KP;
-    wrist_mm_reverse.kI = WRIST_MM_REVERSE_KI;
-    wrist_mm_reverse.kD = WRIST_MM_REVERSE_KD;
-    wrist_mm_reverse.kF = WRIST_MM_REVERSE_KF;
-    wrist_config.slot1 = wrist_mm_reverse;
-
-    SlotConfiguration wrist_hold_config = wrist_config.slot2;
-    wrist_hold_config.allowableClosedloopError = 10;
-    wrist_hold_config.closedLoopPeriod = 1;
-    wrist_hold_config.kP = WRIST_HOLD_POSITION_KP;
-    wrist_hold_config.kI = WRIST_HOLD_POSITION_KI;
-    wrist_hold_config.kD = WRIST_HOLD_POSITION_KD;
-    wrist_hold_config.kF = WRIST_HOLD_POSITION_KF;
-    wrist_config.slot2 = wrist_hold_config;
+   
 
     // Setup the ARM stage motor
     m_arm_motor.configSelectedFeedbackSensor(TalonFXFeedbackDevice.IntegratedSensor, ARM_MM_SLOT, 0);
@@ -335,16 +277,6 @@ public class Arm extends SubsystemBase {
     m_arm_motor.setNeutralMode(NeutralMode.Brake);
 
     // Configure the Wrist motor
-  
-
-    // Configure limit switches
-    wrist_config.reverseLimitSwitchNormal = LimitSwitchNormal.NormallyOpen;
-    wrist_config.forwardLimitSwitchNormal = LimitSwitchNormal.NormallyOpen;
-    wrist_config.reverseSoftLimitEnable = true;
-    wrist_config.forwardSoftLimitEnable = true;
-    wrist_config.reverseSoftLimitThreshold = WRIST_REVERSE_SOFT_LIMIT;
-    wrist_config.forwardSoftLimitThreshold = WRIST_FORWARD_SOFT_LIMIT;
-    wrist_config.clearPositionOnLimitR = true;
 
     // // Set current limits for the Wrist
     // stator_limit = wrist_config.statorCurrLimit;
@@ -353,13 +285,6 @@ public class Arm extends SubsystemBase {
     // stator_limit.triggerThresholdCurrent = WRIST_STATOR_CURRENT_TRIGGER;
     // stator_limit.triggerThresholdTime = .001;
     // wrist_config.statorCurrLimit = stator_limit;
-
-    // Set max speeds for output
-    wrist_config.peakOutputForward = .3;
-    wrist_config.peakOutputReverse = -.15;
-    wrist_config.openloopRamp = .4;
-    wrist_config.closedloopRamp = .3;
-
 
     // Top and bottom arm limit switches, these DIOs are for the LEDs to light up
     // when the limits are hit
@@ -370,10 +295,8 @@ public class Arm extends SubsystemBase {
     // Setup the network tables publishers to push data to the dashboard
     NetworkTable shuffleboard = NetworkTableInstance.getDefault().getTable("Shuffleboard").getSubTable("Arm Test");
     m_arm_position = shuffleboard.getDoubleTopic("ArmEncoder").publish();
-    m_wrist_position = shuffleboard.getDoubleTopic("WristEncoder").publish();
 
     m_arm_mm_error = shuffleboard.getDoubleTopic("Arm Error").publish();
-    m_wrist_mm_error = shuffleboard.getDoubleTopic("Wrist Error").publish();
     m_super_position = shuffleboard.getStringTopic("Super Position").publish();
 
 
@@ -574,12 +497,10 @@ public class Arm extends SubsystemBase {
     return m_arm_reverse_limit.get();
   }
 
-  public void drive_manually(double arm_speed, double wrist_speed) {
+  public void drive_manually(double arm_speed) {
     // m_arm_state = ArmState.Moving;
-    wrist_speed = MathUtil.applyDeadband(wrist_speed, .01);
     arm_speed = MathUtil.applyDeadband(arm_speed, .01);
 
-    wrist_speed = MathUtil.clamp(wrist_speed, WRIST_REVERSE_SPEED, WRIST_FORWARD_SPEED);
     arm_speed = MathUtil.clamp(arm_speed, ARM_REVERSE_SPEED, ARM_FORWARD_SPEED);
 
     // System.out.println("Arm Speed: " + arm_speed);
@@ -608,20 +529,6 @@ public class Arm extends SubsystemBase {
    */
   public double degreesToFalconARM(double degrees) {
       return degrees / (360.0 / (ARM_GEAR_RATIO * 2048.0));
-  }
-
-  /**
-   * Convert encoder ticks to degrees for the arm
-   */
-  public double wristToDegrees(double positionCounts) {
-    return positionCounts * (360.0 / (WRIST_GEAR_RATIO * 2048.0));
-  }
-
-  /**
-   * 
-   */
-  public double degreesToFalconWrist(double degrees) {
-      return degrees / (360.0 / (WRIST_GEAR_RATIO * 2048.0));
   }
 
     // If we're within 10 ticks we feel good

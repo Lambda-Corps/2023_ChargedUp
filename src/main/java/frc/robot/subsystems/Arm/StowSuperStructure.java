@@ -8,6 +8,7 @@ import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import frc.robot.subsystems.Arm.Arm.ArmState;
 import frc.robot.subsystems.Arm.Arm.ArmSuperStructurePosition;
 import frc.robot.subsystems.Wrist.Wrist;
+import frc.robot.subsystems.Wrist.Wrist.WristSuperStructurePosition;
 
 // NOTE:  Consider using this command inline, rather than writing a subclass.  For more
 // information, see:
@@ -19,7 +20,7 @@ public class StowSuperStructure extends SequentialCommandGroup {
     // addCommands(new FooCommand(), new BarCommand());
     addCommands(
       arm.set_state(ArmState.Moving),
-      new MoveArmToPositionMM(arm, wrist, ArmSuperStructurePosition.Stowed).withTimeout(2),
+      new MoveArmToPositionMM(arm, wrist, ArmSuperStructurePosition.Stowed, WristSuperStructurePosition.Stowed).withTimeout(2),
       arm.set_state(ArmState.Stowed)
     );
   }

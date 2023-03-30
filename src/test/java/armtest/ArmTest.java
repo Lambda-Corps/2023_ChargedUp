@@ -91,7 +91,8 @@ public class ArmTest {
         double busV = 12;
         sim_bottom_limit.setValue(false);
         sim_upper_limit.setValue(false);
-        m_arm.drive_manually(upper_speed, lower_speed);
+        m_arm.drive_manually(upper_speed);
+        m_wrist.drive_manually(lower_speed);
 
         var lower_sim = m_bottom_motor.getSimCollection();
         var upper_sim = m_upper_motor.getSimCollection();

@@ -5,16 +5,24 @@
 package frc.robot.subsystems.Arm;
 
 import edu.wpi.first.wpilibj2.command.CommandBase;
+import frc.robot.subsystems.Wrist.Wrist;
 
 public class ArmResetPositon extends CommandBase {
+  Arm m_arm;
+  Wrist m_wrist;
   /** Creates a new ArmResetPositon. */
-  public ArmResetPositon() {
+  public ArmResetPositon(Arm arm, Wrist wrist) {
+    m_arm = arm;
+    m_wrist = wrist;
     // Use addRequirements() here to declare subsystem dependencies.
   }
 
   // Called when the command is initially scheduled.
   @Override
-  public void initialize() {}
+  public void initialize() {
+    m_arm.setArmEncoderToZero();
+    m_wrist.setWristEncoderToZero();
+  }
 
   // Called every time the scheduler runs while the command is scheduled.
   @Override

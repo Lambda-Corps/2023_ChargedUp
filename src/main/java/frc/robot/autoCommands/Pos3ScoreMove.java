@@ -26,10 +26,10 @@ public class Pos3ScoreMove extends SequentialCommandGroup {
     // Add your commands in the addCommands() call, e.g.
     // addCommands(new FooCommand(), new BarCommand());
     addCommands(
-      new WristThenArmSequenceCommandTest(arm, wrist, ArmSuperStructurePosition.ScoreConeMid).raceWith(new WaitCommand(4)),
+      new WristThenArmSequenceCommandTest(arm, wrist, ArmSuperStructurePosition.ScoreConeMid, WristSuperStructurePosition.ScoreConeMid).raceWith(new WaitCommand(4)),
       new WaitCommand(0.3),
       gripper.expandGripperCommand(),
-      new StowArmManually(arm),
+      new StowArmManually(arm, wrist),
       new WristDriveToPositionPIDTest(arm, wrist, ArmSuperStructurePosition.Stowed, WristSuperStructurePosition.Stowed).raceWith(new WaitCommand(3)),
       new DriveMotionMagic(dt, -148)
     );

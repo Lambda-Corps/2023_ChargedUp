@@ -18,6 +18,7 @@ import frc.robot.subsystems.DriveTrain.TurnToAngleWithGyroPID;
 import frc.robot.subsystems.Gripper.Gripper;
 import frc.robot.subsystems.Gripper.ScoreCone;
 import frc.robot.subsystems.Wrist.Wrist;
+import frc.robot.subsystems.Wrist.Wrist.WristSuperStructurePosition;
 
 // NOTE:  Consider using this command inline, rather than writing a subclass.  For more
 // information, see:
@@ -34,10 +35,10 @@ public class Pos2ScoreHighMoveBalance extends SequentialCommandGroup {
       // gripper.expandGripperCommand(),
       // // Stow the arm back in the robot
       // new StowSuperStructure(arm),
-      new WristThenArmSequenceCommandTest(arm, wrist, ArmSuperStructurePosition.ScoreCubeHigh),
+      new WristThenArmSequenceCommandTest(arm, wrist, ArmSuperStructurePosition.ScoreCubeHigh, WristSuperStructurePosition.ScoreConeHigh),
       new ScoreCone(gripper),
       // gripper.JustexpandGripper(),
-      new StowArmManually(arm),
+      new StowArmManually(arm, wrist),
       new DriveMotionMagic(dt, -6),
       new TurnToAngleWithGyroPID(dt, 180),
       //Drive Back 100 inches 

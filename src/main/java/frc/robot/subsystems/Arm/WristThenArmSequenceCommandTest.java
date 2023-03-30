@@ -14,13 +14,13 @@ import frc.robot.subsystems.Wrist.Wrist.WristSuperStructurePosition;
 // https://docs.wpilib.org/en/stable/docs/software/commandbased/convenience-features.html
 public class WristThenArmSequenceCommandTest extends SequentialCommandGroup {
   /** Creates a new WristThenArmSequenceCommand. */
-  public WristThenArmSequenceCommandTest(Arm arm_sub, Wrist wrist, Arm.ArmSuperStructurePosition position_req) {
+  public WristThenArmSequenceCommandTest(Arm arm_sub, Wrist wrist, Arm.ArmSuperStructurePosition arm_position_req, Wrist.WristSuperStructurePosition wrist_postion_req) {
     // Add your commands in the addCommands() call, e.g.
     // addCommands(new FooCommand(), new BarCommand());
     addCommands(
       arm_sub.set_state(ArmState.Moving),
-      new WristDriveToPositionPIDTest(arm_sub, wrist, position_req, WristSuperStructurePosition.Manual),
-      new ArmDriveToPositionPIDTest(arm_sub, wrist, position_req),
+      new WristDriveToPositionPIDTest(arm_sub, wrist, arm_position_req, WristSuperStructurePosition.Manual),
+      new ArmDriveToPositionPIDTest(arm_sub, wrist, arm_position_req, wrist_postion_req),
       arm_sub.set_state(ArmState.Holding)
     );
   }
