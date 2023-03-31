@@ -28,6 +28,6 @@ public class Pos1ScoreMovePickupPiece extends SequentialCommandGroup {
     );
   }
 
-  private void addCommands(ScoreCone scoreCone, DriveMotionMagic driveMotionMagic) {
-  }
+  // private void addCommands(ScoreCone scoreCone, DriveMotionMagic driveMotionMagic) {
+  // }
 }
