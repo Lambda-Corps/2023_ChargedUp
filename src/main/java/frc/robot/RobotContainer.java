@@ -43,6 +43,7 @@ import frc.robot.subsystems.Gripper.RunMotorsForward;
 import frc.robot.subsystems.LEDs.LED;
 import frc.robot.subsystems.LEDs.SetLEDs;
 import frc.robot.subsystems.Vision.Vision;
+import frc.robot.subsystems.Wrist.ArmAndWristMotionMagicTest;
 import frc.robot.subsystems.Wrist.Wrist;
 import frc.robot.subsystems.Wrist.Wrist.WristSuperStructurePosition;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -138,7 +139,7 @@ public class RobotContainer {
       //     new WristThenArmSequenceCommand(m_arm, SuperStructurePosition.ScoreCubeMid),
       //     () -> m_arm.isBackwardMovement(SuperStructurePosition.ScoreCubeMid)
       // )
-      new MoveWristToPositionMM(m_arm, m_wrist, ArmSuperStructurePosition.ScoreCubeMid, WristSuperStructurePosition.ScoreCubeMid)
+      new MoveWristToPositionMM( m_wrist, WristSuperStructurePosition.ScoreCubeMid)
     );
     // Y button
     m_partner_controller.y().onTrue(
@@ -160,17 +161,17 @@ public class RobotContainer {
 
     // D-pad down
     m_partner_controller.povDown().onTrue(
-      new StowSuperStructure(m_arm, m_wrist)
+      new StowSuperStructure( m_arm, m_wrist)
     );
     // D-pad up
     m_partner_controller.povUp().onTrue(
-      new MoveWristToPositionMM(m_arm, m_wrist, ArmSuperStructurePosition.SubstationPickup, WristSuperStructurePosition.SubstationPickup)
+      new MoveWristToPositionMM( m_wrist, WristSuperStructurePosition.SubstationPickup)
       // m_arm.moveWristToPositionMM(SuperStructurePosition.SubstationPickup, () -> !(m_arm.isBackwardMovement(SuperStructurePosition.SubstationPickup)))
 
     );
     // D-pad left
     m_partner_controller.povLeft().onTrue(
-      new MoveWristToPositionMM(m_arm, m_wrist, ArmSuperStructurePosition.ScoreLow, WristSuperStructurePosition.ScoreLow)
+      new MoveWristToPositionMM( m_wrist, WristSuperStructurePosition.ScoreLow)
       // m_arm.moveWristToPositionMM(SuperStructurePosition.ScoreLow, () -> !(m_arm.isBackwardMovement(SuperStructurePosition.ScoreLow)))
 
     );
@@ -326,5 +327,9 @@ public class RobotContainer {
     armTestTab.add("Cube High Test", new WristThenArmSequenceCommandTest(m_arm, m_wrist, ArmSuperStructurePosition.ScoreCubeHigh, WristSuperStructurePosition.ScoreCubeHigh)).withPosition(8, 3).withSize(2, 1);
     armTestTab.add("Ground Pickup", new ArmDriveToPositionPIDTest(m_arm, m_wrist, ArmSuperStructurePosition.GroundPickup, WristSuperStructurePosition.GroundPickup)).withPosition(0, 4);
     armTestTab.add("Stow Arm Test", new StowArmManually(m_arm, m_wrist));
+
+    armTestTab.add("mid cone Arm + Wrist MotionMagic parralel test", new ArmAndWristMotionMagicTest(m_arm, m_wrist, ArmSuperStructurePosition.ScoreConeMid, WristSuperStructurePosition.ScoreConeMid)).withSize(1, 1).withPosition(0, 5);
+    armTestTab.add("high cone Arm + Wrist MotionMagic parralel test", new ArmAndWristMotionMagicTest(m_arm, m_wrist, ArmSuperStructurePosition.ScoreCubeHigh, WristSuperStructurePosition.ScoreCubeHigh)).withSize(1, 1).withPosition(1, 5);;
   }
-}
+  }
+

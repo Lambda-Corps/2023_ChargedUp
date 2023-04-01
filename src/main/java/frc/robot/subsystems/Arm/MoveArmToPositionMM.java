@@ -11,21 +11,17 @@ import frc.robot.subsystems.Wrist.Wrist.WristSuperStructurePosition;
 
 public class MoveArmToPositionMM extends CommandBase {
   Arm m_arm;
-  Wrist m_wrist;
   ArmSuperStructurePosition m_arm_position;
-  WristSuperStructurePosition m_wrist_position;
   int m_arm_target_ticks;
-  int m_wrist_target_ticks;
 
   boolean m_done, m_arm_direction_is_forward, m_wrist_direction_is_forward;
   int m_half_second_limit_hit;
   int m_count;
 
   /** Creates a new MoveWristToPositionMM. */
-  public MoveArmToPositionMM(Arm arm, Wrist wrist, ArmSuperStructurePosition armposition, WristSuperStructurePosition wristposition) {
+  public MoveArmToPositionMM(Arm arm, ArmSuperStructurePosition armposition) {
     m_arm = arm;
     m_arm_position = armposition;
-    m_wrist_position = wristposition;
 
     // Use addRequirements() here to declare subsystem dependencies.
     addRequirements(m_arm);
@@ -36,24 +32,21 @@ public class MoveArmToPositionMM extends CommandBase {
   public void initialize() {
 
     m_arm_direction_is_forward = (m_arm.getSuperStructureArmPosition() < m_arm_position.getArmPosition());
-    m_wrist_direction_is_forward = (m_wrist.getSuperStructureWristPosition() < m_wrist_position.getWristPosition());
     m_done = false;
     m_half_second_limit_hit = 0;
     m_count = 0;
     // m_target_ticks = (int)(m_target.getDouble(SuperStructurePosition.Stowed.getArmPosition()));
     m_arm_target_ticks = m_arm_position.getArmPosition();
-    m_wrist_target_ticks = m_wrist_position.getWristPosition();
     m_arm.configure_arm_motion_magic();
 
     m_arm.move_arm_motion_magic(m_arm_target_ticks);
-    m_wrist.move_wrist_motion_magic(m_wrist_target_ticks, m_wrist_direction_is_forward);
 
   }
 
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-    m_done = (m_arm.is_arm_mm_done(m_arm_target_ticks) & m_wrist.is_wrist_mm_done(m_wrist_target_ticks));
+    m_done = (m_arm.is_arm_mm_done(m_arm_target_ticks));
     if(m_done){
       m_count++;
     }
@@ -76,9 +69,7 @@ public class MoveArmToPositionMM extends CommandBase {
   public void end(boolean interrupted) {
     if( !interrupted ){
       m_arm.set_current_position(m_arm_position);
-      m_wrist.wrist_set_current_position(m_wrist_position);
       m_arm.holdArmPosition();
-      m_wrist.holdWristPosition();
     }
   }
 

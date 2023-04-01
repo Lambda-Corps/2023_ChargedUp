@@ -10,7 +10,6 @@ import frc.robot.subsystems.Wrist.Wrist;
 import frc.robot.subsystems.Wrist.Wrist.WristSuperStructurePosition;
 
 public class MoveWristToPositionMM extends CommandBase {
-  Arm m_arm;
   Wrist m_wrist;
   ArmSuperStructurePosition m_arm_position;
   WristSuperStructurePosition m_wrist_position;
@@ -21,14 +20,12 @@ public class MoveWristToPositionMM extends CommandBase {
   int m_count;
 
   /** Creates a new MoveWristToPositionMM. */
-  public MoveWristToPositionMM(Arm arm, Wrist wrist, ArmSuperStructurePosition armposition, WristSuperStructurePosition wristposition) {
-    m_arm = arm;
+  public MoveWristToPositionMM( Wrist wrist, WristSuperStructurePosition wristposition) {
     m_wrist = wrist;
-    m_arm_position = armposition;
     m_wrist_position = wristposition;
 
     // Use addRequirements() here to declare subsystem dependencies.
-    addRequirements(m_arm);
+    addRequirements(m_wrist);
   }
 
   // Called when the command is initially scheduled.
@@ -71,8 +68,7 @@ public class MoveWristToPositionMM extends CommandBase {
   @Override
   public void end(boolean interrupted) {
     if( !interrupted ){
-      m_arm.set_current_position(m_arm_position);
-      m_arm.holdArmPosition();
+      m_wrist.wrist_set_current_position(m_wrist_position);
       m_wrist.holdWristPosition();
     }
   }

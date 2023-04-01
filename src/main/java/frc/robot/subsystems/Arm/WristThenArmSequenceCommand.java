@@ -19,8 +19,8 @@ public class WristThenArmSequenceCommand extends SequentialCommandGroup {
     // addCommands(new FooCommand(), new BarCommand());
     addCommands(
       arm_sub.set_state(ArmState.Moving),
-      new MoveWristToPositionMM(arm_sub, wrist, arm_position_req, wrist_postion_req),
-      new MoveArmToPositionMM(arm_sub, wrist, arm_position_req, wrist_postion_req),
+      new MoveWristToPositionMM( wrist, wrist_postion_req),
+      new MoveArmToPositionMM(arm_sub, arm_position_req),
       arm_sub.set_state(ArmState.Holding)
     );
   }

@@ -20,7 +20,7 @@ public class StowSuperStructure extends SequentialCommandGroup {
     // addCommands(new FooCommand(), new BarCommand());
     addCommands(
       arm.set_state(ArmState.Moving),
-      new MoveArmToPositionMM(arm, wrist, ArmSuperStructurePosition.Stowed, WristSuperStructurePosition.Stowed).withTimeout(2),
+      new MoveArmToPositionMM(arm, ArmSuperStructurePosition.Stowed).withTimeout(2),
       arm.set_state(ArmState.Stowed)
     );
   }
