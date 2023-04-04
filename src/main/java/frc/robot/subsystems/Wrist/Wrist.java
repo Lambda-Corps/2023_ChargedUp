@@ -195,7 +195,7 @@ Automatic,
   final static int WRIST_SCORE_LOW = 4000;
   final static int WRIST_CONE_MID = 27500;
   final static int WRIST_CONE_HIGH = 0;
-  final static int WRIST_CUBE_HIGH = 32000;
+  final static int WRIST_CUBE_HIGH = 31500;
   final static int WRIST_CUBE_MID = 23500;
   final static int WRIST_POSITION_TOLERANCE = 250;
   final int PID_PRIMARY = 0;

@@ -1,7 +1,10 @@
 package frc.robot.subsystems.LEDs;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.I2C;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
+
 import java.util.ArrayList;
 
 public class LED extends SubsystemBase{
@@ -16,6 +19,13 @@ public class LED extends SubsystemBase{
     final public static int TLEFT = 3;
     final public static int PPANEL = 4;
     final public static int ALL = 15;
+
+    private final int ALLIANCE_COLOR_BLUE = 6;
+    private final int ALLIANCE_COLOR_RED = 7;
+
+    int led_color_state;
+
+    public static int m_alliance_color;
 
     public ArrayList<Integer> dataList = new ArrayList<Integer>();
     private static final int kDeviceAddress = 4;
@@ -54,5 +64,24 @@ public class LED extends SubsystemBase{
             i = 0;
         }
         ++i;
+
+        if( DriverStation.getAlliance() == Alliance.Blue){
+            m_alliance_color = ALLIANCE_COLOR_BLUE;
+          }
+          else {
+            m_alliance_color = ALLIANCE_COLOR_RED;
+          }
+
+
+    switch(led_color_state){
+        default:
+          if(m_alliance_color == ALLIANCE_COLOR_BLUE){
+          }
+          else{
+          }
+          break;
+      }
     }
+
+
 }

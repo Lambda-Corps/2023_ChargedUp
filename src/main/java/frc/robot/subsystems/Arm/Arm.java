@@ -187,7 +187,7 @@ public class Arm extends SubsystemBase {
   // Encoder Measurements for the relevant scoring positions
   final static int ARM_STOW = 0;
  // final static int WRIST_STOW = 0;
-  final static int ARM_GROUND_PICKUP = 12000;
+  final static int ARM_GROUND_PICKUP = 8000;
   //final static int WRIST_GROUND_PICKUP = 0;
   final static int ARM_SUBSTATION = 0;
  // final static int WRIST_SUBSTATION = 28500;
@@ -197,7 +197,7 @@ public class Arm extends SubsystemBase {
  // final static int WRIST_CONE_MID = 27500;
   final static int ARM_CONE_HIGH = 0;
  // final static int WRIST_CONE_HIGH = 0;
-  final static int ARM_CUBE_HIGH = 8000;
+  final static int ARM_CUBE_HIGH = 9900;
  // final static int WRIST_CUBE_HIGH = 32000;
   final static int ARM_CUBE_MID = 0;
  // final static int WRIST_CUBE_MID = 23500;

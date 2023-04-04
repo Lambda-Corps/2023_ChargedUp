@@ -25,7 +25,7 @@ public class ArmAndWristMotionMagicTest extends SequentialCommandGroup {
     // Add your commands in the addCommands() call, e.g.
     // addCommands(new FooCommand(), new BarCommand());
     addCommands(
-      new MoveArmToPositionMM(m_arm, armposition).raceWith(new MoveWristToPositionMM(wrist, wristposition)).raceWith(new WaitCommand(3))
+      new MoveWristToPositionMM(m_wrist, wristposition).raceWith(new WaitCommand(3).raceWith(new MoveArmToPositionMM(m_arm, armposition)).raceWith(new WaitCommand(3)))
 
     );
   }

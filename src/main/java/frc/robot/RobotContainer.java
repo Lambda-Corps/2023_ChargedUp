@@ -92,7 +92,10 @@ public class RobotContainer {
 
     // Set the LED to rainbow as the default
     // m_led.setLED(LED.TOP_LEFT, LED.RAINBOW_FUNCTION);
-    m_led.setLED(LED.ALL, LED.RAINBOW);
+    m_led.setLED(LED.PPANEL, LED.RAINBOW);
+    m_led.setLED(LED.EPANEL, LED.RAINBOW);
+    m_led.setLED(LED.TLEFT, LED.m_alliance_color);
+    m_led.setLED(LED.TRIGHT, LED.m_alliance_color);
   }
 
   /**
@@ -143,7 +146,7 @@ public class RobotContainer {
     );
     // Y button
     m_partner_controller.y().onTrue(
-      new WristThenArmSequenceCommandTest(m_arm, m_wrist, ArmSuperStructurePosition.ScoreCubeHigh, WristSuperStructurePosition.ScoreConeHigh)
+      new ArmAndWristMotionMagicTest(m_arm, m_wrist, ArmSuperStructurePosition.ScoreCubeHigh, WristSuperStructurePosition.ScoreCubeHigh)
     );
     // A button
     m_partner_controller.a().onTrue(
@@ -152,7 +155,7 @@ public class RobotContainer {
       //     new WristThenArmSequenceCommand(m_arm, SuperStructurePosition.ScoreConeMid),
       //     () -> m_arm.isBackwardMovement(SuperStructurePosition.ScoreConeMid)
       // )
-      new WristThenArmSequenceCommandTest(m_arm, m_wrist, ArmSuperStructurePosition.ScoreConeMid, WristSuperStructurePosition.ScoreConeMid)
+      new ArmAndWristMotionMagicTest(m_arm, m_wrist, ArmSuperStructurePosition.ScoreConeMid, WristSuperStructurePosition.ScoreConeMid)
   );
     // B button
     // m_partner_controller.b().onTrue(
@@ -210,6 +213,8 @@ public class RobotContainer {
    
     driveTab.add("Arm", m_arm).withPosition(0, 1).withSize(2, 1);
     driveTab.add("Gripper", m_gripper).withPosition(0, 2).withSize(2, 1);
+
+    driveTab.addDouble("Rangefinder Ultra-Sonic", m_drivetrain::getRangeFinderValue).withPosition(0, 4).withSize(2, 1);
 
     // driveTab.add("Camera", m_drivetrain);
 
