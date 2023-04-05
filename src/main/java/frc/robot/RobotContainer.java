@@ -16,7 +16,6 @@ import frc.robot.autoCommands.Pos3ScoreMoveBalance;
 import frc.robot.subsystems.Arm.Arm;
 import frc.robot.subsystems.Arm.ArmDriveToPositionPIDTest;
 import frc.robot.subsystems.Arm.DriveArmManually;
-import frc.robot.subsystems.Arm.StowArmManually;
 import frc.robot.subsystems.Arm.MoveWristToPositionMM;
 import frc.robot.subsystems.Arm.StowSuperStructure;
 import frc.robot.subsystems.Arm.WristThenArmSequenceCommandTest;
@@ -182,7 +181,7 @@ public class RobotContainer {
     m_driver_controller.leftBumper().onFalse(m_drivetrain.shiftToLowGear());
     m_driver_controller.leftTrigger().whileTrue(new FineGrainedDrivingControl(m_drivetrain, m_driver_controller));
     m_driver_controller.rightTrigger().onTrue(m_gripper.contractGripperCommand().andThen(new WaitCommand(0.3)).andThen(m_arm.deployArm().andThen(m_gripper.expandGripperCommand()).andThen(m_gripper.holdGamePieceCommand())));
-    m_driver_controller.rightTrigger().onFalse(m_gripper.contractGripperCommand().andThen(m_gripper.holdGamePieceCommand()).andThen(new StowArmManually(m_arm, m_wrist)));
+    m_driver_controller.rightTrigger().onFalse(m_gripper.contractGripperCommand().andThen(m_gripper.holdGamePieceCommand()).andThen(m_arm.stowArmCommand()));
    /*  m_driver_controller.a().whileTrue(new AlignToConeTapeWithVision(m_drivetrain, m_vision, m_driver_controller)); */
     m_driver_controller.x().onTrue(m_led.ResendLEDBytes());
     m_driver_controller.povUp().onTrue(new SubstationPickupDistanceRangefinder(m_drivetrain));
@@ -333,7 +332,7 @@ public class RobotContainer {
     armTestTab.add("Stow Test", new WristThenArmSequenceCommandTest(m_arm, m_wrist, ArmSuperStructurePosition.Stowed, WristSuperStructurePosition.Stowed)).withPosition(6, 3).withSize(2, 1);
     armTestTab.add("Cube High Test", new WristThenArmSequenceCommandTest(m_arm, m_wrist, ArmSuperStructurePosition.ScoreCubeHigh, WristSuperStructurePosition.ScoreCubeHigh)).withPosition(8, 3).withSize(2, 1);
     armTestTab.add("Ground Pickup", new ArmDriveToPositionPIDTest(m_arm, m_wrist, ArmSuperStructurePosition.GroundPickup, WristSuperStructurePosition.GroundPickup)).withPosition(0, 4);
-    armTestTab.add("Stow Arm Test", new StowArmManually(m_arm, m_wrist));
+    armTestTab.add("Stow Arm Test", m_arm.stowArmCommand());
 
     armTestTab.add("mid cone Arm + Wrist MotionMagic parralel test", new ArmAndWristMotionMagicTest(m_arm, m_wrist, ArmSuperStructurePosition.ScoreConeMid, WristSuperStructurePosition.ScoreConeMid)).withSize(1, 1).withPosition(0, 5);
     armTestTab.add("high cone Arm + Wrist MotionMagic parralel test", new ArmAndWristMotionMagicTest(m_arm, m_wrist, ArmSuperStructurePosition.ScoreCubeHigh, WristSuperStructurePosition.ScoreCubeHigh)).withSize(1, 1).withPosition(1, 5);;

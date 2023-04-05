@@ -601,6 +601,9 @@ public class Arm extends SubsystemBase {
     m_arm_state = ArmState.Inactive;
   }
  
+  public boolean armReverseLimitHit(){
+    return m_arm_motor.isRevLimitSwitchClosed() == 1;
+  }
 
   ////////////////////// ARM INLINE COMMANDS /////////////////////
 
@@ -667,6 +670,14 @@ public class Arm extends SubsystemBase {
         m_arm_motor.set(ControlMode.PercentOutput, ARM_FORWARD_SPEED);
       }
     ).until(this::is_arm_deployed);
+  }
+
+  public CommandBase stowArmCommand(){
+    return run(
+      () -> {
+        m_arm_motor.set(ControlMode.PercentOutput, ARM_REVERSE_SPEED);
+      }
+    ).until(this::armReverseLimitHit);
   }
 
 }

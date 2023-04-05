@@ -6,14 +6,13 @@ package frc.robot.autoCommands;
 
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import frc.robot.subsystems.Arm.Arm;
-import frc.robot.subsystems.Arm.StowArmManually;
+import frc.robot.subsystems.Arm.MoveWristToPositionMM;
 import frc.robot.subsystems.Arm.WristThenArmSequenceCommand;
 import frc.robot.subsystems.Arm.Arm.ArmSuperStructurePosition;
 import frc.robot.subsystems.DriveTrain.DriveMotionMagic;
 import frc.robot.subsystems.DriveTrain.DriveTrain;
 import frc.robot.subsystems.DriveTrain.TurnToAngleWithGyroPID;
 import frc.robot.subsystems.Gripper.Gripper;
-import frc.robot.subsystems.Gripper.ScoreCone;
 import frc.robot.subsystems.Wrist.Wrist;
 import frc.robot.subsystems.Wrist.Wrist.WristSuperStructurePosition;
 
@@ -28,16 +27,19 @@ public class Blue1ScorePickup extends SequentialCommandGroup {
     addCommands(
       new WristThenArmSequenceCommand(arm, wrist, ArmSuperStructurePosition.ScoreConeHigh, WristSuperStructurePosition.ScoreConeHigh),
       gripper.JustexpandGripper(),
-      new StowArmManually(arm, wrist),
+      // new StowArmManually(arm, wrist),
+      arm.stowArmCommand().alongWith(new MoveWristToPositionMM(wrist, WristSuperStructurePosition.Stowed)),
       new DriveMotionMagic(dt, -170), //230" inches from  |  40" robot | 10" left to get to 230"
       new TurnToAngleWithGyroPID(dt, 162),
       arm.deployArm(),
       gripper.contractGripperCommand(),
       gripper.holdGamePieceCommand(),
-      new StowArmManually(arm, wrist),
+      // new StowArmManually(arm, wrist),
+      arm.stowArmCommand(),
       new TurnToAngleWithGyroPID(dt, -160),
-      new DriveMotionMagic(dt, 160), 
-      new ScoreCone(gripper)
+      new DriveMotionMagic(dt, 160)
+      // Instead of score low, hold on to it to score high
+      // new ScoreCone(gripper) 
     );
   }
 

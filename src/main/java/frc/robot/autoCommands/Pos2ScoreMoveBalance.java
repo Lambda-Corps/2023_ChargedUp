@@ -10,8 +10,8 @@ import frc.robot.subsystems.DriveTrain.DriveSlowlyUntilRamp;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import frc.robot.subsystems.Arm.Arm;
-import frc.robot.subsystems.Arm.StowArmManually;
-import frc.robot.subsystems.Arm.WristThenArmSequenceCommandTest;
+import frc.robot.subsystems.Arm.MoveWristToPositionMM;
+import frc.robot.subsystems.Arm.WristThenArmSequenceCommand;
 import frc.robot.subsystems.Arm.Arm.ArmSuperStructurePosition;
 import frc.robot.subsystems.DriveTrain.DriveTrain;
 import frc.robot.subsystems.DriveTrain.TurnToAngleWithGyroPID;
@@ -28,15 +28,10 @@ public class Pos2ScoreMoveBalance extends SequentialCommandGroup {
     // Add your commands in the addCommands() call, e.g.
     // addCommands(new FooCommand(), new BarCommand());
     addCommands(
-      // new WristThenArmSequenceCommand(arm, SuperStructurePosition.ScoreConeMid).raceWith(new WaitCommand(3)),
-      // // new PrintCommand("Wrist the arm done"),
-      // // Drop the cone on the peg
-      // gripper.expandGripperCommand(),
-      // // Stow the arm back in the robot
-      // new StowSuperStructure(arm),
-      new WristThenArmSequenceCommandTest(arm, wrist, ArmSuperStructurePosition.ScoreConeMid, WristSuperStructurePosition.ScoreConeMid),
+      new WristThenArmSequenceCommand(arm, wrist, ArmSuperStructurePosition.ScoreConeHigh, WristSuperStructurePosition.ScoreConeHigh),
       gripper.JustexpandGripper(),
-      new StowArmManually(arm, wrist),
+      // new StowArmManually(arm, wrist),
+      arm.stowArmCommand().alongWith(new MoveWristToPositionMM(wrist, WristSuperStructurePosition.Stowed)),
       new DriveMotionMagic(dt, -6),
       new TurnToAngleWithGyroPID(dt, 180),
       //Drive Back 100 inches 
