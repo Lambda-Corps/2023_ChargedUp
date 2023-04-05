@@ -4,12 +4,15 @@
 
 package frc.robot.autoCommands;
 
+import frc.robot.subsystems.DriveTrain.BalanceBangBangCommand;
+import frc.robot.subsystems.DriveTrain.DriveMotionMagic;
+import frc.robot.subsystems.DriveTrain.DriveSlowlyUntilRamp;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
 import frc.robot.subsystems.Arm.Arm;
 import frc.robot.subsystems.Arm.MoveWristToPositionMM;
 import frc.robot.subsystems.Arm.WristThenArmSequenceCommand;
 import frc.robot.subsystems.Arm.Arm.ArmSuperStructurePosition;
-import frc.robot.subsystems.DriveTrain.DriveMotionMagic;
 import frc.robot.subsystems.DriveTrain.DriveTrain;
 import frc.robot.subsystems.DriveTrain.TurnToAngleWithGyroPID;
 import frc.robot.subsystems.Gripper.Gripper;
@@ -19,30 +22,23 @@ import frc.robot.subsystems.Wrist.Wrist.WristSuperStructurePosition;
 // NOTE:  Consider using this command inline, rather than writing a subclass.  For more
 // information, see:
 // https://docs.wpilib.org/en/stable/docs/software/commandbased/convenience-features.html
-public class Blue1ScorePickup extends SequentialCommandGroup {
-  /** Creates a new Pos1ScoreMovePickupPiece. */
-  public Blue1ScorePickup(DriveTrain dt, Arm arm, Wrist wrist, Gripper gripper) {
+public class Pos2ScoreMoveMidBalance extends SequentialCommandGroup {
+  /** Creates a new Pos2ScoreMoveBalance. */
+  public Pos2ScoreMoveMidBalance(DriveTrain dt, Arm arm, Gripper gripper, Wrist wrist) {
     // Add your commands in the addCommands() call, e.g.
     // addCommands(new FooCommand(), new BarCommand());
     addCommands(
-      new WristThenArmSequenceCommand(arm, wrist, ArmSuperStructurePosition.ScoreConeHigh, WristSuperStructurePosition.ScoreConeHigh),
+      new WristThenArmSequenceCommand(arm, wrist, ArmSuperStructurePosition.ScoreConeMid, WristSuperStructurePosition.ScoreConeMid),
       gripper.JustexpandGripper(),
       // new StowArmManually(arm, wrist),
-      arm.stowArmCommand().alongWith(new MoveWristToPositionMM(wrist, WristSuperStructurePosition.Stowed)),
-      new DriveMotionMagic(dt, -170), //230" inches from  |  40" robot | 10" left to get to 230"
-      new TurnToAngleWithGyroPID(dt, 162),
-      arm.deployArm(),
-      gripper.contractGripperCommand(),
-      gripper.holdGamePieceCommand(),
-      // new StowArmManually(arm, wrist),
-      arm.stowArmCommand(),
-      new TurnToAngleWithGyroPID(dt, -160),
-      new DriveMotionMagic(dt, 160)
-      // Instead of score low, hold on to it to score high
-      // new ScoreCone(gripper) 
+      arm.stowArmCommand().alongWith(new MoveWristToPositionMM(wrist, WristSuperStructurePosition.Stowed).withTimeout(2)),
+      new DriveMotionMagic(dt, -6),
+      new TurnToAngleWithGyroPID(dt, 180),
+      //Drive Back 100 inches 
+      new DriveSlowlyUntilRamp(dt).raceWith(new WaitCommand(1.5)), 
+     
+      // This needs to be drive and Bang Bang
+      new BalanceBangBangCommand(dt)
     );
   }
-
-  // private void addCommands(ScoreCone scoreCone, DriveMotionMagic driveMotionMagic) {
-  // }
 }

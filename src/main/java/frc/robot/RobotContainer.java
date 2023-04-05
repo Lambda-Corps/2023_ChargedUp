@@ -7,10 +7,11 @@ package frc.robot;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import frc.robot.autoCommands.Pos1ScoreMove;
-import frc.robot.autoCommands.Pos1ScoreMoveBalance;
-import frc.robot.autoCommands.Blue1ScorePickup;
+import frc.robot.autoCommands.Pos1ScoreLowMoveBalance;
+import frc.robot.autoCommands.Pos1ScoreHighPickup;
 import frc.robot.autoCommands.Pos2ScoreHighMoveBalance;
-import frc.robot.autoCommands.Pos2ScoreMoveBalance;
+import frc.robot.autoCommands.Pos2ScoreMoveMidBalance;
+import frc.robot.autoCommands.Pos3ScoreHighPickup;
 import frc.robot.autoCommands.Pos3ScoreMove;
 import frc.robot.autoCommands.Pos3ScoreMoveBalance;
 import frc.robot.subsystems.Arm.Arm;
@@ -18,6 +19,7 @@ import frc.robot.subsystems.Arm.ArmDriveToPositionPIDTest;
 import frc.robot.subsystems.Arm.DriveArmManually;
 import frc.robot.subsystems.Arm.MoveWristToPositionMM;
 import frc.robot.subsystems.Arm.StowSuperStructure;
+import frc.robot.subsystems.Arm.WristThenArmSequenceCommand;
 import frc.robot.subsystems.Arm.WristThenArmSequenceCommandTest;
 import frc.robot.subsystems.Arm.Arm.ArmState;
 import frc.robot.subsystems.Arm.Arm.ArmSuperStructurePosition;
@@ -153,12 +155,11 @@ public class RobotContainer {
       //     new WristThenArmSequenceCommand(m_arm, SuperStructurePosition.ScoreConeMid),
       //     () -> m_arm.isBackwardMovement(SuperStructurePosition.ScoreConeMid)
       // )
-      new ArmAndWristMotionMagicTest(m_arm, m_wrist, ArmSuperStructurePosition.ScoreConeMid, WristSuperStructurePosition.ScoreConeMid)
+      new WristThenArmSequenceCommand(m_arm, m_wrist, ArmSuperStructurePosition.ScoreConeMid, WristSuperStructurePosition.ScoreConeMid)
   );
-    // B button
-    // m_partner_controller.b().onTrue(
-    //     new PrintCommand("Cone High")
-    // );
+    m_partner_controller.b().onTrue(
+      new WristThenArmSequenceCommand(m_arm, m_wrist, ArmSuperStructurePosition.ScoreConeHigh, WristSuperStructurePosition.ScoreConeHigh)
+    );
 
     // D-pad down
     m_partner_controller.povDown().onTrue(
@@ -224,24 +225,21 @@ public class RobotContainer {
     //Auto Options
     m_auto_chooser = new SendableChooser<Command>();
     driveTab.add("Autonomous Chooser", m_auto_chooser).withWidget(BuiltInWidgets.kComboBoxChooser).withPosition(0, 0).withSize(2, 1);
-    m_auto_chooser.addOption("1 Score Balance", new Pos1ScoreMoveBalance(m_drivetrain, m_arm, m_gripper));
-    m_auto_chooser.addOption("2 Score Balance", new Pos2ScoreMoveBalance(m_drivetrain, m_arm, m_gripper, m_wrist));
-    m_auto_chooser.addOption("3 Score Balance", new Pos3ScoreMoveBalance(m_drivetrain, m_arm, m_gripper));
+    m_auto_chooser.addOption("1 Score High Pickup", new Pos1ScoreHighPickup(m_drivetrain, m_arm, m_wrist, m_gripper));
     m_auto_chooser.addOption("1 Score Move", new Pos1ScoreMove(m_drivetrain, m_gripper, m_arm, m_wrist));
+    m_auto_chooser.addOption("2 Score High Balance", new Pos2ScoreHighMoveBalance(m_drivetrain, m_arm, m_gripper, m_wrist));
+    m_auto_chooser.addOption("2 Score Mid Balance", new Pos2ScoreMoveMidBalance(m_drivetrain, m_arm, m_gripper, m_wrist));
+    m_auto_chooser.addOption("3 Score High Pickup", new Pos3ScoreHighPickup(m_drivetrain, m_arm, m_wrist, m_gripper));
     m_auto_chooser.addOption("3 Score Move", new Pos3ScoreMove(m_drivetrain, m_gripper, m_arm, m_wrist));
-    m_auto_chooser.setDefaultOption("Default Auto incase we forget", new DriveMotionMagic(m_drivetrain, -150));
-    m_auto_chooser.addOption("Drive Forward 14ft", new DriveMotionMagic(m_drivetrain, 150));
-    m_auto_chooser.addOption("Drive Backward 14ft", new DriveMotionMagic(m_drivetrain, -150));
-    m_auto_chooser.addOption("Blue 1 score pickup", new Blue1ScorePickup(m_drivetrain, m_arm, m_wrist, m_gripper));
-    
+    m_auto_chooser.setDefaultOption("Default Auto incase we forget", new DriveMotionMagic(m_drivetrain, -150));    
   }
   public Command getAutonomousCommand2() {
     // An ExampleCommand will run in autonomous
-    return new Pos1ScoreMoveBalance(m_drivetrain, m_arm, m_gripper);
+    return new Pos1ScoreLowMoveBalance(m_drivetrain, m_arm, m_gripper);
   }
   public Command getAutonomousCommand3() {
     // An ExampleCommand will run in autonomous
-    return new Pos1ScoreMoveBalance(m_drivetrain, m_arm, m_gripper);
+    return new Pos1ScoreLowMoveBalance(m_drivetrain, m_arm, m_gripper);
   }
   
   @SuppressWarnings("unused")

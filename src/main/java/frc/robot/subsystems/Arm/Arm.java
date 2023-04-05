@@ -185,7 +185,7 @@ public class Arm extends SubsystemBase {
   // Encoder Measurements for the relevant scoring positions
   final static int ARM_STOW = 0;
  // final static int WRIST_STOW = 0;
-  final static int ARM_GROUND_PICKUP = 8000;
+  final static int ARM_GROUND_PICKUP = 15000;
   //final static int WRIST_GROUND_PICKUP = 0;
   final static int ARM_SUBSTATION = 0;
  // final static int WRIST_SUBSTATION = 28500;
@@ -555,7 +555,7 @@ public class Arm extends SubsystemBase {
 
   public boolean is_arm_mm_done(int target_ticks){
     double arm_pos = m_arm_motor.getSelectedSensorPosition();
-    m_arm_mm_error.set(Math.abs(target_ticks - arm_pos));
+    // m_arm_mm_error.set(Math.abs(target_ticks - arm_pos));
     return Math.abs((target_ticks - arm_pos)) < ARM_POSITION_TOLERANCE;
   }
 
@@ -661,7 +661,7 @@ public class Arm extends SubsystemBase {
   }
 
   public boolean is_arm_deployed(){
-    return m_arm_motor.getSelectedSensorPosition() >= 25000;
+    return m_arm_motor.getSelectedSensorPosition() >= ARM_GROUND_PICKUP;
   }
 
   public CommandBase deployArm(){

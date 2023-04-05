@@ -18,9 +18,9 @@ import frc.robot.subsystems.Gripper.ScoreCone;
 // NOTE:  Consider using this command inline, rather than writing a subclass.  For more
 // information, see:
 // https://docs.wpilib.org/en/stable/docs/software/commandbased/convenience-features.html
-public class Pos1ScoreMoveBalance extends SequentialCommandGroup {
+public class Pos1ScoreLowMoveBalance extends SequentialCommandGroup {
   /** Creates a new ReplaceMeSequentialCommandGroup. */
-  public Pos1ScoreMoveBalance(DriveTrain dt, Arm arm, Gripper gripper) {
+  public Pos1ScoreLowMoveBalance(DriveTrain dt, Arm arm, Gripper gripper) {
     // Add your commands in the addCommands() call, e.g.
     // addCommands(new FooCommand(), new BarCommand());
     addCommands(

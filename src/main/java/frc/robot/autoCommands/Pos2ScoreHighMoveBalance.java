@@ -31,7 +31,7 @@ public class Pos2ScoreHighMoveBalance extends SequentialCommandGroup {
       new WristThenArmSequenceCommand(arm, wrist, ArmSuperStructurePosition.ScoreConeHigh, WristSuperStructurePosition.ScoreConeHigh),
       gripper.JustexpandGripper(),
       // new StowArmManually(arm, wrist),
-      arm.stowArmCommand().alongWith(new MoveWristToPositionMM(wrist, WristSuperStructurePosition.Stowed)),
+      arm.stowArmCommand().alongWith(new MoveWristToPositionMM(wrist, WristSuperStructurePosition.Stowed).withTimeout(2)),
       new DriveMotionMagic(dt, -6),
       new TurnToAngleWithGyroPID(dt, 180),
       //Drive Back 100 inches 
