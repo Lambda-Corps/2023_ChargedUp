@@ -5,7 +5,6 @@
 package frc.robot.subsystems.Wrist;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.function.BooleanSupplier;
 
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
@@ -22,8 +21,6 @@ import com.ctre.phoenix.motorcontrol.TalonFXInvertType;
 import com.ctre.phoenix.motorcontrol.can.SlotConfiguration;
 import com.ctre.phoenix.motorcontrol.can.TalonFX;
 import com.ctre.phoenix.motorcontrol.can.TalonFXConfiguration;
-import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
-
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.NetworkTable;
@@ -36,7 +33,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class Wrist extends SubsystemBase {
 
-  public WPI_TalonFX  m_wrist_motor;
+  private WPI_TalonFX  m_wrist_motor;
   DigitalInput  m_wrist_reverse_limit, m_wrist_forward_limit;
   DigitalInput m_arm_forward_limit;
   DigitalInput m_arm_reverse_limit;
@@ -46,9 +43,10 @@ public class Wrist extends SubsystemBase {
   private WristState m_wrist_state;
   private WristControlMode m_wrist_control_mode;
   private WristTask wrist_task;
+  @SuppressWarnings("unused")
   private WristSuperStructurePosition m_current_position, m_requested_position;
-  private HashMap<WristSuperStructurePosition, ArrayList<WristSuperStructurePosition>> m_illegal_transitions = new HashMap<WristSuperStructurePosition, ArrayList<WristSuperStructurePosition>>();
-  private ArrayList<WristSuperStructurePosition> stowed_illegal_transitions = new ArrayList<WristSuperStructurePosition>();
+  // private HashMap<WristSuperStructurePosition, ArrayList<WristSuperStructurePosition>> m_illegal_transitions = new HashMap<WristSuperStructurePosition, ArrayList<WristSuperStructurePosition>>();
+  // private ArrayList<WristSuperStructurePosition> stowed_illegal_transitions = new ArrayList<WristSuperStructurePosition>();
 
 
   public static enum WristState {
@@ -60,9 +58,9 @@ public class Wrist extends SubsystemBase {
 
   public enum WristControlMode { // Mostly for debugging information, could be used as an arm safety measure in
     // emergencies
-Manual,
-Automatic,
-}
+    Manual,
+    Automatic,
+  }
 
   public enum WristSuperStructurePosition {
     Stowed(WRIST_STOW){
@@ -274,29 +272,26 @@ Automatic,
     m_wrist_forward_limit = new DigitalInput(WRIST_FORWARD_LIMIT_SWITCH);
     m_wrist_reverse_limit = new DigitalInput(WRIST_REVERSE_LIMIT_SWITCH);
 
-    NetworkTable shuffleboard = NetworkTableInstance.getDefault().getTable("Shuffleboard").getSubTable("Arm Test");
+    NetworkTable shuffleboard = NetworkTableInstance.getDefault().getTable("Shuffleboard").getSubTable("Drive Tab");
     m_wrist_position = shuffleboard.getDoubleTopic("WristEncoder").publish();
-    m_wrist_mm_error = shuffleboard.getDoubleTopic("Wrist Error").publish();
-    m_super_position = shuffleboard.getStringTopic("Super Position").publish();
+    // m_wrist_mm_error = shuffleboard.getDoubleTopic("Wrist Error").publish();
+    // m_super_position = shuffleboard.getStringTopic("Super Position").publish();
 
-    m_current_position = WristSuperStructurePosition.Stowed;
-    m_requested_position = WristSuperStructurePosition.Stowed;
+    // m_current_position = WristSuperStructurePosition.Stowed;
+    // m_requested_position = WristSuperStructurePosition.Stowed;
 
-    stowed_illegal_transitions.add(WristSuperStructurePosition.GroundPickup);
+    // stowed_illegal_transitions.add(WristSuperStructurePosition.GroundPickup);
     // ground_pickup_illegal_transitions.add(SuperStructurePosition.Stowed);
 
     // The HashMap that associates specific illegal transitions per each position
     // (as needed)
-    m_illegal_transitions.put(WristSuperStructurePosition.Stowed, stowed_illegal_transitions);
+    // m_illegal_transitions.put(WristSuperStructurePosition.Stowed, stowed_illegal_transitions);
     // illegal_transitions.put(SuperStructurePosition.GroundPickup, ground_pickup_illegal_transitions);
 
     m_wrist_motor.selectProfileSlot(WRIST_HOLD_POSITION_SLOT, 0);
     m_wrist_motor.set(ControlMode.Position, WristSuperStructurePosition.Stowed.wrist_position);
 
     m_wrist_state = WristState.Holding;
-
-    
-
   }
 
   public int getWristReverseLimitFromMotor(){
@@ -343,71 +338,70 @@ Automatic,
         break;
     }
     
-    m_super_position.set(m_current_position.toString());
+    // m_super_position.set(m_current_position.toString());
 
   }
 
-  public boolean isTransitionInvalid(WristSuperStructurePosition requestedPosition) {
-    boolean isInvalid = false;
+  // public boolean isTransitionInvalid(WristSuperStructurePosition requestedPosition) {
+  //   boolean isInvalid = false;
 
-    // If the position is a known position, we can make a smart decision
-    if( m_current_position != WristSuperStructurePosition.Manual ){
-      if( m_illegal_transitions.containsKey(m_current_position) ){
-        ArrayList<WristSuperStructurePosition> illegals = m_illegal_transitions.get(m_current_position);
+  //   // If the position is a known position, we can make a smart decision
+  //   if( m_current_position != WristSuperStructurePosition.Manual ){
+  //     if( m_illegal_transitions.containsKey(m_current_position) ){
+  //       ArrayList<WristSuperStructurePosition> illegals = m_illegal_transitions.get(m_current_position);
 
-        for( WristSuperStructurePosition pos : illegals ){
-          if (requestedPosition == pos){
-            // System.out.println("Invalid request: " + m_current_position + " to " + pos);
-            isInvalid = true;
-            break;
-          }
-        }
-      }
-    } else {
-      // If the position is Manual, we just need to make sure the wrist is in a safe zone so we don't
-      // clip the bumpers on the move
-      double wrist_pos = m_wrist_motor.getSelectedSensorPosition();
-      if( wrist_pos <= SAFE__MOVE_WRIST_POSITION){
-        // System.out.println("Invalid Manual to " + requestedPosition);
-        isInvalid = true;
-      }
-    }
-    
-    // TODO Set some variable so people know it's invalid like LED or Boolean flash
-    return isInvalid;
-  }
+  //       for( WristSuperStructurePosition pos : illegals ){
+  //         if (requestedPosition == pos){
+  //           // System.out.println("Invalid request: " + m_current_position + " to " + pos);
+  //           isInvalid = true;
+  //           break;
+  //         }
+  //       }
+  //     }
+  //   } else {
+  //     // If the position is Manual, we just need to make sure the wrist is in a safe zone so we don't
+  //     // clip the bumpers on the move
+  //     double wrist_pos = m_wrist_motor.getSelectedSensorPosition();
+  //     if( wrist_pos <= SAFE__MOVE_WRIST_POSITION){
+  //       // System.out.println("Invalid Manual to " + requestedPosition);
+  //       isInvalid = true;
+  //     }
+  //   }
 
-  public void forceSetCurrentPos() { // FOR TESTING ONLY DO NOT USE AT COMPS
-    m_current_position = m_requested_position;
-  }
+  //   return isInvalid;
+  // }
+
+  // public void forceSetCurrentPos() { // FOR TESTING ONLY DO NOT USE AT COMPS
+  //   m_current_position = m_requested_position;
+  // }
 
   public void wrist_set_current_position( WristSuperStructurePosition position ){
     m_current_position = position;
   }
 
-  public void moveWristManually(double bottom_speed, double top_speed) {
-    m_wrist_motor.set(ControlMode.PercentOutput, top_speed);
+  // public void moveWristManually(double bottom_speed, double top_speed) {
+  //   m_wrist_motor.set(ControlMode.PercentOutput, top_speed);
 
-    if (m_arm_reverse_limit.get() && top_speed < 0) {
-      m_wrist_motor.set(ControlMode.PercentOutput, 0);
-    }
-  }
+  //   if (m_arm_reverse_limit.get() && top_speed < 0) {
+  //     m_wrist_motor.set(ControlMode.PercentOutput, 0);
+  //   }
+  // }
 
-  public void wrist_reset_arm_pos() {
-    m_wrist_control_mode = WristControlMode.Automatic;
-    // while BOTH top and bottoms are false (not triggered)
-    while (!m_arm_forward_limit.get() && !m_arm_reverse_limit.get()) {
-      // only drive upper stage if limit is not hit
-      if (!m_arm_reverse_limit.get()) {
-        m_wrist_motor.set(ControlMode.PercentOutput, -WRIST_FORWARD_SPEED);
-      } else {
-        m_wrist_motor.set(ControlMode.PercentOutput, 0);
-      }
-    }
+  // public void wrist_reset_arm_pos() {
+  //   m_wrist_control_mode = WristControlMode.Automatic;
+  //   // while BOTH top and bottoms are false (not triggered)
+  //   while (!m_arm_forward_limit.get() && !m_arm_reverse_limit.get()) {
+  //     // only drive upper stage if limit is not hit
+  //     if (!m_arm_reverse_limit.get()) {
+  //       m_wrist_motor.set(ControlMode.PercentOutput, -WRIST_FORWARD_SPEED);
+  //     } else {
+  //       m_wrist_motor.set(ControlMode.PercentOutput, 0);
+  //     }
+  //   }
 
-    // Zero encoders once both stages are reset
-    m_wrist_motor.setSelectedSensorPosition(0);
-  }
+  //   // Zero encoders once both stages are reset
+  //   m_wrist_motor.setSelectedSensorPosition(0);
+  // }
 
   public WPI_TalonFX getTopStageMotor() {
     return m_wrist_motor;
@@ -560,9 +554,9 @@ public boolean isBackwardMovement(WristSuperStructurePosition pos){
   return  !(wristPos < pos.wrist_position);
 }
 
-public void set_state_to_inactive(){
-  m_wrist_state = WristState.Inactive;
-}
+// public void set_state_to_inactive(){
+//   m_wrist_state = WristState.Inactive;
+// }
 
 public CommandBase setWristEncoderToZero() {
   // Inline construction of command goes here.
@@ -573,64 +567,64 @@ public CommandBase setWristEncoderToZero() {
       });
 }
 
-public CommandBase setWristMaxSpeed() {
-  return runOnce(
-      () -> {
-        NetworkTable driveTab = NetworkTableInstance.getDefault().getTable("Shuffleboard")
-            .getSubTable("Arm Test");
-        double forward_speed = driveTab.getEntry("Wrist Fwd Spd").getDouble(WRIST_FORWARD_SPEED);
-        double reverse_speed = driveTab.getEntry("Wrist Rev Spd").getDouble(WRIST_REVERSE_SPEED);
+// public CommandBase setWristMaxSpeed() {
+//   return runOnce(
+//       () -> {
+//         NetworkTable driveTab = NetworkTableInstance.getDefault().getTable("Shuffleboard")
+//             .getSubTable("Arm Test");
+//         double forward_speed = driveTab.getEntry("Wrist Fwd Spd").getDouble(WRIST_FORWARD_SPEED);
+//         double reverse_speed = driveTab.getEntry("Wrist Rev Spd").getDouble(WRIST_REVERSE_SPEED);
 
-        // Just in case they put values that aren't positive or negative on Shuffleboard
-        // as an accident, make sure it's right
-        if (reverse_speed > 0) {
-          reverse_speed = reverse_speed * -1;
-        }
+//         // Just in case they put values that aren't positive or negative on Shuffleboard
+//         // as an accident, make sure it's right
+//         if (reverse_speed > 0) {
+//           reverse_speed = reverse_speed * -1;
+//         }
 
-        if (forward_speed < 0) {
-          forward_speed = forward_speed * -1;
-        }
+//         if (forward_speed < 0) {
+//           forward_speed = forward_speed * -1;
+//         }
 
-        m_wrist_motor.configPeakOutputForward(forward_speed);
-        m_wrist_motor.configPeakOutputReverse(reverse_speed);
-      });
-}
+//         m_wrist_motor.configPeakOutputForward(forward_speed);
+//         m_wrist_motor.configPeakOutputReverse(reverse_speed);
+//       });
+// }
 
-public CommandBase stopArmAndWristCommand() {
-  // Inline construction of command goes here.
-  // Subsystem::RunOnce implicitly requires `this` subsystem.
-  return runOnce(
-      () -> {
-        m_wrist_motor.set(ControlMode.PercentOutput, 0);
-      });
-}
+// public CommandBase stopArmAndWristCommand() {
+//   // Inline construction of command goes here.
+//   // Subsystem::RunOnce implicitly requires `this` subsystem.
+//   return runOnce(
+//       () -> {
+//         m_wrist_motor.set(ControlMode.PercentOutput, 0);
+//       });
+// }
 
-public CommandBase requestMoveSuperstructure(WristSuperStructurePosition position){
-  return runOnce(
-    () -> {
-      System.out.println("Moving Superposition to: " + position.toString());
-      m_current_position = position;
-      // m_arm_motor.set(ControlMode.MotionMagic, position.arm_position);
-      // m_wrist_motor.set(ControlMode.MotionMagic, position.wrist_position);
-    });
-}
+// public CommandBase requestMoveSuperstructure(WristSuperStructurePosition position){
+//   return runOnce(
+//     () -> {
+//       System.out.println("Moving Superposition to: " + position.toString());
+//       m_current_position = position;
+//       // m_arm_motor.set(ControlMode.MotionMagic, position.arm_position);
+//       // m_wrist_motor.set(ControlMode.MotionMagic, position.wrist_position);
+//     });
+// }
 
-public CommandBase configureWristMM(BooleanSupplier isForward){
-  return runOnce(
-    () -> {
-      /* If we're going in the forward direciton we need to select a specific 
-       * PID slot on the controller, versus backward being different. 
-       * 
-       * Then just set the MM target once the configuration is done
-       */
-      if(isForward.getAsBoolean()){
-        m_wrist_motor.selectProfileSlot(WRIST_MM_FORWARD_SLOT, PID_PRIMARY);
-      }
-      else {
-        m_wrist_motor.selectProfileSlot(WRIST_MM_REVERSE_SLOT, PID_PRIMARY);
-      }
-    });
-}
+// public CommandBase configureWristMM(BooleanSupplier isForward){
+//   return runOnce(
+//     () -> {
+//       /* If we're going in the forward direciton we need to select a specific 
+//        * PID slot on the controller, versus backward being different. 
+//        * 
+//        * Then just set the MM target once the configuration is done
+//        */
+//       if(isForward.getAsBoolean()){
+//         m_wrist_motor.selectProfileSlot(WRIST_MM_FORWARD_SLOT, PID_PRIMARY);
+//       }
+//       else {
+//         m_wrist_motor.selectProfileSlot(WRIST_MM_REVERSE_SLOT, PID_PRIMARY);
+//       }
+//     });
+// }
 
 public CommandBase moveWristToPositionMM(WristSuperStructurePosition position, BooleanSupplier isForward){
   return run(

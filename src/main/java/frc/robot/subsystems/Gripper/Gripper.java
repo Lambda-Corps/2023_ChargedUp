@@ -23,10 +23,10 @@ public class Gripper extends SubsystemBase {
   final DoubleSolenoid.Value GRIPPER_EXPAND = DoubleSolenoid.Value.kReverse;
   final DoubleSolenoid.Value GRIPPER_CONTRACT = DoubleSolenoid.Value.kForward;
 
-  final double INTAKE_CONE_SPEED = .5;
-  final double INTAKE_CUBE_SPEED = .5;
+  final double INTAKE_CONE_SPEED = .7;
+  final double INTAKE_CUBE_SPEED = .7;
   final double INTAKE_HOLD_SPEED = .2;
-  final double INTAKE_SCORE_SPEED = -.5;
+  final double SCORE_GAMEPIECE_SPEED = -.5;
 
   /** Creates a new Gripper. */
   public Gripper() {
@@ -65,25 +65,13 @@ public class Gripper extends SubsystemBase {
     m_rightside.set(ControlMode.PercentOutput, speed);
   }
 
-  private void request_gripper_position(DoubleSolenoid.Value pos){
-    m_requested_position = pos;
-  }
-
-  public void close_gripper(){
-    request_gripper_position(GRIPPER_CONTRACT);
-  }
-
-  public void open_gripper() {
-    request_gripper_position(GRIPPER_EXPAND);
-  }
-
   private void hold_game_piece() {
-    m_leftside.set(ControlMode.PercentOutput, .3);
+    m_leftside.set(ControlMode.PercentOutput, INTAKE_HOLD_SPEED);
     m_rightside.set(ControlMode.PercentOutput, INTAKE_HOLD_SPEED);
   }
 
   public void eject_piece(){
-    runMotors(INTAKE_SCORE_SPEED);
+    runMotors(SCORE_GAMEPIECE_SPEED);
   }
 
   public void intake_piece(){
@@ -112,8 +100,8 @@ public class Gripper extends SubsystemBase {
     // Subsystem::RunOnce implicitly requires `this` subsystem.
     return runOnce(
         () -> {
-          m_gripper.set(GRIPPER_EXPAND);
           runMotors(0);
+          m_gripper.set(GRIPPER_EXPAND);       
         });
   }
 
@@ -143,7 +131,7 @@ public class Gripper extends SubsystemBase {
   public CommandBase scoreGamePieceCommand() {
     return runOnce(
       () -> { 
-        runMotors(INTAKE_SCORE_SPEED);
+        runMotors(SCORE_GAMEPIECE_SPEED);
       }
     );
   }

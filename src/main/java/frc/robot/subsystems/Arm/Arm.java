@@ -17,7 +17,6 @@ import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.TalonFXFeedbackDevice;
 import com.ctre.phoenix.motorcontrol.TalonFXInvertType;
 import com.ctre.phoenix.motorcontrol.can.SlotConfiguration;
-import com.ctre.phoenix.motorcontrol.can.TalonFX;
 import com.ctre.phoenix.motorcontrol.can.TalonFXConfiguration;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 
@@ -29,7 +28,6 @@ import edu.wpi.first.networktables.StringPublisher;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.subsystems.Wrist.Wrist;
 
 public class Arm extends SubsystemBase {
   public WPI_TalonFX m_arm_motor;
@@ -179,7 +177,7 @@ public class Arm extends SubsystemBase {
   final double ARM_MM_KF = 0.43; // (.4 * 1023) / 8000
   final double ARM_MM_FF = 0;
   final int ARM_MM_VELOCITY = 2000;
-  final int ARM_MM_ACCELERATION = 700; // 1 Second to full velocity
+  final int ARM_MM_ACCELERATION = 2000; // 1 Second to full velocity
   final double ARM_HOLD_POSITION_KP = 3.069;
   final double ARM_HOLD_POSITION_KI = 0;
   final double ARM_HOLD_POSITION_KD = 15;
@@ -215,7 +213,6 @@ public class Arm extends SubsystemBase {
     m_arm_motor.configFactoryDefault();
 
     TalonFXConfiguration arm_config = new TalonFXConfiguration();
-    TalonFXConfiguration wrist_config = new TalonFXConfiguration();
 
     // Setup the PID control variables for arm movement
     SlotConfiguration arm_mm = arm_config.slot0;
@@ -293,10 +290,10 @@ public class Arm extends SubsystemBase {
 
 
     // Setup the network tables publishers to push data to the dashboard
-    NetworkTable shuffleboard = NetworkTableInstance.getDefault().getTable("Shuffleboard").getSubTable("Arm Test");
+    NetworkTable shuffleboard = NetworkTableInstance.getDefault().getTable("Shuffleboard").getSubTable("Drive Tab");
     m_arm_position = shuffleboard.getDoubleTopic("ArmEncoder").publish();
 
-    m_arm_mm_error = shuffleboard.getDoubleTopic("Arm Error").publish();
+    // m_arm_mm_error = shuffleboard.getDoubleTopic("Arm Error").publish();
     m_super_position = shuffleboard.getStringTopic("Super Position").publish();
 
 
@@ -387,31 +384,30 @@ public class Arm extends SubsystemBase {
     return isAtPosition;
   }
 
-  public boolean isTransitionInvalid(ArmSuperStructurePosition requestedPosition) {
-    boolean isInvalid = false;
+  // public boolean isTransitionInvalid(ArmSuperStructurePosition requestedPosition) {
+  //   boolean isInvalid = false;
+  //
+  //   // If the position is a known position, we can make a smart decision
+  //   if( m_current_position != ArmSuperStructurePosition.Manual ){
+  //     if( illegal_transitions.containsKey(m_current_position) ){
+  //       ArrayList<ArmSuperStructurePosition> illegals = illegal_transitions.get(m_current_position);
+  //
+  //       for( ArmSuperStructurePosition pos : illegals ){
+  //         if (requestedPosition == pos){
+  //           // System.out.println("Invalid request: " + m_current_position + " to " + pos);
+  //           isInvalid = true;
+  //           break;
+  //         }
+  //       }
+  //     }
+  //   } else {
+  //     // If the position is Manual, we just need to make sure the wrist is in a safe zone so we don't
+  //     // clip the bumpers on the move
+  //
+  //   }
 
-    // If the position is a known position, we can make a smart decision
-    if( m_current_position != ArmSuperStructurePosition.Manual ){
-      if( illegal_transitions.containsKey(m_current_position) ){
-        ArrayList<ArmSuperStructurePosition> illegals = illegal_transitions.get(m_current_position);
-
-        for( ArmSuperStructurePosition pos : illegals ){
-          if (requestedPosition == pos){
-            // System.out.println("Invalid request: " + m_current_position + " to " + pos);
-            isInvalid = true;
-            break;
-          }
-        }
-      }
-    } else {
-      // If the position is Manual, we just need to make sure the wrist is in a safe zone so we don't
-      // clip the bumpers on the move
-
-    }
-    
-    // TODO Set some variable so people know it's invalid like LED or Boolean flash
-    return isInvalid;
-  }
+  //   return isInvalid;
+  // }
 
   public void forceSetCurrentPos() { // FOR TESTING ONLY DO NOT USE AT COMPS
     m_current_position = m_requested_position;
@@ -430,23 +426,23 @@ public class Arm extends SubsystemBase {
     }
   }
 
-  // DO NOT USE DURING MATCHES!!! ONLY RUN IN THE PITS!!!
-  public void reset_arm_pos() {
-    m_arm_control_mode = ArmControlMode.Automatic;
-    // while BOTH top and bottoms are false (not triggered)
-    while (!m_arm_forward_limit.get() && !m_arm_reverse_limit.get()) {
-      // only drive base if limit is not hit
-      if (!m_arm_forward_limit.get()) {
-        m_arm_motor.set(ControlMode.PercentOutput, -ARM_FORWARD_SPEED);
-      } else {
-        m_arm_motor.set(ControlMode.PercentOutput, 0);
-      }
+  // // DO NOT USE DURING MATCHES!!! ONLY RUN IN THE PITS!!!
+  // public void reset_arm_pos() {
+  //   m_arm_control_mode = ArmControlMode.Automatic;
+  //   // while BOTH top and bottoms are false (not triggered)
+  //   while (!m_arm_forward_limit.get() && !m_arm_reverse_limit.get()) {
+  //     // only drive base if limit is not hit
+  //     if (!m_arm_forward_limit.get()) {
+  //       m_arm_motor.set(ControlMode.PercentOutput, -ARM_FORWARD_SPEED);
+  //     } else {
+  //       m_arm_motor.set(ControlMode.PercentOutput, 0);
+  //     }
 
-    }
+  //   }
 
-    // Zero encoders once both stages are reset
-    m_arm_motor.setSelectedSensorPosition(0);
-  }
+  //   // Zero encoders once both stages are reset
+  //   m_arm_motor.setSelectedSensorPosition(0);
+  // }
 
   public WPI_TalonFX getBottomStageMotor() {
     return m_arm_motor;
@@ -619,38 +615,38 @@ public class Arm extends SubsystemBase {
   }
 
 
-  public CommandBase setArmMaxSpeed() {
-    return runOnce(
-        () -> {
-          NetworkTable driveTab = NetworkTableInstance.getDefault().getTable("Shuffleboard")
-              .getSubTable("Arm Test");
-          double forward_speed = driveTab.getEntry("Arm Fwd Spd").getDouble(ARM_FORWARD_SPEED);
-          double reverse_speed = driveTab.getEntry("Arm Rev Spd").getDouble(ARM_REVERSE_SPEED);
+  // public CommandBase setArmMaxSpeed() {
+  //   return runOnce(
+  //       () -> {
+  //         NetworkTable driveTab = NetworkTableInstance.getDefault().getTable("Shuffleboard")
+  //             .getSubTable("Arm Test");
+  //         double forward_speed = driveTab.getEntry("Arm Fwd Spd").getDouble(ARM_FORWARD_SPEED);
+  //         double reverse_speed = driveTab.getEntry("Arm Rev Spd").getDouble(ARM_REVERSE_SPEED);
 
-          // Just in case they put values that aren't positive or negative on Shuffleboard
-          // as an accident, make sure it's right
-          if (reverse_speed > 0) {
-            reverse_speed = reverse_speed * -1;
-          }
+  //         // Just in case they put values that aren't positive or negative on Shuffleboard
+  //         // as an accident, make sure it's right
+  //         if (reverse_speed > 0) {
+  //           reverse_speed = reverse_speed * -1;
+  //         }
 
-          if (forward_speed < 0) {
-            forward_speed = forward_speed * -1;
-          }
+  //         if (forward_speed < 0) {
+  //           forward_speed = forward_speed * -1;
+  //         }
 
-          m_arm_motor.configPeakOutputForward(forward_speed);
-          m_arm_motor.configPeakOutputReverse(reverse_speed);
-        });
-  }
+  //         m_arm_motor.configPeakOutputForward(forward_speed);
+  //         m_arm_motor.configPeakOutputReverse(reverse_speed);
+  //       });
+  // }
 
-  public CommandBase requestMoveSuperstructure(ArmSuperStructurePosition position){
-    return runOnce(
-      () -> {
-        System.out.println("Moving Superposition to: " + position.toString());
-        m_current_position = position;
-        // m_arm_motor.set(ControlMode.MotionMagic, position.arm_position);
-        // m_wrist_motor.set(ControlMode.MotionMagic, position.wrist_position);
-      });
-  }
+  // public CommandBase requestMoveSuperstructure(ArmSuperStructurePosition position){
+  //   return runOnce(
+  //     () -> {
+  //       System.out.println("Moving Superposition to: " + position.toString());
+  //       m_current_position = position;
+  //       // m_arm_motor.set(ControlMode.MotionMagic, position.arm_position);
+  //       // m_wrist_motor.set(ControlMode.MotionMagic, position.wrist_position);
+  //     });
+  // }
 
  
 
@@ -664,6 +660,7 @@ public class Arm extends SubsystemBase {
   public boolean is_arm_deployed(){
     return m_arm_motor.getSelectedSensorPosition() >= 25000;
   }
+
   public CommandBase deployArm(){
     return run(
       () -> {

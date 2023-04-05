@@ -26,7 +26,6 @@ import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
-import frc.robot.subsystems.DriveTrain.AlignToConeTapeWithVision;
 import frc.robot.subsystems.DriveTrain.BalanceBangBangTestCommand;
 import frc.robot.subsystems.DriveTrain.DefaultDriveTrainCommand;
 import frc.robot.subsystems.DriveTrain.DriveMotionMagicTest;
@@ -43,7 +42,6 @@ import frc.robot.subsystems.Gripper.RunMotorsBackward;
 import frc.robot.subsystems.Gripper.RunMotorsForward;
 import frc.robot.subsystems.LEDs.LED;
 import frc.robot.subsystems.LEDs.SetLEDs;
-import frc.robot.subsystems.Vision.Vision;
 import frc.robot.subsystems.Wrist.ArmAndWristMotionMagicTest;
 import frc.robot.subsystems.Wrist.Wrist;
 import frc.robot.subsystems.Wrist.Wrist.WristSuperStructurePosition;
@@ -84,7 +82,7 @@ public class RobotContainer {
     
     buildDriveTab();
     // buildDriveTestTab();
-     buildArmTestTab();
+    // buildArmTestTab();
     // Set subsystem default commands
     m_drivetrain.setDefaultCommand(new DefaultDriveTrainCommand(m_drivetrain, m_driver_controller));    
     // m_arm.setDefaultCommand(new DriveArmManually(m_arm, m_partner_controller));
@@ -167,6 +165,7 @@ public class RobotContainer {
     m_partner_controller.povDown().onTrue(
       new StowSuperStructure( m_arm, m_wrist)
     );
+
     // D-pad up
     m_partner_controller.povUp().onTrue(
       new MoveWristToPositionMM( m_wrist, WristSuperStructurePosition.SubstationPickup)
@@ -246,7 +245,7 @@ public class RobotContainer {
     return new Pos1ScoreMoveBalance(m_drivetrain, m_arm, m_gripper);
   }
   
-
+  @SuppressWarnings("unused")
   private void buildDriveTestTab() {
     ShuffleboardTab driveTestTab = Shuffleboard.getTab("Drive Test");
 
@@ -300,6 +299,7 @@ public class RobotContainer {
     driveTestTab.add("DriveSlowly Command", m_drivetrain.driveSlowlyUntil().withTimeout(2).andThen(m_drivetrain.stopMotorsCommand()));
   }
 
+  @SuppressWarnings("unused")
   private void buildArmTestTab() {
     ShuffleboardTab armTestTab = Shuffleboard.getTab("Arm Test");
 

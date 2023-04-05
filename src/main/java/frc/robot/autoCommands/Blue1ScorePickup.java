@@ -14,7 +14,6 @@ import frc.robot.subsystems.DriveTrain.DriveTrain;
 import frc.robot.subsystems.DriveTrain.TurnToAngleWithGyroPID;
 import frc.robot.subsystems.Gripper.Gripper;
 import frc.robot.subsystems.Gripper.ScoreCone;
-import frc.robot.subsystems.Wrist.ArmAndWristMotionMagicTest;
 import frc.robot.subsystems.Wrist.Wrist;
 import frc.robot.subsystems.Wrist.Wrist.WristSuperStructurePosition;
 
