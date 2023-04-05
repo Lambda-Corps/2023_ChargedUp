@@ -8,6 +8,7 @@ import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import frc.robot.autoCommands.Pos1ScoreMove;
 import frc.robot.autoCommands.Pos1ScoreMoveBalance;
+import frc.robot.autoCommands.Blue1ScorePickup;
 import frc.robot.autoCommands.Pos2ScoreHighMoveBalance;
 import frc.robot.autoCommands.Pos2ScoreMoveBalance;
 import frc.robot.autoCommands.Pos3ScoreMove;
@@ -233,6 +234,7 @@ public class RobotContainer {
     m_auto_chooser.setDefaultOption("Default Auto incase we forget", new DriveMotionMagic(m_drivetrain, -150));
     m_auto_chooser.addOption("Drive Forward 14ft", new DriveMotionMagic(m_drivetrain, 150));
     m_auto_chooser.addOption("Drive Backward 14ft", new DriveMotionMagic(m_drivetrain, -150));
+    m_auto_chooser.addOption("Blue 1 score pickup", new Blue1ScorePickup(m_drivetrain, m_arm, m_wrist, m_gripper));
     
   }
   public Command getAutonomousCommand2() {

@@ -178,7 +178,7 @@ public class Arm extends SubsystemBase {
   final double ARM_MM_KD = 0;
   final double ARM_MM_KF = 0.43; // (.4 * 1023) / 8000
   final double ARM_MM_FF = 0;
-  final int ARM_MM_VELOCITY = 700;
+  final int ARM_MM_VELOCITY = 2000;
   final int ARM_MM_ACCELERATION = 700; // 1 Second to full velocity
   final double ARM_HOLD_POSITION_KP = 3.069;
   final double ARM_HOLD_POSITION_KI = 0;
@@ -193,9 +193,9 @@ public class Arm extends SubsystemBase {
  // final static int WRIST_SUBSTATION = 28500;
   final static int ARM_SCORE_LOW = 0;
  // final static int WRIST_SCORE_LOW = 4000;
-  final static int ARM_CONE_MID =  7000;
+  final static int ARM_CONE_MID =  9000;
  // final static int WRIST_CONE_MID = 27500;
-  final static int ARM_CONE_HIGH = 0;
+  final static int ARM_CONE_HIGH = 25000;
  // final static int WRIST_CONE_HIGH = 0;
   final static int ARM_CUBE_HIGH = 9900;
  // final static int WRIST_CUBE_HIGH = 32000;
@@ -662,7 +662,7 @@ public class Arm extends SubsystemBase {
   }
 
   public boolean is_arm_deployed(){
-    return m_arm_motor.getSelectedSensorPosition() > ARM_GROUND_PICKUP;
+    return m_arm_motor.getSelectedSensorPosition() >= 25000;
   }
   public CommandBase deployArm(){
     return run(
