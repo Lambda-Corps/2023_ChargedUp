@@ -13,6 +13,7 @@ import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.InvertType;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.StatusFrame;
+import com.ctre.phoenix.motorcontrol.TalonFXControlMode;
 import com.ctre.phoenix.motorcontrol.TalonFXFeedbackDevice;
 import com.ctre.phoenix.motorcontrol.TalonFXInvertType;
 import com.ctre.phoenix.motorcontrol.TalonFXSimCollection;
@@ -140,10 +141,13 @@ public class DriveTrain extends SubsystemBase {
 	final double MM_DRIVE_KP = 0.495;
 	final double MM_DRIVE_KD = 4.9;
 	final int MM_SLOT = 0;
+	final int MM_SLOW_SLOT = 0;
 	final int PID_PRIMARY = 0;
 	final int MM_TOLERANCE = 200;
 	final int MM_VELOCITY = 10000;
 	final int MM_ACCELERATION = 10000;
+	final int MM_SLOW_VELOCITY = MM_VELOCITY/2;
+	final int MM_SLOW_ACCELERATION = MM_SLOW_VELOCITY;
 	final int FORWARD_SLEW_RATE = 3;
 	final int TURN_SLEW_RATE = 5;
 	double TURN_DRIVE_FF = .1;
@@ -196,6 +200,13 @@ public class DriveTrain extends SubsystemBase {
 		talon_config.neutralDeadband = kNeutralDeadband;
 		talon_config.motionCruiseVelocity = MM_VELOCITY;
 		talon_config.motionAcceleration = MM_ACCELERATION;
+		
+		talon_config.slot1.kP = MM_DRIVE_KP;
+		talon_config.slot1.kD = MM_DRIVE_KD;
+		talon_config.slot1.allowableClosedloopError = 25;
+		talon_config.slot1.closedLoopPeriod = 1;
+		talon_config.primaryPID.selectedFeedbackSensor = TalonFXFeedbackDevice.IntegratedSensor.toFeedbackDevice();
+
 
 		if( Robot.isSimulation() ){
 			// The simulator needs much smaller motion magic values due to not 
@@ -698,6 +709,12 @@ public class DriveTrain extends SubsystemBase {
 		m_left_leader.selectProfileSlot(MM_SLOT, PID_PRIMARY);
 		m_right_leader.selectProfileSlot(MM_SLOT, PID_PRIMARY);
 
+		m_left_leader.configMotionCruiseVelocity(MM_VELOCITY);
+		m_right_leader.configMotionCruiseVelocity(MM_VELOCITY);
+
+		m_left_leader.configMotionAcceleration(MM_ACCELERATION);
+		m_right_leader.configMotionAcceleration(MM_ACCELERATION);
+
 		m_setpoint_left = (int)(m_left_leader.getSelectedSensorPosition() + setpoint);
 		m_setpoint_right = (int)(m_right_leader.getSelectedSensorPosition() + setpoint);
 	}
@@ -918,5 +935,29 @@ public class DriveTrain extends SubsystemBase {
 
 				m_odometry.resetPosition(m_gyro.getRotation2d(), x, y,pose);
 			});
+	}
+
+	public CommandBase driveMMSlowly(double distance) {
+		m_left_leader.selectProfileSlot(MM_SLOW_SLOT, PID_PRIMARY);
+		m_right_leader.selectProfileSlot(MM_SLOW_SLOT, PID_PRIMARY);
+
+		m_right_leader.configMotionCruiseVelocity(MM_SLOW_VELOCITY);
+		m_left_leader.configMotionCruiseVelocity(MM_SLOW_VELOCITY);
+
+		m_right_leader.configMotionAcceleration(MM_SLOW_ACCELERATION);
+		m_left_leader.configMotionAcceleration(MM_SLOW_ACCELERATION);
+
+		double setpoint = (int)(distance * kEncoderTicksPerInch);
+		m_setpoint_left = (int)(m_left_leader.getSelectedSensorPosition() + setpoint);
+		m_setpoint_right = (int)(m_right_leader.getSelectedSensorPosition() + setpoint);
+
+		driveMotionMagic(distance);
+
+		return run(
+			() -> {
+				m_left_leader.set(ControlMode.MotionMagic, m_setpoint_left);
+				m_right_leader.set(ControlMode.MotionMagic, m_setpoint_right);
+			}
+		).until(this::is_drive_mm_done);
 	}
 }

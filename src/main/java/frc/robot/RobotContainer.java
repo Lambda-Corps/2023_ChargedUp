@@ -231,7 +231,14 @@ public class RobotContainer {
     m_auto_chooser.addOption("2 Score Mid Balance", new Pos2ScoreMoveMidBalance(m_drivetrain, m_arm, m_gripper, m_wrist));
     m_auto_chooser.addOption("3 Score High Pickup", new Pos3ScoreHighPickup(m_drivetrain, m_arm, m_wrist, m_gripper));
     m_auto_chooser.addOption("3 Score Move", new Pos3ScoreMove(m_drivetrain, m_gripper, m_arm, m_wrist));
-    m_auto_chooser.setDefaultOption("Default Auto incase we forget", new DriveMotionMagic(m_drivetrain, -150));    
+    m_auto_chooser.setDefaultOption("Default Auto incase we forget", new DriveMotionMagic(m_drivetrain, -150));
+
+    driveTab.add("Middle High Cone Balance", new Pos2ScoreHighMoveBalance(m_drivetrain, m_arm, m_gripper, m_wrist)).withPosition(5, 5).withSize(2, 1);
+    driveTab.add("Middle mid score balance", new Pos2ScoreMoveMidBalance(m_drivetrain, m_arm, m_gripper, m_wrist)).withPosition(5, 6).withSize(2, 1);
+    driveTab.add("Pos3 high pickup", new Pos3ScoreHighPickup(m_drivetrain, m_arm, m_wrist, m_gripper)).withPosition(7, 5).withSize(2, 1);
+    driveTab.add("Pos1 High Pickup", new Pos1ScoreHighPickup(m_drivetrain, m_arm, m_wrist, m_gripper)).withPosition(7, 6).withSize(2, 1);
+
+    driveTab.add("DriveMM Slowly Test", m_drivetrain.driveMMSlowly(50));
   }
   public Command getAutonomousCommand2() {
     // An ExampleCommand will run in autonomous
