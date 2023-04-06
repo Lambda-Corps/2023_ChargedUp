@@ -145,8 +145,8 @@ public class DriveTrain extends SubsystemBase {
 	final int MM_TOLERANCE = 200;
 	final int MM_VELOCITY = 10000;
 	final int MM_ACCELERATION = 10000;
-	final int MM_SLOW_VELOCITY = MM_VELOCITY/2;
-	final int MM_SLOW_ACCELERATION = MM_SLOW_VELOCITY;
+	final int MM_SLOW_VELOCITY = 7500;
+	final int MM_SLOW_ACCELERATION = 7500;
 	final int FORWARD_SLEW_RATE = 3;
 	final int TURN_SLEW_RATE = 5;
 	double TURN_DRIVE_FF = .1;

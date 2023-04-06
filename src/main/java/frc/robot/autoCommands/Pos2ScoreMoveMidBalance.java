@@ -11,6 +11,7 @@ import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import frc.robot.subsystems.Arm.Arm;
 import frc.robot.subsystems.Arm.MoveWristToPositionMM;
+import frc.robot.subsystems.Arm.StowSuperStructure;
 import frc.robot.subsystems.Arm.WristThenArmSequenceCommand;
 import frc.robot.subsystems.Arm.Arm.ArmSuperStructurePosition;
 import frc.robot.subsystems.DriveTrain.DriveTrain;
@@ -31,7 +32,7 @@ public class Pos2ScoreMoveMidBalance extends SequentialCommandGroup {
       new WristThenArmSequenceCommand(arm, wrist, ArmSuperStructurePosition.ScoreConeMid, WristSuperStructurePosition.ScoreConeMid),
       gripper.JustexpandGripper(),
       // new StowArmManually(arm, wrist),
-      arm.stowArmCommand().alongWith(new MoveWristToPositionMM(wrist, WristSuperStructurePosition.Stowed).withTimeout(2)),
+      new StowSuperStructure(arm, wrist),
       new DriveMotionMagic(dt, -6),
       new TurnToAngleWithGyroPID(dt, 180),
       //Drive Back 100 inches 

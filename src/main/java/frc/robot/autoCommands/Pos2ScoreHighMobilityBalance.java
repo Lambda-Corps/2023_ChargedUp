@@ -8,6 +8,7 @@ import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import frc.robot.subsystems.Arm.Arm;
 import frc.robot.subsystems.Arm.MoveWristToPositionMM;
+import frc.robot.subsystems.Arm.StowSuperStructure;
 import frc.robot.subsystems.Arm.WristThenArmSequenceCommand;
 import frc.robot.subsystems.Arm.Arm.ArmSuperStructurePosition;
 import frc.robot.subsystems.DriveTrain.BalanceBangBangCommand;
@@ -29,7 +30,7 @@ public class Pos2ScoreHighMobilityBalance extends SequentialCommandGroup {
     addCommands(
       new WristThenArmSequenceCommand(arm, wrist, ArmSuperStructurePosition.ScoreConeHigh, WristSuperStructurePosition.ScoreConeHigh),
       gripper.expandGripperCommand(),
-      arm.stowArmCommand().alongWith((new MoveWristToPositionMM(wrist, WristSuperStructurePosition.Stowed)).raceWith(new WaitCommand(2))),
+      new StowSuperStructure(arm, wrist),
       new DriveMotionMagic(drivetrain, -150, true),
       new DriveSlowlyUntilRamp(drivetrain).withTimeout(1.5),
       new BalanceBangBangCommand(drivetrain)

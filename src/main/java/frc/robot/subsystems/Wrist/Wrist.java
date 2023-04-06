@@ -192,7 +192,7 @@ public class Wrist extends SubsystemBase {
   final static int WRIST_SUBSTATION = 28500;
   final static int WRIST_SCORE_LOW = 4000;
   final static int WRIST_CONE_MID = 27500;
-  final static int WRIST_CONE_HIGH = 42900;
+  final static int WRIST_CONE_HIGH = 40000;
   final static int WRIST_CUBE_HIGH = 31500;
   final static int WRIST_CUBE_MID = 23500;
   final static int WRIST_POSITION_TOLERANCE = 250;
@@ -245,7 +245,7 @@ public class Wrist extends SubsystemBase {
     // Configure limit switches
     wrist_config.reverseLimitSwitchNormal = LimitSwitchNormal.NormallyOpen;
     wrist_config.forwardLimitSwitchNormal = LimitSwitchNormal.NormallyOpen;
-    wrist_config.reverseSoftLimitEnable = true;
+    wrist_config.reverseSoftLimitEnable = false;
     wrist_config.forwardSoftLimitEnable = true;
     wrist_config.reverseSoftLimitThreshold = WRIST_REVERSE_SOFT_LIMIT;
     wrist_config.forwardSoftLimitThreshold = WRIST_FORWARD_SOFT_LIMIT;
@@ -554,6 +554,10 @@ public boolean isBackwardMovement(WristSuperStructurePosition pos){
   return  !(wristPos < pos.wrist_position);
 }
 
+public boolean wristReverseLimitHit(){
+  return m_wrist_motor.isRevLimitSwitchClosed() == 1;
+}
+
 // public void set_state_to_inactive(){
 //   m_wrist_state = WristState.Inactive;
 // }
@@ -626,23 +630,30 @@ public CommandBase setWristEncoderToZero() {
 //     });
 // }
 
-public CommandBase moveWristToPositionMM(WristSuperStructurePosition position, BooleanSupplier isForward){
-  return run(
-    () -> {
-      if( isForward.getAsBoolean() ){
-        m_wrist_motor.set(ControlMode.MotionMagic, position.wrist_position, DemandType.ArbitraryFeedForward, getWristArbFF());
-      } else {
-        m_wrist_motor.set(ControlMode.MotionMagic, position.wrist_position);
-      }
-    });
-}
+  public CommandBase moveWristToPositionMM(WristSuperStructurePosition position, BooleanSupplier isForward){
+    return run(
+      () -> {
+        if( isForward.getAsBoolean() ){
+          m_wrist_motor.set(ControlMode.MotionMagic, position.wrist_position, DemandType.ArbitraryFeedForward, getWristArbFF());
+        } else {
+          m_wrist_motor.set(ControlMode.MotionMagic, position.wrist_position);
+        }
+      });
+  }
 
-public CommandBase set_state(WristState state){
-  return runOnce(
-    () -> {
-      m_wrist_state = state;
-    });
-}
+  public CommandBase set_state(WristState state){
+    return runOnce(
+      () -> {
+        m_wrist_state = state;
+      });
+  }
 
+  public CommandBase stowWristCommand(){
+    return run(
+        () -> {
+          m_wrist_motor.set(ControlMode.PercentOutput, WRIST_REVERSE_SPEED);
+        }
+      ).until(this::wristReverseLimitHit);
+  }
 }
 
