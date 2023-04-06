@@ -10,10 +10,11 @@ import frc.robot.autoCommands.Pos1ScoreMove;
 import frc.robot.autoCommands.Pos1ScoreLowMoveBalance;
 import frc.robot.autoCommands.Pos1ScoreHighPickup;
 import frc.robot.autoCommands.Pos2ScoreHighMoveBalance;
+import frc.robot.autoCommands.Pos2ScoreMidMobilityBalance;
+import frc.robot.autoCommands.Pos2ScoreHighMobilityBalance;
 import frc.robot.autoCommands.Pos2ScoreMoveMidBalance;
 import frc.robot.autoCommands.Pos3ScoreHighPickup;
 import frc.robot.autoCommands.Pos3ScoreMove;
-import frc.robot.autoCommands.Pos3ScoreMoveBalance;
 import frc.robot.subsystems.Arm.Arm;
 import frc.robot.subsystems.Arm.ArmDriveToPositionPIDTest;
 import frc.robot.subsystems.Arm.DriveArmManually;
@@ -228,6 +229,7 @@ public class RobotContainer {
     m_auto_chooser.addOption("1 Score High Pickup", new Pos1ScoreHighPickup(m_drivetrain, m_arm, m_wrist, m_gripper));
     m_auto_chooser.addOption("1 Score Move", new Pos1ScoreMove(m_drivetrain, m_gripper, m_arm, m_wrist));
     m_auto_chooser.addOption("2 Score High Balance", new Pos2ScoreHighMoveBalance(m_drivetrain, m_arm, m_gripper, m_wrist));
+    m_auto_chooser.addOption("2 Score Mid Mobility+", new Pos2ScoreHighMobilityBalance(m_drivetrain, m_arm, m_wrist, m_gripper));
     m_auto_chooser.addOption("2 Score Mid Balance", new Pos2ScoreMoveMidBalance(m_drivetrain, m_arm, m_gripper, m_wrist));
     m_auto_chooser.addOption("3 Score High Pickup", new Pos3ScoreHighPickup(m_drivetrain, m_arm, m_wrist, m_gripper));
     m_auto_chooser.addOption("3 Score Move", new Pos3ScoreMove(m_drivetrain, m_gripper, m_arm, m_wrist));
@@ -238,7 +240,8 @@ public class RobotContainer {
     driveTab.add("Pos3 high pickup", new Pos3ScoreHighPickup(m_drivetrain, m_arm, m_wrist, m_gripper)).withPosition(7, 5).withSize(2, 1);
     driveTab.add("Pos1 High Pickup", new Pos1ScoreHighPickup(m_drivetrain, m_arm, m_wrist, m_gripper)).withPosition(7, 6).withSize(2, 1);
 
-    driveTab.add("DriveMM Slowly Test", m_drivetrain.driveMMSlowly(50));
+    driveTab.add("Position 2 Mid+Mob+Bal",new Pos2ScoreMidMobilityBalance(m_drivetrain, m_arm, m_wrist, m_gripper)).withPosition(5, 4).withSize(2, 1);
+    driveTab.add("Position 2 High+Mob+Bal",new Pos2ScoreHighMobilityBalance(m_drivetrain, m_arm, m_wrist, m_gripper)).withPosition(7, 4).withSize(2, 1);
   }
   public Command getAutonomousCommand2() {
     // An ExampleCommand will run in autonomous

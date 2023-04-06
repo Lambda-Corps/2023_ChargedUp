@@ -44,7 +44,7 @@ public class DriveMotionMagicTest extends CommandBase {
     m_setpoint_in_ticks.setDouble(m_target_in_ticks);
 
     m_dt.configure_motion_magic_test( m_target_velocity.getDouble(0), m_time_to_velo.getDouble(0), m_kp.getDouble(0));
-    m_dt.configure_motion_magic(m_target_in_ticks);
+    m_dt.configure_motion_magic(m_target_in_ticks, false);
     m_dt.drive_motion_magic();
   }
 

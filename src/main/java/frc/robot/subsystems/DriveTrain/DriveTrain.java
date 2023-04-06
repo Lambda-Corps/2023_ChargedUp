@@ -13,7 +13,6 @@ import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.InvertType;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.StatusFrame;
-import com.ctre.phoenix.motorcontrol.TalonFXControlMode;
 import com.ctre.phoenix.motorcontrol.TalonFXFeedbackDevice;
 import com.ctre.phoenix.motorcontrol.TalonFXInvertType;
 import com.ctre.phoenix.motorcontrol.TalonFXSimCollection;
@@ -705,15 +704,27 @@ public class DriveTrain extends SubsystemBase {
 		m_right_leader.configAllowableClosedloopError(MM_SLOT, 10);
 	}
 
-	public void configure_motion_magic(int setpoint) {
-		m_left_leader.selectProfileSlot(MM_SLOT, PID_PRIMARY);
-		m_right_leader.selectProfileSlot(MM_SLOT, PID_PRIMARY);
+	public void configure_motion_magic(int setpoint, boolean isSlow) {
+		if( isSlow ){
+			m_left_leader.selectProfileSlot(MM_SLOW_SLOT, PID_PRIMARY);
+			m_right_leader.selectProfileSlot(MM_SLOW_SLOT, PID_PRIMARY);
 
-		m_left_leader.configMotionCruiseVelocity(MM_VELOCITY);
-		m_right_leader.configMotionCruiseVelocity(MM_VELOCITY);
+			m_right_leader.configMotionCruiseVelocity(MM_SLOW_VELOCITY);
+			m_left_leader.configMotionCruiseVelocity(MM_SLOW_VELOCITY);
 
-		m_left_leader.configMotionAcceleration(MM_ACCELERATION);
-		m_right_leader.configMotionAcceleration(MM_ACCELERATION);
+			m_right_leader.configMotionAcceleration(MM_SLOW_ACCELERATION);
+			m_left_leader.configMotionAcceleration(MM_SLOW_ACCELERATION);
+		} else {
+			m_left_leader.selectProfileSlot(MM_SLOT, PID_PRIMARY);
+			m_right_leader.selectProfileSlot(MM_SLOT, PID_PRIMARY);
+
+			m_left_leader.configMotionCruiseVelocity(MM_VELOCITY);
+			m_right_leader.configMotionCruiseVelocity(MM_VELOCITY);
+
+			m_left_leader.configMotionAcceleration(MM_ACCELERATION);
+			m_right_leader.configMotionAcceleration(MM_ACCELERATION);
+		}
+		
 
 		m_setpoint_left = (int)(m_left_leader.getSelectedSensorPosition() + setpoint);
 		m_setpoint_right = (int)(m_right_leader.getSelectedSensorPosition() + setpoint);
@@ -900,19 +911,6 @@ public class DriveTrain extends SubsystemBase {
 			});
 	}
 
-	public CommandBase driveMotionMagic(double target_in_inches){
-		return runOnce(
-			() -> {
-				// Configure the target in encoder ticks, set the motor controllers up
-				// and have them go until the setpoint
-				int target_in_ticks = (int)(target_in_inches * kEncoderTicksPerInch);
-
-				configure_motion_magic(target_in_ticks);
-
-				drive_motion_magic();
-			});
-	}
-
 	// This command takes in an (x,y) coordinate pair and sets the robot odometry to match
 	// that value.  It will set the integrated encoders to that value in the Talons and 
 	// set the gyro angle as well
@@ -937,27 +935,4 @@ public class DriveTrain extends SubsystemBase {
 			});
 	}
 
-	public CommandBase driveMMSlowly(double distance) {
-		m_left_leader.selectProfileSlot(MM_SLOW_SLOT, PID_PRIMARY);
-		m_right_leader.selectProfileSlot(MM_SLOW_SLOT, PID_PRIMARY);
-
-		m_right_leader.configMotionCruiseVelocity(MM_SLOW_VELOCITY);
-		m_left_leader.configMotionCruiseVelocity(MM_SLOW_VELOCITY);
-
-		m_right_leader.configMotionAcceleration(MM_SLOW_ACCELERATION);
-		m_left_leader.configMotionAcceleration(MM_SLOW_ACCELERATION);
-
-		double setpoint = (int)(distance * kEncoderTicksPerInch);
-		m_setpoint_left = (int)(m_left_leader.getSelectedSensorPosition() + setpoint);
-		m_setpoint_right = (int)(m_right_leader.getSelectedSensorPosition() + setpoint);
-
-		driveMotionMagic(distance);
-
-		return run(
-			() -> {
-				m_left_leader.set(ControlMode.MotionMagic, m_setpoint_left);
-				m_right_leader.set(ControlMode.MotionMagic, m_setpoint_right);
-			}
-		).until(this::is_drive_mm_done);
-	}
 }

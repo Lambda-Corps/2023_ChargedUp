@@ -21,16 +21,16 @@ import frc.robot.subsystems.Wrist.Wrist.WristSuperStructurePosition;
 // NOTE:  Consider using this command inline, rather than writing a subclass.  For more
 // information, see:
 // https://docs.wpilib.org/en/stable/docs/software/commandbased/convenience-features.html
-public class Pos2ScoreMidMobilityBalance extends SequentialCommandGroup {
+public class Pos2ScoreHighMobilityBalance extends SequentialCommandGroup {
   /** Creates a new Pos2ScoreMidMobilityBalance. */
-  public Pos2ScoreMidMobilityBalance(DriveTrain drivetrain, Arm arm, Wrist wrist, Gripper gripper) {
+  public Pos2ScoreHighMobilityBalance(DriveTrain drivetrain, Arm arm, Wrist wrist, Gripper gripper) {
     // Add your commands in the addCommands() call, e.g.
     // addCommands(new FooCommand(), new BarCommand());
     addCommands(
-      new WristThenArmSequenceCommand(arm, wrist, ArmSuperStructurePosition.ScoreConeMid, WristSuperStructurePosition.ScoreConeMid),
+      new WristThenArmSequenceCommand(arm, wrist, ArmSuperStructurePosition.ScoreConeHigh, WristSuperStructurePosition.ScoreConeHigh),
       gripper.expandGripperCommand(),
       arm.stowArmCommand().alongWith((new MoveWristToPositionMM(wrist, WristSuperStructurePosition.Stowed)).raceWith(new WaitCommand(2))),
-      new DriveMotionMagic(drivetrain, -180, true),
+      new DriveMotionMagic(drivetrain, -150, true),
       new DriveSlowlyUntilRamp(drivetrain).withTimeout(1.5),
       new BalanceBangBangCommand(drivetrain)
     );

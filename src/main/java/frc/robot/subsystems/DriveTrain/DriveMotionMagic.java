@@ -12,12 +12,23 @@ public class DriveMotionMagic extends CommandBase {
   int m_target_in_ticks;
   boolean m_done;
   int m_count;
+  boolean m_slowmm;
 
   /** Creates a new DriveMotionMagic. */
   public DriveMotionMagic(DriveTrain dt, double distance_in_inches) {
     m_dt = dt;
     m_target_in_inches = distance_in_inches;
+    m_slowmm = false;
 
+    // Use addRequirements() here to declare subsystem dependencies.
+    addRequirements(m_dt);
+  }
+
+  /** Creates a new DriveMotionMagic. */
+  public DriveMotionMagic(DriveTrain dt, double distance_in_inches, boolean isSlow) {
+    m_dt = dt;
+    m_target_in_inches = distance_in_inches;
+    m_slowmm = isSlow;
     // Use addRequirements() here to declare subsystem dependencies.
     addRequirements(m_dt);
   }
@@ -29,7 +40,7 @@ public class DriveMotionMagic extends CommandBase {
     m_done = false;
     m_count = 0;
 
-    m_dt.configure_motion_magic(m_target_in_ticks);
+    m_dt.configure_motion_magic(m_target_in_ticks, m_slowmm);
     m_dt.drive_motion_magic();
   }
 
