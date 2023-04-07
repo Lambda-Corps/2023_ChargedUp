@@ -14,7 +14,7 @@ import frc.robot.autoCommands.Pos2ScoreMidMobilityBalance;
 import frc.robot.autoCommands.Pos2ScoreHighMobilityBalance;
 import frc.robot.autoCommands.Pos2ScoreMoveMidBalance;
 import frc.robot.autoCommands.Pos3ScoreHighPickup;
-import frc.robot.autoCommands.Pos3ScoreMove;
+import frc.robot.autoCommands.Pos3ScoreMidPickup;
 import frc.robot.subsystems.Arm.Arm;
 import frc.robot.subsystems.Arm.ArmDriveToPositionPIDTest;
 import frc.robot.subsystems.Arm.DriveArmManually;
@@ -235,7 +235,7 @@ public class RobotContainer {
     m_auto_chooser.addOption("2 Score Mid Mobility+", new Pos2ScoreMidMobilityBalance(m_drivetrain, m_arm, m_wrist, m_gripper));
     m_auto_chooser.addOption("2 Score Mid Balance", new Pos2ScoreMoveMidBalance(m_drivetrain, m_arm, m_gripper, m_wrist));
     m_auto_chooser.addOption("3 Score High Pickup", new Pos3ScoreHighPickup(m_drivetrain, m_arm, m_wrist, m_gripper));
-    m_auto_chooser.addOption("3 Score Move", new Pos3ScoreMove(m_drivetrain, m_gripper, m_arm, m_wrist));
+    m_auto_chooser.addOption("3 Score Mid Pickup", new Pos3ScoreMidPickup(m_drivetrain, m_arm, m_wrist, m_gripper));
     m_auto_chooser.setDefaultOption("Default Auto incase we forget", new DriveMotionMagic(m_drivetrain, -150));
 
     driveTab.add("Middle High Cone Balance", new Pos2ScoreHighMoveBalance(m_drivetrain, m_arm, m_gripper, m_wrist)).withPosition(5, 0).withSize(2, 1);

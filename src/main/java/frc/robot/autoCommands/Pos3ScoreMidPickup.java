@@ -9,10 +9,9 @@ import frc.robot.subsystems.Arm.Arm;
 import frc.robot.subsystems.Arm.StowSuperStructure;
 import frc.robot.subsystems.Arm.WristThenArmSequenceCommand;
 import frc.robot.subsystems.Arm.Arm.ArmSuperStructurePosition;
-import frc.robot.subsystems.DriveTrain.BalanceBangBangCommand;
 import frc.robot.subsystems.DriveTrain.DriveMotionMagic;
-import frc.robot.subsystems.DriveTrain.DriveSlowlyUntilRamp;
 import frc.robot.subsystems.DriveTrain.DriveTrain;
+import frc.robot.subsystems.DriveTrain.TurnToAngleWithGyroPID;
 import frc.robot.subsystems.Gripper.Gripper;
 import frc.robot.subsystems.Wrist.Wrist;
 import frc.robot.subsystems.Wrist.Wrist.WristSuperStructurePosition;
@@ -20,18 +19,30 @@ import frc.robot.subsystems.Wrist.Wrist.WristSuperStructurePosition;
 // NOTE:  Consider using this command inline, rather than writing a subclass.  For more
 // information, see:
 // https://docs.wpilib.org/en/stable/docs/software/commandbased/convenience-features.html
-public class Pos2ScoreMidMobilityBalance extends SequentialCommandGroup {
-  /** Creates a new Pos2ScoreMidMobilityBalance. */
-  public Pos2ScoreMidMobilityBalance(DriveTrain drivetrain, Arm arm, Wrist wrist, Gripper gripper) {
+public class Pos3ScoreMidPickup extends SequentialCommandGroup {
+  /** Creates a new Pos1ScoreMovePickupPiece. */
+  public Pos3ScoreMidPickup(DriveTrain dt, Arm arm, Wrist wrist, Gripper gripper) {
     // Add your commands in the addCommands() call, e.g.
     // addCommands(new FooCommand(), new BarCommand());
     addCommands(
       new WristThenArmSequenceCommand(arm, wrist, ArmSuperStructurePosition.ScoreConeMid, WristSuperStructurePosition.ScoreConeMid),
-      gripper.expandGripperCommand(),
+      gripper.JustexpandGripper(),
+      // new StowArmManually(arm, wrist),
       new StowSuperStructure(arm, wrist),
-      new DriveMotionMagic(drivetrain, -150, true),
-      new DriveSlowlyUntilRamp(drivetrain).withTimeout(1.5),
-      new BalanceBangBangCommand(drivetrain)
+      new DriveMotionMagic(dt, -170), //230" inches from  |  40" robot | 10" left to get to 230"
+      new TurnToAngleWithGyroPID(dt, -152),
+      arm.deployArm(),
+      gripper.contractGripperCommand(),
+      gripper.holdGamePieceCommand(),
+      // new StowArmManually(arm, wrist),
+      arm.stowArmCommand(),
+      new TurnToAngleWithGyroPID(dt, -160)
+      // new DriveMotionMagic(dt, 160)
+      // Instead of score low, hold on to it to score high
+      // new ScoreCone(gripper) 
     );
   }
+
+  // private void addCommands(ScoreCone scoreCone, DriveMotionMagic driveMotionMagic) {
+  // }
 }
