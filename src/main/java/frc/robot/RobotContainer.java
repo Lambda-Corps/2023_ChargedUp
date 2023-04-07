@@ -237,14 +237,6 @@ public class RobotContainer {
     m_auto_chooser.addOption("3 Score High Pickup", new Pos3ScoreHighPickup(m_drivetrain, m_arm, m_wrist, m_gripper));
     m_auto_chooser.addOption("3 Score Move", new Pos3ScoreMove(m_drivetrain, m_gripper, m_arm, m_wrist));
     m_auto_chooser.setDefaultOption("Default Auto incase we forget", new DriveMotionMagic(m_drivetrain, -150));
-
-    driveTab.add("Middle High Cone Balance", new Pos2ScoreHighMoveBalance(m_drivetrain, m_arm, m_gripper, m_wrist)).withPosition(5, 0).withSize(2, 1);
-    driveTab.add("Middle mid score balance", new Pos2ScoreMoveMidBalance(m_drivetrain, m_arm, m_gripper, m_wrist)).withPosition(7, 0).withSize(2, 1);
-    driveTab.add("Pos3 high pickup", new Pos3ScoreHighPickup(m_drivetrain, m_arm, m_wrist, m_gripper)).withPosition(5, 1).withSize(2, 1);
-    driveTab.add("Pos1 High Pickup", new Pos1ScoreHighPickup(m_drivetrain, m_arm, m_wrist, m_gripper)).withPosition(7, 1).withSize(2, 1);
-
-    driveTab.add("Position 2 Mid+Mob+Bal",new Pos2ScoreMidMobilityBalance(m_drivetrain, m_arm, m_wrist, m_gripper)).withPosition(5, 2).withSize(2, 1);
-    driveTab.add("Position 2 High+Mob+Bal",new Pos2ScoreHighMobilityBalance(m_drivetrain, m_arm, m_wrist, m_gripper)).withPosition(7, 2).withSize(2, 1);
   }
   public Command getAutonomousCommand2() {
     // An ExampleCommand will run in autonomous
