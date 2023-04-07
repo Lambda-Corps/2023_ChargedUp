@@ -31,7 +31,7 @@ public class Pos2ScoreMidMobilityBalance extends SequentialCommandGroup {
       new WristThenArmSequenceCommand(arm, wrist, ArmSuperStructurePosition.ScoreConeMid, WristSuperStructurePosition.ScoreConeMid),
       gripper.expandGripperCommand(),
       new StowSuperStructure(arm, wrist),
-      new DriveMotionMagic(drivetrain, -180, true),
+      new DriveMotionMagic(drivetrain, -150, true),
       new DriveSlowlyUntilRamp(drivetrain).withTimeout(1.5),
       new BalanceBangBangCommand(drivetrain)
     );

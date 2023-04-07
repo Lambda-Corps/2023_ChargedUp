@@ -28,6 +28,7 @@ import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+import frc.robot.subsystems.DriveTrain.BalanceBangBangCommand;
 import frc.robot.subsystems.DriveTrain.BalanceBangBangTestCommand;
 import frc.robot.subsystems.DriveTrain.DefaultDriveTrainCommand;
 import frc.robot.subsystems.DriveTrain.DriveMotionMagicTest;
@@ -189,6 +190,7 @@ public class RobotContainer {
     m_driver_controller.povUp().onTrue(new SubstationPickupDistanceRangefinder(m_drivetrain));
     m_driver_controller.povDown().onTrue(new SubStationDriveStop2feet(m_drivetrain, m_driver_controller));
     // m_driver_controller.a().whileTrue(new AlignToConeTapeWithVision(m_drivetrain, m_vision, m_driver_controller));
+    m_driver_controller.start().onTrue(new BalanceBangBangCommand(m_drivetrain));
   }
   
   /**
@@ -229,7 +231,8 @@ public class RobotContainer {
     m_auto_chooser.addOption("1 Score High Pickup", new Pos1ScoreHighPickup(m_drivetrain, m_arm, m_wrist, m_gripper));
     m_auto_chooser.addOption("1 Score Move", new Pos1ScoreMove(m_drivetrain, m_gripper, m_arm, m_wrist));
     m_auto_chooser.addOption("2 Score High Balance", new Pos2ScoreHighMoveBalance(m_drivetrain, m_arm, m_gripper, m_wrist));
-    m_auto_chooser.addOption("2 Score Mid Mobility+", new Pos2ScoreHighMobilityBalance(m_drivetrain, m_arm, m_wrist, m_gripper));
+    m_auto_chooser.addOption("2 Score High Mobility+", new Pos2ScoreHighMobilityBalance(m_drivetrain, m_arm, m_wrist, m_gripper));
+    m_auto_chooser.addOption("2 Score Mid Mobility+", new Pos2ScoreMidMobilityBalance(m_drivetrain, m_arm, m_wrist, m_gripper));
     m_auto_chooser.addOption("2 Score Mid Balance", new Pos2ScoreMoveMidBalance(m_drivetrain, m_arm, m_gripper, m_wrist));
     m_auto_chooser.addOption("3 Score High Pickup", new Pos3ScoreHighPickup(m_drivetrain, m_arm, m_wrist, m_gripper));
     m_auto_chooser.addOption("3 Score Move", new Pos3ScoreMove(m_drivetrain, m_gripper, m_arm, m_wrist));

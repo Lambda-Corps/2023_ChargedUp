@@ -150,7 +150,7 @@ public class DriveTrain extends SubsystemBase {
 	final int FORWARD_SLEW_RATE = 3;
 	final int TURN_SLEW_RATE = 5;
 	double TURN_DRIVE_FF = .1;
-	final double DRIVE_BANG_BANG_FWD = .225;
+	final double DRIVE_BANG_BANG_FWD = .21;
 	final double DRIVE_BANG_BANG_BACK = -.16;
 	final int DRIVE_BANG_BANG_SP = 10;
 	double DRIVE_STRAIGHT_FF = .2;

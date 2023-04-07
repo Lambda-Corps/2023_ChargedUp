@@ -30,7 +30,7 @@ public class Pos3ScoreHighPickup extends SequentialCommandGroup {
       // new StowArmManually(arm, wrist),
       new StowSuperStructure(arm, wrist),
       new DriveMotionMagic(dt, -170), //230" inches from  |  40" robot | 10" left to get to 230"
-      new TurnToAngleWithGyroPID(dt, -162),
+      new TurnToAngleWithGyroPID(dt, -152),
       arm.deployArm(),
       gripper.contractGripperCommand(),
       gripper.holdGamePieceCommand(),
